@@ -16,14 +16,29 @@ provide('mode', {
 </script>
 
 <template>
-  <header>
+  <!-- <header>
     <div class="wrapper">
       <nav>
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/about">About</RouterLink>
       </nav>
     </div>
-  </header>
+  </header> -->
 
-  <RouterView />
+  <div
+    :class="[
+      'min-h-screen transition-colors duration-500',
+      mode === 'developer'
+        ? 'bg-gray-50 text-gray-900'
+        : 'bg-gray-900 text-gray-50 bg-[url(\'/stars.png\')] bg-fixed'
+    ]"
+  >
+    <div class="max-w-5xl mx-auto px-4 py-8">
+      <Header></Header>
+      <main class="mb-8">
+        <RouterView />
+      </main>
+      <Footer></Footer>
+    </div>
+  </div>
 </template>
