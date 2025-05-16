@@ -3,8 +3,8 @@ import { Globe, Cpu, Cloud, Terminal, MonitorSmartphone, Smartphone } from 'luci
 import { inject, computed } from 'vue'
 import SectionTitle from '@/components/SectionTitle.vue'
 import SkillItem from './Skill.vue'
+import SkillSlider from './SkillSlider.vue'
 
-// Inject mode from parent
 const { mode } = inject('mode')
 
 // Computed property for skills based on mode
@@ -79,5 +79,7 @@ const skills = computed(() => {
         </ul>
       </div>
     </div>
+    <!-- Skill slider -->
+    <SkillSlider v-if="mode === 'developer'" />
   </section>
 </template>
