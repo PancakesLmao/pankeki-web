@@ -2,6 +2,7 @@
 import Hero from '@/components/Hero.vue';
 import About from '@/components/about/About.vue';
 import Experience from '@/components/Experience.vue';
+import Project from '@/components/projects/Project.vue';
 import Contact from '@/components/contact/Contact.vue';
 </script>
 
@@ -10,6 +11,7 @@ import Contact from '@/components/contact/Contact.vue';
     <Hero></Hero>
     <About></About>
     <Experience></Experience>
+    <Project></Project>
     <Contact></Contact>
   </main>
 </template>
