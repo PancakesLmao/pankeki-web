@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Globe, Cpu, Cloud, Terminal, MonitorSmartphone, Smartphone } from 'lucide-vue-next'
 import { inject, computed } from 'vue'
-import SectionTitle from '../SectionTitle.vue'
+import SectionTitle from '@/components/SectionTitle.vue'
 import SkillItem from './Skill.vue'
 
 // Inject mode from parent
