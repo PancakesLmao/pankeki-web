@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { inject } from 'vue'
+import { useMode } from '@/composables/useMode'
 
 defineProps({
   href: {
@@ -16,7 +16,7 @@ defineProps({
   }
 })
 
-const { mode } = inject('mode')
+const { mode } = useMode()
 </script>
 <template>
   <a

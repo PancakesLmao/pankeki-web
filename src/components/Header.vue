@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { inject } from 'vue'
+import { useMode } from '@/composables/useMode';
 import { Gamepad2, Code } from 'lucide-vue-next'
 // import { useRoute } from 'vue-router'
-// Inject mode and setMode from parent
-const { mode, setMode } = inject<{ mode: string; setMode: (newMode: string) => void }>('mode')!
+const { mode, setMode } = useMode()
 </script>
 <template>
   <header class="flex justify-between items-center mb-16">

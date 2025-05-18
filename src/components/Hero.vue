@@ -4,12 +4,12 @@ defineOptions({
   name: 'HeroSection'
 });
 
-import { inject, ref, computed } from 'vue';
+import { computed } from 'vue';
+import { useMode } from '@/composables/useMode';
 import light_profile from '@/assets/905429.png'
 import dark_profile from '@/assets/905429.png'
 
-// Inject mode from parent
-const { mode = ref('developer') } = inject('mode') || {};
+const { mode } = useMode()
 const developerRoles = ['Frontend Developer', 'Cloud Engineer'];
 const gamerRoles = ['Gacha Gremlin'];
 // watch(mode, (newMode) => {

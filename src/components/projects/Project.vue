@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { inject } from 'vue'
+import { useMode } from '@/composables/useMode'
 import SectionTitle from '../SectionTitle.vue'
 import ProjectCard from './ProjectCard.vue'
 import GameSlider from './GameSlider.vue'
 
-const { mode } = inject('mode')
+const { mode } = useMode()
 
 const developerProjects = [
   {

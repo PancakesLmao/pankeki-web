@@ -1,3 +1,16 @@
+<script setup lang="ts">
+import { useMode } from '@/composables/useMode'
+
+defineProps<{
+  title: string
+  description: string
+  tags: string[]
+}>()
+
+const { mode } = useMode()
+
+</script>
+
 <template>
   <div
     :class="[
@@ -49,15 +62,3 @@
     </a>
   </div>
 </template>
-
-<script setup lang="ts">
-import { inject } from 'vue'
-
-defineProps<{
-  title: string
-  description: string
-  tags: string[]
-}>()
-
-const { mode } = inject('mode')
-</script>

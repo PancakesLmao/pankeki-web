@@ -1,7 +1,6 @@
 <script lang="ts" setup>
-import { inject } from 'vue'
-
-const { mode } = inject('mode')
+import { useMode } from '@/composables/useMode'
+const { mode } = useMode()
 </script>
 
 <template>
