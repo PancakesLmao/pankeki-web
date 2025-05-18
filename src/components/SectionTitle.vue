@@ -11,7 +11,7 @@ const { mode } = inject('mode')
 <template>
   <div
     :class="[
-      'mb-12 inline-block px-4 py-1 rounded-full text-sm font-medium transition-colors',
+      'mb-12 inline-block px-4 py-1 rounded-full text-md font-medium transition-colors',
       mode === 'developer' ? 'bg-gray-200 text-gray-700' : 'bg-purple-900 text-purple-100'
     ]"
   >

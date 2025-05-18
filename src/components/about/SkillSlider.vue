@@ -12,6 +12,8 @@ import Git from '../icons/Git.vue'
 import Github from '../icons/Github.vue'
 import Docker from '../icons/Docker.vue'
 import AWS from '../icons/AWS.vue'
+import Raspberry from '../icons/Raspberry.vue'
+import Arduino from '../icons/Arduino.vue'
 import Linux from '../icons/Linux.vue'
 import Postgresql from '../icons/Postgresql.vue'
 import Mongodb from '../icons/Mongodb.vue'
@@ -51,7 +53,7 @@ onMounted(() => {
 }
 
 .skills-slider:hover {
-  animation-play-state: paused;
+  /* animation-play-state: paused; */
 }
 </style>
 
@@ -62,30 +64,62 @@ onMounted(() => {
       :class="[
         mode === 'developer'
           ? 'before:from-gray-50 before:to-transparent after:from-gray-50 after:to-transparent'
-          : 'before:from-gray-800 before:to-transparent after:from-gray-800 after:to-transparent'
+          : 'before:from-gray-800 before:to-transparent after:from-gray-800 after:to-transparent',
       ]"
     >
       <div class="skills-slider" ref="sliderRef">
-        <div
-          v-for="setIndex in 2"
-          :key="setIndex"
-          class="flex items-center gap-16 px-8"
-        >
-          <Git :size="50"></Git>
-          <Github :size="50"></Github>
-          <Docker :size="50"></Docker>
-          <Javascript :size="50"></Javascript>
-          <Typescript :size="50"></Typescript>
-          <Tailwind :size="50"></Tailwind>
-          <Vite :size="50"></Vite>
-          <React :size="50"></React>
-          <Vue :size="50"></Vue>
-          <Nextjs :size="50"></Nextjs>
-          <Kotlin :size="50"></Kotlin>
-          <Postgresql :size="50"></Postgresql>
-          <Mongodb :size="50"></Mongodb>
-          <Linux :size="50"></Linux>
-          <AWS :size="50"></AWS>
+        <div v-for="setIndex in 2" :key="setIndex" class="flex items-center gap-16 px-8">
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <Git :size="50" />
+          </div>
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <Github :size="50" />
+          </div>
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <Docker :size="50" />
+          </div>
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <Javascript :size="50" />
+          </div>
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <Typescript :size="50" />
+          </div>
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <Tailwind :size="50" />
+          </div>
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <Vite :size="50" />
+          </div>
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <React :size="50" />
+          </div>
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <Vue :size="50" />
+          </div>
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <Nextjs :size="50" />
+          </div>
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <Kotlin :size="50" />
+          </div>
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <Postgresql :size="50" />
+          </div>
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <Mongodb :size="50" />
+          </div>
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <Arduino :size="50" />
+          </div>
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <Raspberry :size="50" />
+          </div>
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <Linux :size="50" />
+          </div>
+          <div class="transform transition-transform duration-300 hover:scale-125">
+            <AWS :size="50" />
+          </div>
         </div>
       </div>
     </div>

@@ -1,23 +1,8 @@
-<template>
-  <section class="mb-24" id="projects">
-    <SectionTitle :title="mode === 'developer' ? 'Projects' : 'Games'" />
-
-    <div class="grid md:grid-cols-2 gap-8">
-      <ProjectCard
-        v-for="(project, index) in projects"
-        :key="index"
-        :title="project.title"
-        :description="project.description"
-        :tags="project.tags"
-      />
-    </div>
-  </section>
-</template>
-
 <script setup lang="ts">
-import { inject, computed } from 'vue'
+import { inject } from 'vue'
 import SectionTitle from '../SectionTitle.vue'
 import ProjectCard from './ProjectCard.vue'
+import GameSlider from './GameSlider.vue'
 
 const { mode } = inject('mode')
 
@@ -43,12 +28,21 @@ const developerProjects = [
     tags: ['React', 'Javascript', 'Tailwind', 'Expressjs'],
   },
 ]
-
-const gamerProjects = [
-  {
-
-  }
-]
-
-const projects = computed(() => mode.value === 'developer' ? developerProjects : gamerProjects)
 </script>
+
+<template>
+  <section class="mb-24" id="projects">
+    <SectionTitle :title="mode === 'developer' ? 'Projects' : 'Games'" />
+
+    <div v-if="mode === 'developer'" class="grid md:grid-cols-2 gap-8">
+      <ProjectCard
+        v-for="(project, index) in developerProjects"
+        :key="index"
+        :title="project.title"
+        :description="project.description"
+        :tags="project.tags"
+      />
+    </div>
+    <GameSlider v-else />
+  </section>
+</template>

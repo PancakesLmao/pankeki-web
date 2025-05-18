@@ -5,8 +5,8 @@ defineOptions({
 });
 
 import { inject, ref, computed } from 'vue';
-import light_profile from '../assets/Arona_Icon.webp'
-import dark_profile from '../assets/A.R.O.N.A_Icon.webp'
+import light_profile from '@/assets/905429.png'
+import dark_profile from '@/assets/905429.png'
 
 // Inject mode from parent
 const { mode = ref('developer') } = inject('mode') || {};
@@ -27,7 +27,7 @@ const writerArray = computed(() => {
   <section class="mb-24 flex flex-col items-center text-center">
     <div
       :class="[
-        'w-32 h-32 rounded-full mb-8 overflow-hidden border-4 transition-all',
+        'w-40 h-40 rounded-full mb-8 overflow-hidden border-4 transition-all',
         mode === 'developer' ? 'border-gray-300' : 'border-purple-600',
       ]"
     >

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject } from 'vue'
 import { Gamepad2, Code } from 'lucide-vue-next'
-import { useRoute } from 'vue-router'
+// import { useRoute } from 'vue-router'
 // Inject mode and setMode from parent
 const { mode, setMode } = inject<{ mode: string; setMode: (newMode: string) => void }>('mode')!
 </script>
@@ -23,7 +23,7 @@ const { mode, setMode } = inject<{ mode: string; setMode: (newMode: string) => v
           mode === 'developer' ? 'text-gray-600' : 'text-purple-400',
         ]"
       >
-        <!-- {{ mode === 'developer' ? 'Developer' : 'Gamer' }} -->
+        {{ mode === 'developer' ? 'Developer On' : 'Developer Off' }}
       </span>
       <button
         @click="setMode(mode === 'developer' ? 'gamer' : 'developer')"
