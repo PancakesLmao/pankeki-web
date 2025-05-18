@@ -45,7 +45,7 @@ const games: GameProject[] = [
     title: 'Honkai Impact 3rd',
     description:
       'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. ',
-    coverImage: 'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/2019090914565526843.jpg',
+    coverImage: 'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/2019090914565526843.jpg',
     iconImage: 'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/67a9b6e59ac1105da3d7785693e2028d.png',
     platform: 'PC / Mobile',
     genre: 'Action RPG',
