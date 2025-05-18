@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { inject, computed } from 'vue'
+import { computed } from 'vue'
+import { useMode } from '@/composables/useMode'
 import SectionTitle from '@/components/SectionTitle.vue'
 
 interface TimelineItem {
@@ -10,7 +11,7 @@ interface TimelineItem {
   description: string
 }
 
-const { mode } = inject('mode')
+const { mode } = useMode()
 
 const developerExperience: TimelineItem[] = [
 {
@@ -137,4 +138,3 @@ const timelineItems = computed(() =>
     </div>
   </section>
 </template>
-

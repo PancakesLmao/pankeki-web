@@ -23,7 +23,7 @@ const games: GameProject[] = [
     title: 'Grandblue Fantasy: Relink',
     description:
       'Journey through the Zegagrande Skydom, a world of floating islands adrift in a sea of clouds, forsaken by the gods. As a young skyfarer, follow your father’s letter to find Estalucia, the legendary Island of the Astrals. Alongside Lyria, a girl linked to powerful primal beasts, navigate a fragile peace 500 years after a great war',
-    coverImage: 'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/3746df86b7befa462e28f3a0460ca9fb.jpg',
+    coverImage: 'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/GCr45I2WkAAYPXj.jpeg',
     iconImage: 'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/256x256.png',
     platform: 'PC / PlayStation',
     genre: 'JRPG',
@@ -45,7 +45,7 @@ const games: GameProject[] = [
     title: 'Honkai Impact 3rd',
     description:
       'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. ',
-    coverImage: 'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/e673128bb7c5849dd421143fc5953d27.jpg',
+    coverImage: 'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/2019090914565526843.jpg',
     iconImage: 'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/67a9b6e59ac1105da3d7785693e2028d.png',
     platform: 'PC / Mobile',
     genre: 'Action RPG',
@@ -213,10 +213,6 @@ watch(activeIndex, () => {
   scrollActiveGameIntoView()
 })
 
-// Utility for className concatenation (equivalent to cn)
-const cn = (...classes: (string | undefined | false)[]) => {
-  return classes.filter(Boolean).join(' ')
-}
 </script>
 
 <template>
@@ -265,7 +261,7 @@ const cn = (...classes: (string | undefined | false)[]) => {
             :key="game.id"
             @click="handleSelectGame(index)"
             :class="[
-              'group relative flex h-16 w-16 flex-shrink-0 flex-col items-center justify-center rounded-2xl transition-all duration-300 md:h-24 md:w-24',
+              'group relative flex h-16 w-16 flex-shrink-0 flex-col items-center justify-center rounded-2xl transition-all duration-300 md:h-20 md:w-20',
               index === activeIndex
                 ? 'bg-gradient-to-t from-purple-900 to-purple-700 shadow-lg shadow-purple-500/20 scale-105 z-10'
                 : 'bg-gray-800/90 hover:bg-gray-700/90',

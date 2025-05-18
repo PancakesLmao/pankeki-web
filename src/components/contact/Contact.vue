@@ -1,11 +1,14 @@
 <script lang="ts" setup>
-import { inject } from 'vue'
+defineOptions({ name: 'ContactSection' })
+
+import { useMode } from '@/composables/useMode'
 import { Mail, Github, Linkedin } from 'lucide-vue-next'
 import SectionTitle from '../SectionTitle.vue'
 import ContactLink from './ContactLink.vue'
 import ContactForm from './ContactForm.vue'
 import Steam from '../icons/Steam.vue'
-const { mode } = inject('mode')
+
+const { mode } = useMode()
 </script>
 
 <template>

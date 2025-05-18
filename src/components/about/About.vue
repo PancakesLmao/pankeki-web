@@ -1,11 +1,13 @@
 <script lang="ts" setup>
+defineOptions({ name: 'AboutSection' })
 import { Globe, Cpu, Cloud, Terminal, MonitorSmartphone, Smartphone } from 'lucide-vue-next'
-import { inject, computed } from 'vue'
+import { computed } from 'vue'
+import { useMode } from '@/composables/useMode'
 import SectionTitle from '@/components/SectionTitle.vue'
 import SkillItem from './Skill.vue'
 import SkillSlider from './SkillSlider.vue'
 
-const { mode } = inject('mode')
+const { mode } = useMode()
 
 // Computed property for skills based on mode
 const skills = computed(() => {

@@ -18,11 +18,8 @@ import Linux from '../icons/Linux.vue'
 import Postgresql from '../icons/Postgresql.vue'
 import Mongodb from '../icons/Mongodb.vue'
 
-import { inject } from 'vue'
-
-const { mode } = inject<{
-  mode: 'developer' | 'gamer'
-}>('mode')!
+import { useMode } from '@/composables/useMode'
+const { mode } = useMode()
 
 const sliderRef = ref<HTMLDivElement | null>(null)
 
@@ -52,9 +49,6 @@ onMounted(() => {
   width: fit-content;
 }
 
-.skills-slider:hover {
-  /* animation-play-state: paused; */
-}
 </style>
 
 <template>

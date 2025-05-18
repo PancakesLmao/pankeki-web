@@ -1,12 +1,10 @@
 <script lang="ts" setup>
-import { inject } from 'vue'
-
+import { useMode } from '@/composables/useMode';
 defineProps({
   title: String
 })
 
-// Inject mode from parent
-const { mode } = inject('mode')
+const { mode } = useMode()
 </script>
 <template>
   <div

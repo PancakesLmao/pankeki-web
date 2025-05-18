@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterView } from 'vue-router'
 import { ref, provide } from 'vue';
+import { ModeInjectionKey } from '@/types/mode'
 import Header from './components/Header.vue';
 import Footer from './components/Footer.vue';
 
 // Reactive mode state
 const mode = ref('developer')
 // Provide mode and setMode to child components
-provide('mode', {
+provide(ModeInjectionKey, {
   mode,
-  setMode: (newMode) => {
+  setMode: (newMode: string) => {
     mode.value = newMode
-  }
+  },
 })
 </script>
 
