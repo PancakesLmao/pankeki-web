@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+defineOptions({ name: 'AboutSection' })
 import { Globe, Cpu, Cloud, Terminal, MonitorSmartphone, Smartphone } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useMode } from '@/composables/useMode'

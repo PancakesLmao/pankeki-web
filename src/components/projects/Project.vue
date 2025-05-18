@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineOptions({ name: 'ProjectSection' })
 import { useMode } from '@/composables/useMode'
 import SectionTitle from '../SectionTitle.vue'
 import ProjectCard from './ProjectCard.vue'

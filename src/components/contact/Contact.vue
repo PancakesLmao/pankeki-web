@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+defineOptions({ name: 'ContactSection' })
+
 import { useMode } from '@/composables/useMode'
 import { Mail, Github, Linkedin } from 'lucide-vue-next'
 import SectionTitle from '../SectionTitle.vue'

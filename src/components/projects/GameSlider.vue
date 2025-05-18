@@ -213,10 +213,6 @@ watch(activeIndex, () => {
   scrollActiveGameIntoView()
 })
 
-// Utility for className concatenation (equivalent to cn)
-const cn = (...classes: (string | undefined | false)[]) => {
-  return classes.filter(Boolean).join(' ')
-}
 </script>
 
 <template>

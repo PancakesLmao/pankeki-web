@@ -49,9 +49,6 @@ onMounted(() => {
   width: fit-content;
 }
 
-.skills-slider:hover {
-  /* animation-play-state: paused; */
-}
 </style>
 
 <template>
