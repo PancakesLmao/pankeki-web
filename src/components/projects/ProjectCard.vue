@@ -5,6 +5,7 @@ defineProps<{
   title: string
   description: string
   tags: string[]
+  link: string
 }>()
 
 const { mode } = useMode()
@@ -52,7 +53,9 @@ const { mode } = useMode()
     </div>
 
     <a
-      href="#"
+      :href="link"
+      target="_blank"
+      rel="noopener noreferrer"
       :class="[
         'inline-flex items-center text-sm font-medium transition-colors',
         mode === 'developer' ? 'text-gray-900 hover:text-gray-700' : 'text-purple-400 hover:text-purple-300',
