@@ -55,7 +55,7 @@ const { mode } = useMode()
               :text="mode === 'developer' ? 'PancakesLmao' : 'PancakesLmao'"
             />
             <ContactLink
-              href="linkedin.com/in/khanh-phuc-thinh-nguyen-a216b928b"
+              :href="mode === 'developer' ? 'https://www.linkedin.com/in/khanh-phuc-thinh-nguyen-a216b928b/' : 'https://steamcommunity.com/profiles/76561199544433765/'"
               :icon="{ component: mode === 'developer' ? Linkedin : Steam, size: 20 }"
               :text="mode === 'developer' ? 'Khanh Phuc Thinh Nguyenn' : 'PancakesLmao2902'"
             />
