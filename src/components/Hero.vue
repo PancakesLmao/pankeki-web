@@ -6,12 +6,12 @@ defineOptions({
 
 import { computed } from 'vue';
 import { useMode } from '@/composables/useMode';
-import light_profile from '@/assets/905429.png'
-import dark_profile from '@/assets/905429.png'
+import light_profile from '@/assets/schwi-light.png'
+import dark_profile from '@/assets/schwi_dark.webp'
 
 const { mode } = useMode()
 const developerRoles = ['Frontend Developer', 'Cloud Engineer'];
-const gamerRoles = ['Gacha Gremlin'];
+const gamerRoles = ['Gacha Gremlin', 'Pull Master'];
 // watch(mode, (newMode) => {
 //   console.log('Mode changed to:', newMode);
 // });
@@ -34,8 +34,8 @@ const writerArray = computed(() => {
       <img
         :src="
           mode === 'developer'
-            ? dark_profile
-            : light_profile
+            ? light_profile
+            : dark_profile
         "
         alt="Profile"
         class="w-full h-full object-cover"
@@ -68,7 +68,7 @@ const writerArray = computed(() => {
     >
       {{ mode === 'developer'
         ? 'Sparking curiosity through vibrant web apps and cloud-powered solutions'
-        : '"90% of gambling addicts quit right before they’re about to hit it big"' }}
+        : '"Gamers don’t check the time, we check the pity counter"' }}
     </p>
 
     <div class="flex gap-4">
