@@ -6,8 +6,8 @@ defineOptions({
 
 import { computed } from 'vue';
 import { useMode } from '@/composables/useMode';
-import light_profile from '@/assets/schwi-light.png'
-import dark_profile from '@/assets/schwi_dark.webp'
+import light_profile from '@/assets/905429.png'
+import dark_profile from '@/assets/schwi_dark-CVAmPcC1.webp'
 
 const { mode } = useMode()
 const developerRoles = ['Frontend Developer', 'Cloud Engineer'];

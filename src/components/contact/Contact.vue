@@ -7,6 +7,7 @@ import SectionTitle from '../SectionTitle.vue'
 import ContactLink from './ContactLink.vue'
 import ContactForm from './ContactForm.vue'
 import Steam from '../icons/Steam.vue'
+import Discord from '../icons/Discord.vue'
 
 const { mode } = useMode()
 </script>
@@ -40,14 +41,14 @@ const { mode } = useMode()
           >
             {{ mode === 'developer'
               ? 'Interested in collaborating or have a project in mind? Feel free to reach out through any of the channels below.'
-              : 'Want to join my gaming community, collaborate on streams, or just chat about games? Connect with me through these platforms.' }}
+              : 'Want to join my gaming community, collaborate, or just chat about games? Connect with me through these platforms.' }}
           </p>
 
           <div class="space-y-4">
             <ContactLink
-              href="mailto:phucthin29@gmail.com"
-              :icon="{ component: Mail, size: 20 }"
-              :text="mode === 'developer' ? 'phucthin29@gmail.com' : 'phucthin29@gmail.com'"
+              :href= "mode === 'developer' ? 'mailto:phucthin29@gmail.com' : ''"
+              :icon="{ component: mode === 'developer' ? Mail : Discord, size: 20 }"
+              :text="mode === 'developer' ? 'phucthin29@gmail.com' : 'pancakeslmao2902'"
             />
             <ContactLink
               href="https://github.com/PancakesLmao"
@@ -57,7 +58,7 @@ const { mode } = useMode()
             <ContactLink
               :href="mode === 'developer' ? 'https://www.linkedin.com/in/khanh-phuc-thinh-nguyen-a216b928b/' : 'https://steamcommunity.com/profiles/76561199544433765/'"
               :icon="{ component: mode === 'developer' ? Linkedin : Steam, size: 20 }"
-              :text="mode === 'developer' ? 'Khanh Phuc Thinh Nguyenn' : 'PancakesLmao2902'"
+              :text="mode === 'developer' ? 'Khanh Phuc Thinh Nguyenn' : 'PancakesLmao'"
             />
           </div>
         </div>

@@ -17,20 +17,20 @@ const { mode } = useMode()
 
 const developerExperience: TimelineItem[] = [
   {
-    date: 'May 2025 - Present',
-    title: 'Cloud Engineer Intern',
-    company: 'AWS First Cloud Journey',
-    location: 'HCM, Vietnam',
-    description:
-      'Participate in FCJ community where I gain hands-on experience in cloud computing and AWS services. My role involves assisting in the development and deployment of cloud-based solutions, as well as learning about best practices in cloud architecture',
-  },
-  {
     date: 'Spring 2025 - Present',
     title: 'ITea Lab Operations',
     company: 'ITea Lab Community',
     location: 'HCM, Vietnam',
     description:
       'Work along with head of ITea Lab to lead developer team in building projects and organizing community events. Collaborate with other industries to create a vibrant learning environment for CS students.',
+  },
+  {
+    date: 'May 2025 - August 2025',
+    title: 'Cloud Engineer Trainee',
+    company: 'AWS First Cloud Journey',
+    location: 'HCM, Vietnam',
+    description:
+      'Participate in FCJ community where I gain hands-on experience in cloud computing and AWS services. My role involves assisting in the development and deployment of cloud-based solutions, as well as learning about best practices in cloud architecture',
   },
   {
     date: 'Spring 2024 - December 2024',
@@ -62,7 +62,7 @@ onMounted(() => {
         }
       })
     },
-    { threshold: 0.2 }, // Trigger when 10% of the item is visible
+    { threshold: 0.1 }, // Trigger when 10% of the item is visible
   )
 
   timelineItemsRef.value.forEach((item) => {
@@ -80,7 +80,7 @@ onUnmounted(() => {
 <style scoped>
 .timeline-item {
   transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-  transition-delay: 500ms;
+  transition-delay: 200ms;
 }
 
 /* Initial state: hidden and slightly offset */

@@ -9,29 +9,35 @@ const { mode } = useMode()
 
 const developerProjects = [
   {
-    title: 'Decentralized Exchange Platform',
-    description: 'My first project using ReactJS, where me and my team developed a simple Decentralized Exchange Platform leveraging blockchain technology for peer-to-peer asset transfers',
-    tags: ['React', 'JavaScript', 'Tailwind', 'Expressjs', 'ProgreSQL', 'Ganache'],
-    link: 'https://github.com/asianmurphyCo/Decentralized-Trading-Platform'
+    title: 'Weather Platform',
+    description: 'Centralized IoT platform that build specifically for weather stations',
+    tags: ['Nextjs', 'Typescript', 'Tailwind', 'Shadcn', 'AWS'],
+    link: 'https://github.com/Itea-Lab/Weather-Platform'
+  },
+  {
+    title: 'Astral Nexus',
+    description: 'A platform for sharing game contents',
+    tags: ['Vuejs', 'Typescript', 'Tailwind', 'Elysia', 'PosgreSQL', 'Docker'],
+    link: 'https://github.com/PancakesLmao/Astral-Nexus'
+  },
+  {
+    title: 'Weather Edge Station',
+    description: 'Weather station runs IoT devices to collect data from a weather station',
+    tags: ['ESP32', 'Raspberry Pi', 'Docker', 'InfluxDB'],
+    link: 'https://github.com/Itea-Lab/Weather-Edge'
+  },
+  {
+    title: 'Weather Dashboard',
+    description: 'A rework version from AIoT Akathon 2024 project. A simple dashboard that visualize data from the weather edge station',
+    tags: ['Nextjs', 'Typescript', 'Tailwind'],
+    link: 'https://github.com/Itea-Lab/Weather-Dashboard'
   },
   {
     title: 'The Relaxing Koala',
     description: 'A Restaurant Information System builded to optimize the new workflow of the rerstaurant',
     tags: ['React', 'Javascript', 'Tailwind', 'FastAPI', 'SQLite'],
     link: 'https://github.com/PancakesLmao/The-Relaxing-Koala-RIS'
-  },
-  {
-    title: 'Weather Edge Station',
-    description: 'Weather station runs IoT devices to collect data from a weather station',
-    tags: ['Arduino', 'Raspberry Pi', 'Docker', 'InfluxDB'],
-    link: 'https://github.com/Itea-Lab/Weather-Edge'
-  },
-  {
-    title: 'Weather Dashboard',
-    description: 'A project from AIoT Akathon 2024. A web application that visualize weather information from the weather edge station',
-    tags: ['React', 'Javascript', 'Tailwind', 'Expressjs'],
-    link: 'https://github.com/asianmurphyCo/Weather-Dashboard'
-  },
+  }
 ]
 </script>
 
