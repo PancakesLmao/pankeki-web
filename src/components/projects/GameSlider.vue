@@ -100,29 +100,29 @@ const games: GameProject[] = [
   },
   {
     id: 'pubg',
-    title: 'PUBG: Battlegrounds',
+    title: 'Umamusume: Pretty Derby',
     description:
-      'Parachute onto a vast island with 99 others and fight for survival in PUBG. Scavenge weapons and gear, outsmart your foes, and adapt as the shrinking play zone drives relentless, high-stakes confrontations. Only one can claim victory',
+      'In a vibrant world where "Umamusume"—graceful horse girls inheriting the spirits and names of legendary racehorses—strive for glory on the track and stage, take on the role of a dedicated trainer at Tracen Academy. Scout and nurture your team of aspiring idols through intensive training regimens, strategic stat-building, and heart-pounding races against rivals.',
     coverImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/4ddc41b4191e585aa81256b6a6bcf2bd.png',
+      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/4c4f63797573af64476acb67d715be49.png',
     iconImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/64c2d22899f32ccd5b3d9fca3ff04c9c.ico',
-    platform: 'PC',
-    genre: 'Battle Royale',
-    tags: ['Battle Royale', 'FPS', 'Survival'],
-    link: 'https://pubg.com/',
+      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/4cf54a3d780b9294815e5f249164f20f.png',
+    platform: 'Mobile',
+    genre: 'Gacha RPG',
+    tags: ['Gacha RPG'],
+    link: 'https://umamusume.com/',
   },
   {
     id: 'fgo',
     title: 'Fate/Grand Order',
     description:
-      'Answer the call as Master and embark on a quest to rewrite destiny in Fate/Grand Order. Summon and command mighty Servants—heroes and deities drawn from history, myth, and legend—in strategic turn-based battles, then dive into each Servant’s tale through visual-novel–style chapters. Alongside Ritsuka Fujimaru and Mash Kyrielight, pursue the Grand Order: recover the Holy Grails, restore humanity’s foundation, and defy fate itself.',
+      'Answer the call as Master and embark on a quest to rewrite destiny in Fate/Grand Order. Summon and command Servants—heroes and deities drawn from history, myth, and legend—in strategic turn-based battles, then dive into each Servant’s tale through visual-novel–style chapters. Alongside Ritsuka Fujimaru and Mash Kyrielight, pursue the Grand Order: recover the Holy Grails, restore humanity’s foundation, and defy fate itself.',
     coverImage: 'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/551179.jpg',
     iconImage:
       'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/4fc8ed929e539525e3590f1607718f97.png',
     platform: 'Mobile',
     genre: 'Visual Novel',
-    tags: ['Visual Novel', 'Turn-based RPG', 'Gacha RPG', 'Fantasy'],
+    tags: ['Visual Novel', 'Turn-based', 'Gacha RPG', 'Fantasy'],
     link: 'https://fate-go.us/',
   },
   {
