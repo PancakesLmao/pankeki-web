@@ -4,6 +4,7 @@ import { cookie } from "@elysiajs/cookie";
 import { openapi } from "@elysiajs/openapi";
 import { authRoutes } from "./routes/auth";
 import { projectRoutes } from "./routes/projects";
+import { gameRoutes } from "./routes/games";
 
 const PORT = process.env.PORT || 3000;
 const isDevelopment = process.env.NODE_ENV !== "production";
@@ -31,6 +32,7 @@ if (isDevelopment) {
           { name: "Health", description: "Health check endpoints" },
           { name: "Auth", description: "Authentication endpoints" },
           { name: "Projects", description: "Project management endpoints" },
+          { name: "Games", description: "Game management endpoints" },
         ],
       },
       path: "/swagger",
@@ -52,6 +54,7 @@ app = app
   })
   .use(authRoutes)
   .use(projectRoutes)
+  .use(gameRoutes)
   .listen(PORT);
 
 console.log(

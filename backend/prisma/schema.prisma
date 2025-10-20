@@ -408,18 +408,18 @@ model users {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model games {
-  id          BigInt   @id @default(autoincrement())
-  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  id          BigInt           @id @default(autoincrement())
+  created_at  DateTime         @default(now()) @db.Timestamptz(6)
   title       String
   description String?
-  cover_img   String?  @db.VarChar
-  icon_img    String?  @db.VarChar
-  platform    String?
-  genre       String[]
+  cover_img   String?          @db.VarChar
+  icon_img    String?          @db.VarChar
+  platform    game_platforms[]
+  genre       game_genre[]
   tags        String[]
-  link        String?  @db.VarChar
-  created_by  String   @default(dbgenerated("auth.uid()")) @db.Uuid
-  users       users    @relation(fields: [created_by], references: [id], onDelete: SetNull)
+  link        String?          @db.VarChar
+  created_by  String           @default(dbgenerated("auth.uid()")) @db.Uuid
+  users       users            @relation(fields: [created_by], references: [id], onDelete: SetNull)
 
   @@schema("public")
 }
@@ -535,6 +535,14 @@ enum project_status {
   Completed_and_Documenting @map("Completed and Documenting")
   Upcoming
   Under_Maintenance         @map("Under Maintenance")
+
+  @@schema("public")
+}
+
+enum game_platforms {
+  PC
+  Mobile
+  PlayStation
 
   @@schema("public")
 }
