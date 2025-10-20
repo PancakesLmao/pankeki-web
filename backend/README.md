@@ -45,6 +45,27 @@ bun run dev
 
 The server will start at `http://localhost:3000`
 
+## API Documentation
+
+### Interactive Documentation (Development Only)
+
+When running in development mode (`NODE_ENV !== "production"`), comprehensive API documentation is automatically generated and available at:
+
+```
+http://localhost:3000/swagger
+```
+
+This provides an interactive Swagger UI where you can:
+
+- View all available endpoints
+- Test API calls directly from the browser
+- See request/response schemas
+- Explore authentication requirements
+
+### Static Documentation
+
+For detailed API documentation including examples and error responses, see [`API-DOCS.md`](./API-DOCS.md).
+
 ## API Endpoints
 
 ### Health Check
@@ -59,6 +80,23 @@ Returns server status.
 
 This is a personal portfolio website, so user registration is disabled. Only the admin can sign in.
 
+**Authentication Flow:**
+
+- Uses Supabase Auth with email/password
+- Session management via HTTP-only, Secure, SameSite=Strict cookies
+- Automatic token refresh on protected routes
+- JWT-based access tokens (1 hour expiry)
+- Long-lived refresh tokens (7 days)
+
+**Security Features:**
+
+- HTTP-only cookies prevent XSS attacks
+- Secure flag ensures HTTPS-only transmission in production
+- SameSite=Strict prevents CSRF attacks
+- Automatic token verification with `supabase.auth.getUser()`
+- Automatic session refresh when access token expires
+- No manual JWT handling required (Supabase handles it)
+
 #### Sign In
 
 ```bash
@@ -71,11 +109,21 @@ Content-Type: application/json
 }
 ```
 
+**Response:**
+
+- Sets `access_token` and `refresh_token` HTTP-only cookies
+- Returns user data and session information
+
 #### Sign Out
 
 ```bash
 POST /auth/signout
 ```
+
+**Response:**
+
+- Revokes session server-side via `supabase.auth.signOut()`
+- Clears `access_token` and `refresh_token` cookies
 
 #### Get Current User
 
@@ -112,7 +160,10 @@ backend/
 - ✅ CORS support
 - ✅ Type-safe API with Elysia
 - ✅ Automatic validation with Elysia's type system
+- ✅ Auto-generated OpenAPI documentation (development only)
 - ✅ Health check endpoint
+- ✅ Full CRUD operations for projects
+- ✅ Supabase database integration
 
 ## Security
 
@@ -174,7 +225,3 @@ const app = new Elysia()
     credentials: true
   }))
   ```
-
-## License
-
-MIT
