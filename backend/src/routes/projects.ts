@@ -3,6 +3,32 @@ import { cookie } from "@elysiajs/cookie";
 import { prisma } from "../libs/prisma";
 import { requireAuth } from "../middleware/auth";
 
+// Helper function to serialize BigInt to string
+const serializeProject = (project: any) => ({
+  ...project,
+  id: project.id.toString(),
+});
+
+// Mapping between URL-friendly status and database enum
+const statusMap: Record<string, string> = {
+  "completed-and-published": "Completed_and_Published",
+  ongoing: "Ongoing",
+  deprecated: "Deprecated",
+  "completed-and-documenting": "Completed_and_Documenting",
+  upcoming: "Upcoming",
+  "under-maintenance": "Under_Maintenance",
+};
+
+// Reverse mapping for responses
+const reverseStatusMap: Record<string, string> = {
+  Completed_and_Published: "completed-and-published",
+  Ongoing: "ongoing",
+  Deprecated: "deprecated",
+  Completed_and_Documenting: "completed-and-documenting",
+  Upcoming: "upcoming",
+  Under_Maintenance: "under-maintenance",
+};
+
 export const projectRoutes = new Elysia({ prefix: "/projects" })
   .use(cookie())
   // Get all projects (public access)
@@ -10,12 +36,15 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
     "/",
     async ({ query, set }) => {
       try {
+        // Convert URL-friendly status to database enum
+        const dbStatus = query.status ? statusMap[query.status] : undefined;
+
         const projects = await prisma.projects.findMany({
-          where: query.status ? { status: query.status as any } : undefined,
+          where: dbStatus ? { status: dbStatus as any } : undefined,
           orderBy: { created_at: "desc" },
         });
 
-        return { projects };
+        return { projects: projects.map(serializeProject) };
       } catch (error: any) {
         set.status = 500;
         return { error: error.message };
@@ -26,17 +55,17 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
         status: t.Optional(
           t.Union(
             [
-              t.Literal("Completed_and_Published"),
-              t.Literal("Ongoing"),
-              t.Literal("Deprecated"),
-              t.Literal("Completed_and_Documenting"),
-              t.Literal("Upcoming"),
-              t.Literal("Under_Maintenance"),
+              t.Literal("completed-and-published"),
+              t.Literal("ongoing"),
+              t.Literal("deprecated"),
+              t.Literal("completed-and-documenting"),
+              t.Literal("upcoming"),
+              t.Literal("under-maintenance"),
             ],
             {
               description:
-                "Filter projects by status. Use underscores, not spaces.",
-              example: "Ongoing",
+                "Filter projects by status. Use lowercase with hyphens.",
+              default: "ongoing",
             }
           )
         ),
@@ -45,7 +74,7 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
         tags: ["Projects"],
         summary: "Get all projects",
         description:
-          "Retrieve all portfolio projects (public access). Can be filtered by status.",
+          "Retrieve all portfolio projects (public access). Can be filtered by status using URL-friendly format (e.g., 'completed-and-published').",
       },
     }
   )
@@ -64,7 +93,7 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
           return { error: "Project not found" };
         }
 
-        return { project };
+        return { project: serializeProject(project) };
       } catch (error: any) {
         set.status = 500;
         return { error: error.message };
@@ -72,7 +101,10 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
     },
     {
       params: t.Object({
-        id: t.Numeric(),
+        id: t.Numeric({
+          description: "Project ID",
+          default: 1,
+        }),
       }),
       detail: {
         tags: ["Projects"],
@@ -89,6 +121,9 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
       try {
         const { user } = await requireAuth({ cookie, set });
 
+        // Convert URL-friendly status to database enum
+        const dbStatus = statusMap[body.status] || body.status;
+
         const project = await prisma.projects.create({
           data: {
             title: body.title,
@@ -96,14 +131,14 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
             tags: body.tags,
             link: body.link,
             project_img: body.project_img,
-            status: body.status,
+            status: dbStatus as any,
             created_by: user!.id,
           },
         });
 
         return {
           message: "Project created successfully",
-          project,
+          project: serializeProject(project),
         };
       } catch (error: any) {
         set.status = error.message.includes("Unauthorized") ? 401 : 500;
@@ -114,44 +149,44 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
       body: t.Object({
         title: t.String({
           description: "Project title",
-          example: "Weather Platform",
+          default: "Weather Platform",
         }),
         description: t.Optional(
           t.String({
             description: "Project description",
-            example:
+            default:
               "Centralized IoT platform that build specifically for weather stations",
           })
         ),
         tags: t.Array(t.String(), {
           description: "Array of technology tags",
-          example: ["Nextjs", "Typescript", "Tailwind"],
+          default: ["Nextjs", "Typescript", "Tailwind", "PostgreSQL"],
         }),
         link: t.Optional(
           t.String({
             description: "Project link (GitHub, live demo, etc.)",
-            example: "https://github.com/username/project",
+            default: "https://github.com/username/weather-platform",
           })
         ),
         project_img: t.Optional(
           t.String({
             description: "Project image URL",
-            example: "https://example.com/image.jpg",
+            default: "https://placehold.co/600x400/png",
           })
         ),
         status: t.Union(
           [
-            t.Literal("Completed_and_Published"),
-            t.Literal("Ongoing"),
-            t.Literal("Deprecated"),
-            t.Literal("Completed_and_Documenting"),
-            t.Literal("Upcoming"),
-            t.Literal("Under_Maintenance"),
+            t.Literal("completed-and-published"),
+            t.Literal("ongoing"),
+            t.Literal("deprecated"),
+            t.Literal("completed-and-documenting"),
+            t.Literal("upcoming"),
+            t.Literal("under-maintenance"),
           ],
           {
             description:
-              "Project status (required). Use underscores, not spaces.",
-            example: "Ongoing",
+              "Project status (required). Use lowercase with hyphens.",
+            default: "ongoing",
           }
         ),
       }),
@@ -159,7 +194,7 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
         tags: ["Projects"],
         summary: "Create project",
         description:
-          "Create a new project (admin only). The created_by field is automatically set from the authenticated user.",
+          "Create a new project (admin only). The created_by field is automatically set from the authenticated user. Use URL-friendly status format (e.g., 'ongoing', 'completed-and-published').",
       },
     }
   )
@@ -179,7 +214,10 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
         if (body.link !== undefined) updateData.link = body.link;
         if (body.project_img !== undefined)
           updateData.project_img = body.project_img;
-        if (body.status !== undefined) updateData.status = body.status;
+        if (body.status !== undefined) {
+          // Convert URL-friendly status to database enum
+          updateData.status = statusMap[body.status] || body.status;
+        }
 
         const project = await prisma.projects.update({
           where: { id: BigInt(params.id) },
@@ -188,7 +226,7 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
 
         return {
           message: "Project updated successfully",
-          project,
+          project: serializeProject(project),
         };
       } catch (error: any) {
         set.status = error.message.includes("Unauthorized") ? 401 : 500;
@@ -197,36 +235,51 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
     },
     {
       params: t.Object({
-        id: t.Numeric(),
+        id: t.Numeric({
+          description: "Project ID to update",
+          default: 1,
+        }),
       }),
       body: t.Partial(
         t.Object({
           title: t.String({
             description: "Project title",
+            default: "Updated Weather Platform",
           }),
           description: t.String({
             description: "Project description",
+            default: "Enhanced IoT platform with real-time analytics",
           }),
           tags: t.Array(t.String(), {
             description: "Array of technology tags",
+            default: [
+              "Nextjs",
+              "Typescript",
+              "Tailwind",
+              "PostgreSQL",
+              "Redis",
+            ],
           }),
           link: t.String({
             description: "Project link",
+            default: "https://github.com/username/weather-platform-v2",
           }),
           project_img: t.String({
             description: "Project image URL",
+            default: "https://placehold.co/600x400/png",
           }),
           status: t.Union(
             [
-              t.Literal("Completed_and_Published"),
-              t.Literal("Ongoing"),
-              t.Literal("Deprecated"),
-              t.Literal("Completed_and_Documenting"),
-              t.Literal("Upcoming"),
-              t.Literal("Under_Maintenance"),
+              t.Literal("completed-and-published"),
+              t.Literal("ongoing"),
+              t.Literal("deprecated"),
+              t.Literal("completed-and-documenting"),
+              t.Literal("upcoming"),
+              t.Literal("under-maintenance"),
             ],
             {
-              description: "Project status. Use underscores, not spaces.",
+              description: "Project status. Use lowercase with hyphens.",
+              default: "ongoing",
             }
           ),
         })
@@ -235,7 +288,7 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
         tags: ["Projects"],
         summary: "Update project",
         description:
-          "Update an existing project (admin only). All fields are optional.",
+          "Update an existing project (admin only). All fields are optional. Use URL-friendly status format (e.g., 'ongoing', 'completed-and-published').",
       },
     }
   )
@@ -259,7 +312,10 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
     },
     {
       params: t.Object({
-        id: t.Numeric(),
+        id: t.Numeric({
+          description: "Project ID to delete",
+          default: 1,
+        }),
       }),
       detail: {
         tags: ["Projects"],

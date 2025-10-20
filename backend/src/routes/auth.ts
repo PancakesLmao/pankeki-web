@@ -52,10 +52,12 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
         email: t.String({
           description: "Admin email address",
           example: "admin@example.com",
+          default: "admin@example.com",
         }),
         password: t.String({
           description: "Admin password",
           example: "your-password",
+          default: "secure-password-123",
         }),
       }),
       response: {

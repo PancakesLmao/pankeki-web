@@ -171,7 +171,7 @@ Get all projects (public access). Can be filtered by status.
 {
   "projects": [
     {
-      "id": 1,
+      "id": "1",
       "created_at": "2024-01-01T00:00:00Z",
       "created_by": "user_uuid",
       "title": "Weather Platform",
@@ -198,7 +198,7 @@ Get a specific project by ID (public access).
 ```json
 {
   "project": {
-    "id": 1,
+    "id": "1",
     "created_at": "2024-01-01T00:00:00Z",
     "created_by": "user_uuid",
     "title": "Weather Platform",
@@ -263,7 +263,7 @@ Cookie: access_token=your_jwt_token
 {
   "message": "Project created successfully",
   "project": {
-    "id": 2,
+    "id": "2",
     "created_at": "2024-01-01T00:00:00Z",
     "created_by": "user_uuid",
     "title": "Weather Platform",
@@ -309,7 +309,7 @@ Cookie: access_token=your_jwt_token
 {
   "message": "Project updated successfully",
   "project": {
-    "id": 1,
+    "id": "1",
     "created_at": "2024-01-01T00:00:00Z",
     "created_by": "user_uuid",
     "title": "Updated Title",
@@ -390,7 +390,7 @@ All endpoints may return the following error responses:
 
 ```typescript
 interface Project {
-  id: bigint;
+  id: string; // BigInt serialized as string
   created_at: Date;
   created_by: string; // UUID
   title: string;
