@@ -153,7 +153,17 @@ Cookie: refresh_token=your_refresh_token
 
 ### GET /projects
 
-Get all projects (public access).
+Get all projects (public access). Can be filtered by status.
+
+**Query Parameters:**
+
+- `status` (optional, enum) - Filter projects by status. Possible values:
+  - `Completed_and_Published`
+  - `Ongoing`
+  - `Deprecated`
+  - `Completed_and_Documenting`
+  - `Upcoming`
+  - `Under_Maintenance`
 
 **Response:**
 
@@ -163,10 +173,13 @@ Get all projects (public access).
     {
       "id": 1,
       "created_at": "2024-01-01T00:00:00Z",
-      "user_id": "user_id",
+      "created_by": "user_uuid",
+      "title": "Weather Platform",
+      "description": "Centralized IoT platform that build specifically for weather stations",
+      "tags": ["Nextjs", "Typescript", "Tailwind"],
+      "link": "https://github.com/username/project",
       "project_img": "https://example.com/image.jpg",
-      "tag": "web-development",
-      "status": "completed"
+      "status": "Ongoing"
     }
   ]
 }
@@ -187,10 +200,13 @@ Get a specific project by ID (public access).
   "project": {
     "id": 1,
     "created_at": "2024-01-01T00:00:00Z",
-    "user_id": "user_id",
+    "created_by": "user_uuid",
+    "title": "Weather Platform",
+    "description": "Centralized IoT platform that build specifically for weather stations",
+    "tags": ["Nextjs", "Typescript", "Tailwind"],
+    "link": "https://github.com/username/project",
     "project_img": "https://example.com/image.jpg",
-    "tag": "web-development",
-    "status": "completed"
+    "status": "Ongoing"
   }
 }
 ```
@@ -205,7 +221,7 @@ Get a specific project by ID (public access).
 
 ### POST /projects
 
-Create a new project (admin only).
+Create a new project (admin only). The `created_by` field is automatically set from the authenticated user.
 
 **Headers:**
 
@@ -217,12 +233,29 @@ Cookie: access_token=your_jwt_token
 
 ```json
 {
-  "user_id": "user_id",
+  "title": "Weather Platform",
+  "description": "Centralized IoT platform that build specifically for weather stations",
+  "tags": ["Nextjs", "Typescript", "Tailwind"],
+  "link": "https://github.com/username/project",
   "project_img": "https://example.com/image.jpg",
-  "tag": "web-development",
-  "status": "in-progress"
+  "status": "Ongoing"
 }
 ```
+
+**Request Body Schema:**
+
+- `title` (required, string) - Project title
+- `description` (optional, string) - Project description
+- `tags` (required, array of strings) - Technology tags
+- `link` (optional, string) - Project link (GitHub, live demo, etc.)
+- `project_img` (optional, string) - Project image URL
+- `status` (required, enum) - Project status. Possible values:
+  - `Completed_and_Published`
+  - `Ongoing`
+  - `Deprecated`
+  - `Completed_and_Documenting`
+  - `Upcoming`
+  - `Under_Maintenance`
 
 **Response (Success):**
 
@@ -232,17 +265,20 @@ Cookie: access_token=your_jwt_token
   "project": {
     "id": 2,
     "created_at": "2024-01-01T00:00:00Z",
-    "user_id": "user_id",
+    "created_by": "user_uuid",
+    "title": "Weather Platform",
+    "description": "Centralized IoT platform that build specifically for weather stations",
+    "tags": ["Nextjs", "Typescript", "Tailwind"],
+    "link": "https://github.com/username/project",
     "project_img": "https://example.com/image.jpg",
-    "tag": "web-development",
-    "status": "in-progress"
+    "status": "Ongoing"
   }
 }
 ```
 
 ### PUT /projects/:id
 
-Update an existing project (admin only).
+Update an existing project (admin only). All fields are optional.
 
 **Headers:**
 
@@ -254,12 +290,16 @@ Cookie: access_token=your_jwt_token
 
 - `id` (number) - Project ID
 
-**Request Body (partial update):**
+**Request Body (all fields optional):**
 
 ```json
 {
-  "status": "completed",
-  "tag": "full-stack"
+  "title": "Updated Title",
+  "description": "Updated description",
+  "tags": ["Vue", "TypeScript"],
+  "link": "https://github.com/username/updated-project",
+  "project_img": "https://example.com/new-image.jpg",
+  "status": "Completed_and_Published"
 }
 ```
 
@@ -271,10 +311,13 @@ Cookie: access_token=your_jwt_token
   "project": {
     "id": 1,
     "created_at": "2024-01-01T00:00:00Z",
-    "user_id": "user_id",
-    "project_img": "https://example.com/image.jpg",
-    "tag": "full-stack",
-    "status": "completed"
+    "created_by": "user_uuid",
+    "title": "Updated Title",
+    "description": "Updated description",
+    "tags": ["Vue", "TypeScript"],
+    "link": "https://github.com/username/updated-project",
+    "project_img": "https://example.com/new-image.jpg",
+    "status": "Completed_and_Published"
   }
 }
 ```
@@ -347,20 +390,36 @@ All endpoints may return the following error responses:
 
 ```typescript
 interface Project {
-  id: number;
-  created_at: string;
-  user_id: string;
-  project_img: string;
-  tag: string;
-  status: string;
+  id: bigint;
+  created_at: Date;
+  created_by: string; // UUID
+  title: string;
+  description: string | null;
+  tags: string[]; // Array of technology tags
+  link: string | null;
+  project_img: string | null;
+  status: project_status; // Enum: "Completed_and_Published" | "Ongoing" | "Deprecated" | "Completed_and_Documenting" | "Upcoming" | "Under_Maintenance"
 }
 ```
+
+### Project Status Enum
+
+The `project_status` enum represents the current state of a project:
+
+- `Completed_and_Published` - Project is finished and publicly available
+- `Ongoing` - Project is currently in active development
+- `Deprecated` - Project is no longer maintained
+- `Completed_and_Documenting` - Project is complete but documentation is in progress
+- `Upcoming` - Project is planned but not yet started
+- `Under_Maintenance` - Project is receiving updates or bug fixes
+
+**Note:** When using the API, use the underscore format (e.g., `Completed_and_Published`), not spaces.
 
 ### User
 
 ```typescript
 interface User {
-  id: string;
+  id: string; // UUID
   email: string;
   created_at: string;
 }
@@ -368,33 +427,18 @@ interface User {
 
 ---
 
-## Development
+## Interactive API Documentation
 
-### API Documentation
-
-When running in development mode (`NODE_ENV !== "production"`), API documentation is automatically available at:
+When running in development mode (`NODE_ENV !== "production"`), interactive API documentation is automatically available at:
 
 ```
 http://localhost:3000/swagger
 ```
 
-This provides an interactive Swagger UI for testing all endpoints.
+This provides an interactive Swagger UI where you can:
 
-### Environment Variables
-
-```env
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_KEY=your_supabase_service_role_key
-PORT=3000
-NODE_ENV=development
-```
-
----
-
-## Security Notes
-
-- All admin endpoints require valid authentication cookies
-- Cookies are HTTP-only and secure in production
-- CORS is configured to allow credentials
-- Service role key provides admin access to Supabase
-- No public user registration (admin-only system)
+- View all available endpoints with detailed schemas
+- Test API calls directly from the browser
+- See real-time request/response examples
+- Explore authentication requirements
+- Try out different request parameters and bodies
