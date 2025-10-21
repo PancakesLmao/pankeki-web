@@ -48,7 +48,7 @@ const { mode } = useMode()
             <ContactLink
               :href= "mode === 'developer' ? 'mailto:phucthin29@gmail.com' : ''"
               :icon="{ component: mode === 'developer' ? Mail : Discord, size: 20 }"
-              :text="mode === 'developer' ? 'phucthin29@gmail.com' : 'pancakeslmao2902'"
+              :text="mode === 'developer' ? 'phucthin29@gmail.com' : 'pancakeslmao29'"
             />
             <ContactLink
               href="https://github.com/PancakesLmao"

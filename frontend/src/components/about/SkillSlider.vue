@@ -7,7 +7,7 @@ import Tailwind from '../icons/Tailwind.vue'
 import React from '../icons/React.vue'
 import Vue from '../icons/Vue.vue'
 import Nextjs from '../icons/Nextjs.vue'
-import Kotlin from '../icons/Kotlin.vue'
+import Elysia from '../icons/Elysia.vue'
 import Git from '../icons/Git.vue'
 import Github from '../icons/Github.vue'
 import Docker from '../icons/Docker.vue'
@@ -94,7 +94,7 @@ onMounted(() => {
             <Nextjs :size="50" />
           </div>
           <div class="transform transition-transform duration-300 hover:scale-125">
-            <Kotlin :size="50" />
+            <Elysia :size="50" />
           </div>
           <div class="transform transition-transform duration-300 hover:scale-125">
             <Postgresql :size="50" />

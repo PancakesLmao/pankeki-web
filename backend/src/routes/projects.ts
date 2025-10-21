@@ -132,6 +132,7 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
             link: body.link,
             project_img: body.project_img,
             status: dbStatus as any,
+            time_range: body.time_range,
             created_by: user!.id,
           },
         });
@@ -174,6 +175,13 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
             default: "https://placehold.co/600x400/png",
           })
         ),
+        time_range: t.Optional(
+          t.String({
+            description:
+              "Development time range (e.g., 'February 2025 - March 2025')",
+            default: "January 2025 - February 2025",
+          })
+        ),
         status: t.Union(
           [
             t.Literal("completed-and-published"),
@@ -214,6 +222,8 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
         if (body.link !== undefined) updateData.link = body.link;
         if (body.project_img !== undefined)
           updateData.project_img = body.project_img;
+        if (body.time_range !== undefined)
+          updateData.time_range = body.time_range;
         if (body.status !== undefined) {
           // Convert URL-friendly status to database enum
           updateData.status = statusMap[body.status] || body.status;
@@ -267,6 +277,11 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
           project_img: t.String({
             description: "Project image URL",
             default: "https://placehold.co/600x400/png",
+          }),
+          time_range: t.String({
+            description:
+              "Development time range (e.g., 'February 2025 - March 2025')",
+            default: "January 2025 - March 2025",
           }),
           status: t.Union(
             [

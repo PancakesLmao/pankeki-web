@@ -157,13 +157,15 @@ Get all projects (public access). Can be filtered by status.
 
 **Query Parameters:**
 
-- `status` (optional, enum) - Filter projects by status. Possible values:
-  - `Completed_and_Published`
-  - `Ongoing`
-  - `Deprecated`
-  - `Completed_and_Documenting`
-  - `Upcoming`
-  - `Under_Maintenance`
+- `status` (optional, enum) - Filter projects by status (use lowercase with hyphens). Possible values:
+  - `completed-and-published`
+  - `ongoing`
+  - `deprecated`
+  - `completed-and-documenting`
+  - `upcoming`
+  - `under-maintenance`
+
+**Example:** `GET /projects?status=ongoing`
 
 **Response:**
 
@@ -179,7 +181,8 @@ Get all projects (public access). Can be filtered by status.
       "tags": ["Nextjs", "Typescript", "Tailwind"],
       "link": "https://github.com/username/project",
       "project_img": "https://example.com/image.jpg",
-      "status": "Ongoing"
+      "time_range": "January 2025 - February 2025",
+      "status": "ongoing"
     }
   ]
 }
@@ -206,7 +209,8 @@ Get a specific project by ID (public access).
     "tags": ["Nextjs", "Typescript", "Tailwind"],
     "link": "https://github.com/username/project",
     "project_img": "https://example.com/image.jpg",
-    "status": "Ongoing"
+    "time_range": "January 2025 - February 2025",
+    "status": "ongoing"
   }
 }
 ```
@@ -238,7 +242,8 @@ Cookie: access_token=your_jwt_token
   "tags": ["Nextjs", "Typescript", "Tailwind"],
   "link": "https://github.com/username/project",
   "project_img": "https://example.com/image.jpg",
-  "status": "Ongoing"
+  "time_range": "January 2025 - February 2025",
+  "status": "ongoing"
 }
 ```
 
@@ -249,13 +254,14 @@ Cookie: access_token=your_jwt_token
 - `tags` (required, array of strings) - Technology tags
 - `link` (optional, string) - Project link (GitHub, live demo, etc.)
 - `project_img` (optional, string) - Project image URL
-- `status` (required, enum) - Project status. Possible values:
-  - `Completed_and_Published`
-  - `Ongoing`
-  - `Deprecated`
-  - `Completed_and_Documenting`
-  - `Upcoming`
-  - `Under_Maintenance`
+- `time_range` (optional, string) - Development time range (e.g., "February 2025 - March 2025")
+- `status` (required, enum) - Project status (use lowercase with hyphens). Possible values:
+  - `completed-and-published`
+  - `ongoing`
+  - `deprecated`
+  - `completed-and-documenting`
+  - `upcoming`
+  - `under-maintenance`
 
 **Response (Success):**
 
@@ -271,7 +277,8 @@ Cookie: access_token=your_jwt_token
     "tags": ["Nextjs", "Typescript", "Tailwind"],
     "link": "https://github.com/username/project",
     "project_img": "https://example.com/image.jpg",
-    "status": "Ongoing"
+    "time_range": "January 2025 - February 2025",
+    "status": "ongoing"
   }
 }
 ```
@@ -299,7 +306,8 @@ Cookie: access_token=your_jwt_token
   "tags": ["Vue", "TypeScript"],
   "link": "https://github.com/username/updated-project",
   "project_img": "https://example.com/new-image.jpg",
-  "status": "Completed_and_Published"
+  "time_range": "January 2025 - March 2025",
+  "status": "completed-and-published"
 }
 ```
 
@@ -317,7 +325,8 @@ Cookie: access_token=your_jwt_token
     "tags": ["Vue", "TypeScript"],
     "link": "https://github.com/username/updated-project",
     "project_img": "https://example.com/new-image.jpg",
-    "status": "Completed_and_Published"
+    "time_range": "January 2025 - March 2025",
+    "status": "completed-and-published"
   }
 }
 ```
@@ -398,19 +407,21 @@ interface Project {
   tags: string[]; // Array of technology tags
   link: string | null;
   project_img: string | null;
-  status: project_status; // Enum: "Completed_and_Published" | "Ongoing" | "Deprecated" | "Completed_and_Documenting" | "Upcoming" | "Under_Maintenance"
+  time_range: string | null; // Development time range (e.g., "February 2025 - March 2025")
+  status: project_status; // Enum: "completed-and-published" | "ongoing" | "deprecated" | "completed-and-documenting" | "upcoming" | "under-maintenance"
 }
 ```
 
 ### Project Status Enum
 
-The `project_status` enum represents the current state of a project:
+The `project_status` enum represents the current state of a project (use lowercase with hyphens in API requests):
 
-- `Completed_and_Published` - Project is finished and publicly available
-- `Ongoing` - Project is currently in active development
-- `Deprecated` - Project is no longer maintained
-- `Completed_and_Documenting` - Project is complete but documentation is in progress
-- `Upcoming` - Project is planned but not yet started
+- `completed-and-published` - Project is finished and publicly available
+- `ongoing` - Project is currently in active development
+- `deprecated` - Project is no longer maintained
+- `completed-and-documenting` - Project is complete but documentation is in progress
+- `upcoming` - Project is planned but not yet started
+- `under-maintenance` - Project is being maintained or updated
 - `Under_Maintenance` - Project is receiving updates or bug fixes
 
 **Note:** When using the API, use the underscore format (e.g., `Completed_and_Published`), not spaces.

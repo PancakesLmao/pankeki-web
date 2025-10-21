@@ -1,13 +1,17 @@
 <script lang="ts" setup>
 defineOptions({ name: 'AboutSection' })
 import { Globe, Cpu, Cloud, Terminal, MonitorSmartphone, Smartphone } from 'lucide-vue-next'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useMode } from '@/composables/useMode'
 import SectionTitle from '@/components/SectionTitle.vue'
 import SkillItem from './Skill.vue'
 import SkillSlider from './SkillSlider.vue'
+import CustomTerminal from './Terminal.vue'
 
 const { mode } = useMode()
+
+// Terminal state
+const showTerminal = ref(false)
 
 // Computed property for skills based on mode
 const skills = computed(() => {
@@ -16,13 +20,20 @@ const skills = computed(() => {
         { text: 'Web Development', icon: { component: Globe } },
         { text: 'IoT Programming', icon: { component: Cpu } },
         { text: 'Cloud Computing', icon: { component: Cloud } },
-        { text: 'Linux', icon: { component: Terminal } },
+        { text: 'Linux', icon: { component: Terminal }, interactive: true },
       ]
     : [
         { text: 'PC Gaming', icon: { component: MonitorSmartphone } },
         { text: 'Mobile Gaming', icon: { component: Smartphone } },
       ]
 })
+
+// Handle skill item click
+const handleSkillClick = (skillText: string) => {
+  if (skillText === 'Linux') {
+    showTerminal.value = !showTerminal.value
+  }
+}
 </script>
 <template>
   <section class="mb-24" id="about">
@@ -77,11 +88,27 @@ const skills = computed(() => {
             :text="item.text"
             :icon="item.icon"
             :is-gamer-mode="mode === 'gamer'"
+            @click="item.interactive ? handleSkillClick(item.text) : null"
           />
         </ul>
+
+        <!-- Terminal inline below skills -->
+        <CustomTerminal v-if="showTerminal" class="mt-4" />
       </div>
     </div>
     <!-- Skill slider -->
     <SkillSlider v-if="mode === 'developer'" />
   </section>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

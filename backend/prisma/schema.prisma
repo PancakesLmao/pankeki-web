@@ -436,6 +436,7 @@ model projects {
   title       String
   description String?
   link        String?        @db.VarChar
+  time_range  String?
   users       users          @relation(fields: [created_by], references: [id], onDelete: SetNull)
 
   @@schema("public")
