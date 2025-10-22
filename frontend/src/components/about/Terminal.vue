@@ -29,7 +29,7 @@ const signinPassword = ref('')
 const intro = `
 ⡆⣿⣿⣦⠹⣳⣳⣕⢅⠈⢗⢕⢕⢕⢕⢕⢈⢆⠟⠋⠉⠁⠉⠉⠁⠈⠼⢐⢕ ⡗⢰⣶⣶⣦⣝⢝⢕⢕⠅⡆⢕⢕⢕⢕⢕⣴⠏⣠⡶⠛⡉⡉⡛⢶⣦⡀⠐⣕ ⡝⡄⢻⢟⣿⣿⣷⣕⣕⣅⣿⣔⣕⣵⣵⣿⣿⢠⣿⢠⣮⡈⣌⠨⠅⠹⣷⡀⢱ ⡝⡵⠟⠈⢀⣀⣀⡀⠉⢿⣿⣿⣿⣿⣿⣿⣿⣼⣿⢈⡋⠴⢿⡟⣡⡇⣿⡇⡀ ⡝⠁⣠⣾⠟⡉⡉⡉⠻⣦⣻⣿⣿⣿⣿⣿⣿⣿⣿⣧⠸⣿⣦⣥⣿⡇⡿⣰⢗ ⠁⢰⣿⡏⣴⣌⠈⣌⠡⠈⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣬⣉⣉⣁⣄⢖⢕⢕ ⡀⢻⣿⡇⢙⠁⠴⢿⡟⣡⡆⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣵⣵ ⡻⣄⣻⣿⣌⠘⢿⣷⣥⣿⠇⣿⣿⣿⣿⣿⣿⠛⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿ ⣷⢄⠻⣿⣟⠿⠦⠍⠉⣡⣾⣿⣿⣿⣿⣿⣿⢸⣿⣦⠙⣿⣿⣿⣿⣿⣿⣿⣿ ⡕⡑⣑⣈⣻⢗⢟⢞⢝⣻⣿⣿⣿⣿⣿⣿⣿⠸⣿⠿⠃⣿⣿⣿⣿⣿⣿⡿⠁
 You've found the Terminal!
-Type 'help' for available commands
+Type 'help' to see available commands
 `
 
 onMounted(() => {
@@ -106,7 +106,7 @@ const handleCommand = (command: string) => {
 
   switch (cmd) {
     case 'help':
-      addOutput(`help     - Show this help message\nabout    - About me\nskills   - List my skills\nsignin   - Sign in to dashboard\nclear    - Clear the terminal
+      addOutput(`help     - Show this help message\nabout    - About me\nskills   - List my skills\nprojects - List my projects\ngames    - List my games\nclear    - Clear the terminal
 `)
       break
 
@@ -115,15 +115,33 @@ const handleCommand = (command: string) => {
       break
 
     case 'skills':
-      addOutput(`- Web Development (React, Vue, TypeScript) \n- IoT Programming\n- Cloud Computing (AWS)\n- Linux (Just a little bit)
+      addOutput(`- Web Development (React, Vue, Elysia, Nextjs) \n- IoT Programming (Raspberry Pi, Arduino, ESP32)\n- Cloud Computing (AWS)\n- Linux (Just a little bit)
 `)
       break
 
+    case 'projects':
+      fetchAndDisplayProjects()
+      break
+
+    case 'games':
+      fetchAndDisplayGames()
+      break
+
     case 'signin':
+      // Check if already signed in
+      if (authStore.isAuthenticated) {
+        addOutput('✓ You are already signed in!')
+        addOutput('Type "signout" to sign out first.')
+        break
+      }
       inputMode.value = InputMode.USERNAME
       signinEmail.value = ''
       signinPassword.value = ''
       addOutput('Username:')
+      break
+
+    case 'signout':
+      performSignout()
       break
 
     case 'rm -rf /*':
@@ -160,11 +178,73 @@ const performSignin = async () => {
   signinPassword.value = ''
 }
 
+const performSignout = async () => {
+  // Check if user is signed in
+  if (!authStore.isAuthenticated) {
+    addOutput('✗ You are not signed in.')
+    return
+  }
+
+  addOutput('Signing out...')
+
+  await authStore.signout()
+
+  addOutput('✓ Signed out successfully!')
+
+  // If on dashboard, redirect to home
+  if (router.currentRoute.value.path === '/dashboard') {
+    addOutput('Redirecting to home...')
+    setTimeout(() => {
+      router.push('/')
+    }, 1000)
+  }
+}
+
 const addOutput = (text: string) => {
   lines.value.push({
     type: 'output',
     text,
   })
+}
+
+const fetchAndDisplayProjects = async () => {
+  try {
+    addOutput('Loading projects...')
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'
+    const response = await fetch(`${backendUrl}/api/projects`)
+    const data = (await response.json()) as { projects: Array<{ title: string }> }
+
+    if (!data.projects || data.projects.length === 0) {
+      addOutput('No projects found.')
+      return
+    }
+
+    const projectList = data.projects.map((project) => `- ${project.title}`).join('\n')
+    addOutput(projectList)
+  } catch (error) {
+    addOutput(
+      `✗ Error fetching projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    )
+  }
+}
+
+const fetchAndDisplayGames = async () => {
+  try {
+    addOutput('Loading games...')
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'
+    const response = await fetch(`${backendUrl}/api/games`)
+    const data = (await response.json()) as { games: Array<{ title: string }> }
+
+    if (!data.games || data.games.length === 0) {
+      addOutput('No games found.')
+      return
+    }
+
+    const gameList = data.games.map((game) => `- ${game.title}`).join('\n')
+    addOutput(gameList)
+  } catch (error) {
+    addOutput(`✗ Error fetching games: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
 }
 
 const scrollToBottom = () => {

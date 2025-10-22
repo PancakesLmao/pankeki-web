@@ -29,7 +29,7 @@ const reverseStatusMap: Record<string, string> = {
   Under_Maintenance: "under-maintenance",
 };
 
-export const projectRoutes = new Elysia({ prefix: "/projects" })
+export const projectRoutes = new Elysia({ prefix: "/api/projects" })
   .use(cookie())
   // Get all projects (public access)
   .get(
@@ -40,7 +40,7 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
         const dbStatus = query.status ? statusMap[query.status] : undefined;
 
         const projects = await prisma.projects.findMany({
-          where: dbStatus ? { status: dbStatus as any } : undefined,
+          where: dbStatus ? { status: dbStatus as any } : {},
           orderBy: { created_at: "desc" },
         });
 
@@ -64,8 +64,7 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
             ],
             {
               description:
-                "Filter projects by status. Use lowercase with hyphens.",
-              default: "ongoing",
+                "Filter projects by status. Use lowercase with hyphens. Omit to fetch all projects.",
             }
           )
         ),
@@ -74,7 +73,7 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
         tags: ["Projects"],
         summary: "Get all projects",
         description:
-          "Retrieve all portfolio projects (public access). Can be filtered by status using URL-friendly format (e.g., 'completed-and-published').",
+          "Retrieve all portfolio projects (public access). Can be filtered by status using URL-friendly format (e.g., 'completed-and-published'). Omit status parameter to get all projects.",
       },
     }
   )

@@ -5,6 +5,7 @@ import { openapi } from "@elysiajs/openapi";
 import { authRoutes } from "./routes/auth";
 import { projectRoutes } from "./routes/projects";
 import { gameRoutes } from "./routes/games";
+import { enumRoutes } from "./routes/enums";
 
 const PORT = process.env.PORT || 3000;
 const isDevelopment = process.env.NODE_ENV !== "production";
@@ -33,6 +34,7 @@ if (isDevelopment) {
           { name: "Auth", description: "Authentication endpoints" },
           { name: "Projects", description: "Project management endpoints" },
           { name: "Games", description: "Game management endpoints" },
+          { name: "Enums", description: "Enum reference endpoints" },
         ],
       },
       path: "/swagger",
@@ -55,6 +57,7 @@ app = app
   .use(authRoutes)
   .use(projectRoutes)
   .use(gameRoutes)
+  .use(enumRoutes)
   .listen(PORT);
 
 console.log(

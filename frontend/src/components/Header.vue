@@ -13,7 +13,7 @@ const { mode, setMode } = useMode()
         mode === Mode.Developer ? 'font-serif' : 'font-mono',
       ]"
     >
-      {{ mode === Mode.Developer ? 'Nguyen Thinh' : 'Pancakes' }}
+      {{ mode === Mode.Developer ? 'Nguyen Thinh' : 'Pankeki' }}
     </h1>
 
     <div class="flex items-center gap-3">

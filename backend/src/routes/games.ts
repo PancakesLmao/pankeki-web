@@ -30,7 +30,7 @@ const platformMap: Record<string, string> = {
   playstation: "PlayStation",
 };
 
-export const gameRoutes = new Elysia({ prefix: "/games" })
+export const gameRoutes = new Elysia({ prefix: "/api/games" })
   .use(cookie())
   // Get all games (public access)
   .get(
@@ -84,8 +84,8 @@ export const gameRoutes = new Elysia({ prefix: "/games" })
               t.Literal("open-world"),
             ],
             {
-              description: "Filter games by genre. Use lowercase with hyphens.",
-              default: "rpg",
+              description:
+                "Filter games by genre. Use lowercase with hyphens. Omit to fetch all games.",
             }
           )
         ),
@@ -93,8 +93,8 @@ export const gameRoutes = new Elysia({ prefix: "/games" })
           t.Union(
             [t.Literal("pc"), t.Literal("mobile"), t.Literal("playstation")],
             {
-              description: "Filter games by platform. Use lowercase.",
-              default: "pc",
+              description:
+                "Filter games by platform. Use lowercase. Omit to fetch all games.",
             }
           )
         ),
@@ -103,7 +103,7 @@ export const gameRoutes = new Elysia({ prefix: "/games" })
         tags: ["Games"],
         summary: "Get all games",
         description:
-          "Retrieve all games (public access). Can be filtered by genre or platform using URL-friendly format (e.g., 'rpg', 'action-rpg', 'pc').",
+          "Retrieve all games (public access). Can be filtered by genre or platform using URL-friendly format (e.g., 'rpg', 'action-rpg', 'pc'). Omit genre and platform parameters to get all games.",
       },
     }
   )
