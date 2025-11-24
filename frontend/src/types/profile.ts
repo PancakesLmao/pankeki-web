@@ -7,6 +7,8 @@ export interface Project {
   link: string
   time_range: string
   project_img: string
+  created_at: string
+  created_by: string
 }
 
 export interface Game {
