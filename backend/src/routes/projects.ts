@@ -1,34 +1,14 @@
 import { Elysia, t } from "elysia";
 import { cookie } from "@elysiajs/cookie";
-import { prisma } from "../libs/prisma";
+import {
+  getProjects,
+  getProject,
+  createProject,
+  updateProject,
+  deleteProject,
+  type Project,
+} from "../libs/db";
 import { requireAuth } from "../middleware/auth";
-
-// Helper function to serialize BigInt to string and convert status to URL-friendly format
-const serializeProject = (project: any) => ({
-  ...project,
-  id: project.id.toString(),
-  status: reverseStatusMap[project.status] || project.status,
-});
-
-// Mapping between URL-friendly status and database enum
-const statusMap: Record<string, string> = {
-  "completed-and-published": "Completed_and_Published",
-  ongoing: "Ongoing",
-  deprecated: "Deprecated",
-  "completed-and-documenting": "Completed_and_Documenting",
-  upcoming: "Upcoming",
-  "under-maintenance": "Under_Maintenance",
-};
-
-// Reverse mapping for responses
-const reverseStatusMap: Record<string, string> = {
-  Completed_and_Published: "completed-and-published",
-  Ongoing: "ongoing",
-  Deprecated: "deprecated",
-  Completed_and_Documenting: "completed-and-documenting",
-  Upcoming: "upcoming",
-  Under_Maintenance: "under-maintenance",
-};
 
 export const projectRoutes = new Elysia({ prefix: "/api/projects" })
   .use(cookie())
@@ -37,15 +17,8 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
     "/",
     async ({ query, set }) => {
       try {
-        // Convert URL-friendly status to database enum
-        const dbStatus = query.status ? statusMap[query.status] : undefined;
-
-        const projects = await prisma.projects.findMany({
-          where: dbStatus ? { status: dbStatus as any } : {},
-          orderBy: { created_at: "desc" },
-        });
-
-        return { projects: projects.map(serializeProject) };
+        const projects = await getProjects(query.status);
+        return { projects };
       } catch (error: any) {
         set.status = 500;
         return { error: error.message };
@@ -84,16 +57,14 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
     "/:id",
     async ({ params, set }) => {
       try {
-        const project = await prisma.projects.findUnique({
-          where: { id: BigInt(params.id) },
-        });
+        const project = await getProject(BigInt(params.id));
 
         if (!project) {
           set.status = 404;
           return { error: "Project not found" };
         }
 
-        return { project: serializeProject(project) };
+        return { project };
       } catch (error: any) {
         set.status = 500;
         return { error: error.message };
@@ -121,25 +92,20 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
       try {
         const { user } = await requireAuth({ cookie, set });
 
-        // Convert URL-friendly status to database enum
-        const dbStatus = statusMap[body.status] || body.status;
-
-        const project = await prisma.projects.create({
-          data: {
-            title: body.title,
-            description: body.description,
-            tags: body.tags,
-            link: body.link,
-            project_img: body.project_img,
-            status: dbStatus as any,
-            time_range: body.time_range,
-            created_by: user!.id,
-          },
+        const project = await createProject({
+          title: body.title,
+          description: body.description,
+          tags: body.tags,
+          link: body.link,
+          project_img: body.project_img,
+          status: body.status,
+          time_range: body.time_range,
+          created_by: user!.id,
         });
 
         return {
           message: "Project created successfully",
-          project: serializeProject(project),
+          project,
         };
       } catch (error: any) {
         set.status = error.message.includes("Unauthorized") ? 401 : 500;
@@ -214,7 +180,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
       try {
         await requireAuth({ cookie, set });
 
-        const updateData: any = {};
+        const updateData: Partial<Project> = {};
         if (body.title !== undefined) updateData.title = body.title;
         if (body.description !== undefined)
           updateData.description = body.description;
@@ -225,18 +191,14 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
         if (body.time_range !== undefined)
           updateData.time_range = body.time_range;
         if (body.status !== undefined) {
-          // Convert URL-friendly status to database enum
-          updateData.status = statusMap[body.status] || body.status;
+          updateData.status = body.status;
         }
 
-        const project = await prisma.projects.update({
-          where: { id: BigInt(params.id) },
-          data: updateData,
-        });
+        const project = await updateProject(BigInt(params.id), updateData);
 
         return {
           message: "Project updated successfully",
-          project: serializeProject(project),
+          project,
         };
       } catch (error: any) {
         set.status = error.message.includes("Unauthorized") ? 401 : 500;
@@ -315,9 +277,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
       try {
         await requireAuth({ cookie, set });
 
-        await prisma.projects.delete({
-          where: { id: BigInt(params.id) },
-        });
+        await deleteProject(BigInt(params.id));
 
         return { message: "Project deleted successfully" };
       } catch (error: any) {

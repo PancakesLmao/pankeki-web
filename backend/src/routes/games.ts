@@ -1,34 +1,14 @@
 import { Elysia, t } from "elysia";
 import { cookie } from "@elysiajs/cookie";
-import { prisma } from "../libs/prisma";
+import {
+  getGames,
+  getGame,
+  createGame,
+  updateGame,
+  deleteGame,
+  type Game,
+} from "../libs/db";
 import { requireAuth } from "../middleware/auth";
-
-// Helper function to serialize BigInt to string
-const serializeGame = (game: any) => ({
-  ...game,
-  id: game.id.toString(),
-});
-
-// Mapping for genre enum (URL-friendly <-> Database enum)
-const genreMap: Record<string, string> = {
-  gacha: "Gacha",
-  "sci-fi": "Sci_Fi",
-  fantasy: "Fantasy",
-  "hack-and-slash": "Hack_And_Slash",
-  "action-rpg": "Action_RPG",
-  rpg: "RPG",
-  jrpg: "JRPG",
-  "visual-novel": "Visual_Novel",
-  "turn-based": "Turn_based",
-  "open-world": "Open_World",
-};
-
-// Mapping for platform enum (URL-friendly <-> Database enum)
-const platformMap: Record<string, string> = {
-  pc: "PC",
-  mobile: "Mobile",
-  playstation: "PlayStation",
-};
 
 export const gameRoutes = new Elysia({ prefix: "/api/games" })
   .use(cookie())
@@ -37,31 +17,8 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
     "/",
     async ({ query, set }) => {
       try {
-        // Build filter object
-        const where: any = {};
-
-        // Filter by genre if provided (convert URL-friendly to DB enum)
-        if (query.genre) {
-          const dbGenre = genreMap[query.genre] || query.genre;
-          where.genre = {
-            has: dbGenre,
-          };
-        }
-
-        // Filter by platform if provided (convert URL-friendly to DB enum)
-        if (query.platform) {
-          const dbPlatform = platformMap[query.platform] || query.platform;
-          where.platform = {
-            has: dbPlatform,
-          };
-        }
-
-        const games = await prisma.games.findMany({
-          where: Object.keys(where).length > 0 ? where : undefined,
-          orderBy: { created_at: "desc" },
-        });
-
-        return { games: games.map(serializeGame) };
+        const games = await getGames(query.genre, query.platform);
+        return { games };
       } catch (error: any) {
         set.status = 500;
         return { error: error.message };
@@ -113,16 +70,14 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
     "/:id",
     async ({ params, set }) => {
       try {
-        const game = await prisma.games.findUnique({
-          where: { id: BigInt(params.id) },
-        });
+        const game = await getGame(BigInt(params.id));
 
         if (!game) {
           set.status = 404;
           return { error: "Game not found" };
         }
 
-        return { game: serializeGame(game) };
+        return { game };
       } catch (error: any) {
         set.status = 500;
         return { error: error.message };
@@ -150,27 +105,19 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
       try {
         const { user } = await requireAuth({ cookie, set });
 
-        // Convert URL-friendly enums to database enums
-        const dbGenres = body.genre.map((g) => genreMap[g] || g);
-        const dbPlatforms = body.platform.map((p) => platformMap[p] || p);
-
-        const game = await prisma.games.create({
-          data: {
-            title: body.title,
-            description: body.description,
-            cover_img: body.cover_img,
-            icon_img: body.icon_img,
-            platform: dbPlatforms as any,
-            genre: dbGenres as any,
-            tags: body.tags,
-            link: body.link,
-            created_by: user!.id,
-          },
+        const game = await createGame({
+          title: body.title,
+          description: body.description,
+          genre: body.genre,
+          platform: body.platform,
+          link: body.link,
+          game_img: body.icon_img,
+          created_by: user!.id,
         });
 
         return {
           message: "Game created successfully",
-          game: serializeGame(game),
+          game,
         };
       } catch (error: any) {
         set.status = 500;
@@ -257,31 +204,23 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
       try {
         await requireAuth({ cookie, set });
 
-        const updateData: any = {};
+        const updateData: Partial<Game> = {};
         if (body.title !== undefined) updateData.title = body.title;
         if (body.description !== undefined)
           updateData.description = body.description;
-        if (body.cover_img !== undefined) updateData.cover_img = body.cover_img;
-        if (body.icon_img !== undefined) updateData.icon_img = body.icon_img;
         if (body.platform !== undefined) {
-          // Convert URL-friendly platforms to database enum
-          updateData.platform = body.platform.map((p) => platformMap[p] || p);
+          updateData.platform = body.platform;
         }
         if (body.genre !== undefined) {
-          // Convert URL-friendly genres to database enum
-          updateData.genre = body.genre.map((g) => genreMap[g] || g);
+          updateData.genre = body.genre;
         }
-        if (body.tags !== undefined) updateData.tags = body.tags;
         if (body.link !== undefined) updateData.link = body.link;
 
-        const game = await prisma.games.update({
-          where: { id: BigInt(params.id) },
-          data: updateData,
-        });
+        const game = await updateGame(BigInt(params.id), updateData);
 
         return {
           message: "Game updated successfully",
-          game: serializeGame(game),
+          game,
         };
       } catch (error: any) {
         set.status = 500;
@@ -368,9 +307,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
       try {
         await requireAuth({ cookie, set });
 
-        await prisma.games.delete({
-          where: { id: BigInt(params.id) },
-        });
+        await deleteGame(BigInt(params.id));
 
         return { message: "Game deleted successfully" };
       } catch (error: any) {

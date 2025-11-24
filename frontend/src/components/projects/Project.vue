@@ -52,7 +52,10 @@ onMounted(() => {
       <div v-if="loadingProjects" class="flex items-center justify-center py-12">
         <div class="text-center">
           <svg
-            class="mx-auto h-12 w-12 animate-spin text-purple-300"
+            :class="[
+              'mx-auto h-12 w-12 animate-spin',
+              mode === 'developer' ? 'text-gray-400' : 'text-purple-300',
+            ]"
             fill="none"
             viewBox="0 0 24 24"
           >
@@ -70,7 +73,9 @@ onMounted(() => {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p class="mt-4 text-gray-400">Loading projects...</p>
+          <p :class="['mt-4', mode === 'developer' ? 'text-gray-500' : 'text-gray-400']">
+            Loading projects...
+          </p>
         </div>
       </div>
 
@@ -80,7 +85,12 @@ onMounted(() => {
           <p class="mb-4 text-red-400">{{ fetchError }}</p>
           <button
             @click="fetchProjects"
-            class="rounded-md bg-purple-600 px-4 py-2 text-white transition-colors hover:bg-purple-700"
+            :class="[
+              'rounded-md px-4 py-2 text-white transition-colors',
+              mode === 'developer'
+                ? 'bg-gray-700 hover:bg-gray-800'
+                : 'bg-purple-600 hover:bg-purple-700',
+            ]"
           >
             Retry
           </button>

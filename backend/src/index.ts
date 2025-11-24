@@ -2,6 +2,7 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { cookie } from "@elysiajs/cookie";
 import { openapi } from "@elysiajs/openapi";
+import { supabase } from "./libs/supabase";
 import { authRoutes } from "./routes/auth";
 import { projectRoutes } from "./routes/projects";
 import { gameRoutes } from "./routes/games";
@@ -54,6 +55,31 @@ app = app
       description: "Returns server health status",
     },
   })
+  .get(
+    "/debug/tables",
+    async () => {
+      try {
+        const { data, error } = await supabase
+          .from("information_schema.tables")
+          .select("table_name")
+          .eq("table_schema", "public");
+
+        if (error) {
+          return { error: error.message, code: (error as any).code };
+        }
+
+        return { tables: data?.map((t: any) => t.table_name) || [] };
+      } catch (err: any) {
+        return { error: err.message };
+      }
+    },
+    {
+      detail: {
+        tags: ["Debug"],
+        description: "List all tables in the database",
+      },
+    }
+  )
   .use(authRoutes)
   .use(projectRoutes)
   .use(gameRoutes)

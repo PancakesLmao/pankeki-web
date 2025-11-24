@@ -3,25 +3,20 @@
   "version": "1.0.50",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "bun build src/index.ts --outdir dist --target bun",
     "dev": "bun run --watch src/index.ts",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio",
-    "prisma:push": "prisma db push"
+    "start": "bun dist/index.js"
   },
   "dependencies": {
     "@elysiajs/cookie": "^0.8.0",
     "@elysiajs/cors": "^1.4.0",
     "@elysiajs/openapi": "^1.4.11",
-    "@prisma/client": "^6.17.1",
     "@supabase/supabase-js": "^2.75.1",
-    "elysia": "^1.2.0-rc.3",
-    "prismabox": "^1.1.25"
+    "elysia": "^1.2.0-rc.3"
   },
   "devDependencies": {
     "@types/node": "^24.8.1",
     "bun-types": "latest",
-    "prisma": "^6.17.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },

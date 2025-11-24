@@ -1,6 +1,6 @@
-# Elysia + Supabase + Prisma Backend
+# Elysia + Supabase Backend
 
-A backend API built with [Elysia](https://elysiajs.com/), [Supabase](https://supabase.com/) (for authentication), and [Prisma](https://www.prisma.io/) (for database operations).
+A lightweight backend API built with [Elysia](https://elysiajs.com/) and [Supabase](https://supabase.com/).
 
 ## Prerequisites
 
@@ -9,10 +9,9 @@ A backend API built with [Elysia](https://elysiajs.com/), [Supabase](https://sup
 
 ## Architecture
 
-- **Supabase**: Authentication only (sign in, token management, user sessions)
-- **Prisma ORM**: Database operations with type safety
-- **Elysia**: Fast and modern web framework
-- **PostgreSQL**: Supabase-hosted database
+- **Supabase Client**: Authentication and direct database operations
+- **Elysia**: Fast and modern web framework with TypeScript support
+- **PostgreSQL**: Supabase-hosted database with RLS (Row Level Security)
 
 ## Setup
 
@@ -24,16 +23,15 @@ bun install
 
 ### 2. Configure Environment Variables
 
-Create/update the `.env` file with your Supabase and database credentials:
+Create/update the `.env` file with your Supabase credentials:
 
 ```env
-# Supabase Auth (for authentication only)
+# Supabase Configuration
 SUPABASE_URL=your_supabase_project_url
-SUPABASE_KEY=your_supabase_service_role_key
+SUPABASE_ANON_KEY=your_supabase_anon_key
 
-# Database (for Prisma)
+# Database Connection (for direct queries if needed)
 DATABASE_URL=postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true
-DIRECT_URL=postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres
 
 # Server
 PORT=3000
@@ -44,22 +42,18 @@ To get your credentials:
 
 1. Go to your [Supabase Dashboard](https://app.supabase.com)
 2. Select your project
-3. **For Supabase Auth:**
-   - Go to Settings → API
-   - Copy Project URL → `SUPABASE_URL`
-   - Copy `service_role` `secret` key → `SUPABASE_KEY`
-4. **For Database URLs:**
-   - Go to Settings → Database → Connection String
-   - Copy the connection pooler URL (port 6543) → `DATABASE_URL`
-   - Copy the direct connection URL (port 5432) → `DIRECT_URL`
+3. Go to Settings → API
+4. Copy the following:
+   - Project URL → `SUPABASE_URL`
+   - `anon` `public` key → `SUPABASE_ANON_KEY`
 
-### 3. Generate Prisma Client
+### 3. Configure RLS Policies
 
-After pulling the schema from Supabase:
+Since we're using the Supabase client directly, you need to set up Row Level Security (RLS) policies in your database:
 
-```bash
-bun run prisma:generate
-```
+1. Go to your Supabase Dashboard → SQL Editor
+2. Run the RLS policies for your tables (see example policies in the project documentation)
+3. Ensure RLS is enabled on all public-facing tables
 
 ### 4. Run the Server
 
@@ -70,27 +64,6 @@ bun run dev
 ```
 
 The server will start at `http://localhost:3000`
-
-## Prisma Commands
-
-```bash
-# Generate Prisma Client (after schema changes)
-npx prisma generate
-
-# Open Prisma Studio (database GUI)
-npx prisma studio
-
-# Pull schema from database (if schema changes in Supabase)
-npx prisma db pull
-# use --force to overwrite local schema if needed
-
-# Push schema to database (only for public schema changes)
-npx prisma db push
-```
-
-**⚠️ Important:** Never modify tables in the `auth` schema via Prisma. These are managed by Supabase.
-
-**⚠️ Important:** Never modify tables in the `auth` schema via Prisma. These are managed by Supabase.
 
 ## Running the Backend
 
