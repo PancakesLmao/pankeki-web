@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { enumsApi } from '@/api'
 
 export interface EnumOption {
   value: string
@@ -56,22 +57,10 @@ export const useEnums = () => {
     cache.value.error = null
 
     try {
-      const baseUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'
-
-      const [statusRes, genresRes, platformsRes] = await Promise.all([
-        fetch(`${baseUrl}/enums/project-statuses`),
-        fetch(`${baseUrl}/enums/game-genres`),
-        fetch(`${baseUrl}/enums/game-platforms`),
-      ])
-
-      if (!statusRes.ok || !genresRes.ok || !platformsRes.ok) {
-        throw new Error('Failed to fetch enums from server')
-      }
-
       const [statusData, genresData, platformsData] = await Promise.all([
-        statusRes.json(),
-        genresRes.json(),
-        platformsRes.json(),
+        enumsApi.getProjectStatuses(),
+        enumsApi.getGameGenres(),
+        enumsApi.getGamePlatforms(),
       ])
 
       cache.value.projectStatuses = statusData.data || DEFAULT_PROJECT_STATUSES

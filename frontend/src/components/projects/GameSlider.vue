@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { ChevronLeft, ChevronRight, SquareArrowOutUpRight } from 'lucide-vue-next'
+import { gamesApi } from '@/api'
+import type { Game } from '@/types/profile'
 
 interface GameProject {
   id: string
@@ -14,132 +16,42 @@ interface GameProject {
   link: string
 }
 
-const games: GameProject[] = [
-  {
-    id: 'gbf-relink',
-    title: 'Grandblue Fantasy: Relink',
-    description:
-      'Journey through the Zegagrande Skydom, a world of floating islands adrift in a sea of clouds, forsaken by the gods. As a young skyfarer, follow your father’s letter to find Estalucia, the legendary Island of the Astrals. Alongside Lyria, a girl linked to powerful primal beasts, navigate a fragile peace 500 years after a great war.',
-    coverImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/GCr45I2WkAAYPXj.jpeg',
-    iconImage: 'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/256x256.png',
-    platform: 'PC / PlayStation',
-    genre: 'JRPG',
-    tags: ['JRPG', 'Action RPG', 'Fantasy'],
-    link: 'https://relink.granbluefantasy.jp/',
-  },
-  {
-    id: 'wuwa',
-    title: 'Wuthering Waves',
-    description:
-      'Explore Solaris-3, a futuristic, post-apocalyptic world ravaged by the Lament, a catastrophe that nearly eradicated humanity and unleashed monstrous Tacet Discords. As civilizations slowly rebuild, you awaken as Rover, an amnesiac wanderer, embarking on a journey to uncover the mysteries of this transformed world.',
-    coverImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/926b135e989f39d73ffc72914d499788.png',
-    iconImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/9d435d2e017f7a7384f4e1c6a6f2d169.png',
-    platform: 'PC / Mobile',
-    genre: 'Action RPG',
-    tags: ['Open world', 'Action RPG', 'Gacha RPG', 'Hack and Slash'],
-    link: 'https://wutheringwaves.kurogames.com/'
-  },
-  {
-    id: 'hi3',
-    title: 'Honkai Impact 3rd',
-    description:
-      'In a world eroded by the Honkai—a cosmic force of collapse—humanity’s last hope lies with the Valkyries: brave girls born with the power to resist its corruption. In Honkai Impact 3rd, command these warriors through apocalyptic eruptions and the rise of Herrschers, as they fight to protect all that is beautiful in a world on the edge of ruin.',
-    coverImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/2019090914565526843.jpg',
-    iconImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/67a9b6e59ac1105da3d7785693e2028d.png',
-    platform: 'PC / Mobile',
-    genre: 'Action RPG',
-    tags: ['Action RPG', 'Gacha RPG', 'Science Fiction', 'Hack and Slash'],
-    link: 'https://honkaiimpact3.hoyoverse.com/',
-  },
-  {
-    id: 'hsr',
-    title: 'Honkai: Star Rail',
-    description:
-      'Board the Astral Express and journey across the stars as the Trailblazer, a voyager bound by fate and mystery. In Honkai: Star Rail, explore distant worlds and unravel cosmic threats born from Stellarons—seeds of chaos that shatter civilizations. Forge bonds, face destiny, and light the way through a universe on the brink.',
-    coverImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/3605051c3cc8426465cb0f6434651a9b.jpg',
-    iconImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/e52da5a31de788599378924f0e639557.png',
-    platform: 'PC / Mobile',
-    genre: 'Turn-based RPG',
-    tags: ['Turn-based RPG', 'Gacha RPG', 'Turn-based'],
-    link: 'https://hsr.hoyoverse.com/'
-  },
-  {
-    id: 'gi',
-    title: 'Genshin Impact',
-    description:
-      'Step into Teyvat, a world of elemental wonder and divine rule. In Genshin Impact, you are the Traveler—an interstellar adventurer separated from your twin and cast into a land of gods and mysteries. With your guide Paimon, journey through seven nations, forge bonds, and uncover the truths hidden beneath a world shaped by visions and fate.',
-    coverImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/e1429bbcb3221d0b9ef07628e0774e0d.jpg',
-    iconImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/54795ec619ebda94c86d00184861c96f.png',
-    platform: 'PC / Mobile',
-    genre: 'Open World RPG',
-    tags: ['Open world', 'Gacha RPG', 'Action RPG', 'Fantasy'],
-    link: 'https://genshin.hoyoverse.com/'
-  },
-  {
-    id: 'zzz',
-    title: 'Zenless Zone Zero',
-    description:
-      'Step into the neon-lit world of Zenless Zone Zero as a Proxy—an agent guiding others through mysterious alternate dimensions called Hollows. Recruit powerful Agents and command your robotic Bangboos to battle the sinister Ethereals and uncover the truth behind the Hollows and the enigmatic forces that shape them.',
-    coverImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/95b3b353b819d2d5fd1d458ce5d5ba72.jpg',
-    iconImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/7029a498c4f596f73b35504df9bab02a.png',
-    platform: 'PC / Mobile',
-    genre: 'Action RPG',
-    tags: ['Action RPG', 'Gacha RPG', 'Hack and Slash'],
-    link: 'https://zenless.hoyoverse.com/'
-  },
-  {
-    id: 'pubg',
-    title: 'Umamusume: Pretty Derby',
-    description:
-      'In a vibrant world where "Umamusume"—graceful horse girls inheriting the spirits and names of legendary racehorses—strive for glory on the track and stage, take on the role of a dedicated trainer at Tracen Academy. Scout and nurture your team of aspiring idols through intensive training regimens, strategic stat-building, and heart-pounding races against rivals.',
-    coverImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/4c4f63797573af64476acb67d715be49.png',
-    iconImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/4cf54a3d780b9294815e5f249164f20f.png',
-    platform: 'Mobile',
-    genre: 'Gacha RPG',
-    tags: ['Gacha RPG'],
-    link: 'https://umamusume.com/',
-  },
-  {
-    id: 'fgo',
-    title: 'Fate/Grand Order',
-    description:
-      'Answer the call as Master and embark on a quest to rewrite destiny in Fate/Grand Order. Summon and command Servants—heroes and deities drawn from history, myth, and legend—in strategic turn-based battles, then dive into each Servant’s tale through visual-novel–style chapters. Alongside Ritsuka Fujimaru and Mash Kyrielight, pursue the Grand Order: recover the Holy Grails, restore humanity’s foundation, and defy fate itself.',
-    coverImage: 'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/551179.jpg',
-    iconImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/4fc8ed929e539525e3590f1607718f97.png',
-    platform: 'Mobile',
-    genre: 'Visual Novel',
-    tags: ['Visual Novel', 'Turn-based', 'Gacha RPG', 'Fantasy'],
-    link: 'https://fate-go.us/',
-  },
-  {
-    id: 'ba',
-    title: 'Blue Archive',
-    description:
-      'Step into Kivotos as the newly assigned Sensei, called upon by its student council to restore order after the president’s mysterious disappearance. In Blue Archive, guide and empower the spirited students of Abydos, deploy them on missions to quell rising crime, and uncover the hidden truths woven into the academy’s past—and its pupils’ hearts',
-    coverImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/z4058361038708_cac1669eb2a35931c10a53942ce8a4df.jpg',
-    iconImage:
-      'https://cdn.jsdelivr.net/gh/PancakesLmao/pankeki-web/src/assets/e9c0ded40a0630024a51c161925ec257.png',
-    platform: 'Mobile',
-    genre: 'Gacha RPG',
-    tags: ['Gacha RPG'],
-    link: 'https://bluearchive.jp/',
-  },
-]
+// Games from API
+const games = ref<GameProject[]>([])
+const loadingGames = ref(false)
+const fetchError = ref<string | null>(null)
+
+// Helper function to map API Game to GameProject format
+const mapGameToGameProject = (game: Game): GameProject => {
+  return {
+    id: game.id,
+    title: game.title,
+    description: game.description,
+    coverImage: game.cover_img || '',
+    iconImage: game.icon_img || '',
+    platform: game.platform.join(' / '),
+    genre: game.genre.join(', '),
+    tags: game.tags,
+    link: game.link || '#',
+  }
+}
+
+// Fetch games from API
+const fetchGames = async () => {
+  try {
+    loadingGames.value = true
+    fetchError.value = null
+    const response = await gamesApi.getAll()
+    games.value = response.games.map(mapGameToGameProject)
+    console.log('Games loaded:', games.value.length)
+  } catch (error) {
+    fetchError.value = error instanceof Error ? error.message : 'Failed to fetch games'
+    console.error('Error fetching games:', error)
+  } finally {
+    loadingGames.value = false
+  }
+}
+
 // State
 const activeIndex = ref(0)
 const isAnimating = ref(false)
@@ -149,7 +61,7 @@ const sliderRef = ref<HTMLElement | null>(null)
 const containerRef = ref<HTMLElement | null>(null)
 
 // Computed
-const activeGame = computed(() => games[activeIndex.value])
+const activeGame = computed(() => games.value[activeIndex.value])
 
 // Functions
 const handlePrev = () => {
@@ -160,7 +72,7 @@ const handlePrev = () => {
 }
 
 const handleNext = () => {
-  if (isAnimating.value || activeIndex.value === games.length - 1) return
+  if (isAnimating.value || activeIndex.value === games.value.length - 1) return
   isAnimating.value = true
   activeIndex.value++
   setTimeout(() => (isAnimating.value = false), 500)
@@ -216,6 +128,9 @@ const handleKeyDown = (e: KeyboardEvent) => {
 
 // Lifecycle hooks
 onMounted(() => {
+  // Fetch games from API on mount
+  fetchGames()
+
   if (sliderRef.value) {
     sliderRef.value.addEventListener('scroll', checkScroll)
     checkScroll()
@@ -237,7 +152,65 @@ watch(activeIndex, () => {
 </script>
 
 <template>
+  <!-- Loading State -->
   <div
+    v-if="loadingGames"
+    class="relative mt-8 flex items-center justify-center overflow-hidden rounded-xl bg-gray-800 shadow-xl"
+    style="min-height: 700px"
+  >
+    <div class="text-center">
+      <div class="mb-4 text-purple-300">
+        <svg class="mx-auto h-12 w-12 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+      </div>
+      <p class="text-lg text-gray-300">Loading games...</p>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div
+    v-else-if="fetchError"
+    class="relative mt-8 flex items-center justify-center overflow-hidden rounded-xl bg-gray-800 shadow-xl"
+    style="min-height: 700px"
+  >
+    <div class="text-center">
+      <p class="mb-4 text-lg text-red-400">{{ fetchError }}</p>
+      <button
+        @click="fetchGames"
+        class="rounded-md bg-purple-600 px-4 py-2 text-white transition-colors hover:bg-purple-700"
+      >
+        Retry
+      </button>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div
+    v-else-if="games.length === 0"
+    class="relative mt-8 flex items-center justify-center overflow-hidden rounded-xl bg-gray-800 shadow-xl"
+    style="min-height: 700px"
+  >
+    <div class="text-center">
+      <p class="text-lg text-gray-300">No games available</p>
+    </div>
+  </div>
+
+  <!-- Game Slider (when games are loaded) -->
+  <div
+    v-else
     ref="containerRef"
     class="relative mt-8 overflow-hidden rounded-xl bg-gray-800 shadow-xl"
     style="min-height: 700px"
@@ -345,7 +318,16 @@ watch(activeIndex, () => {
               NEW
             </span> -->
           </h3>
-          <div class="mb-4 flex flex-wrap gap-2">
+          <div class="mb-2 flex flex-wrap gap-2">
+            <span
+              v-for="genreItem in activeGame.genre.split(', ')"
+              :key="genreItem"
+              class="rounded-full bg-gray-700/80 px-3 py-1 text-xs text-purple-300"
+            >
+              {{ genreItem }}
+            </span>
+          </div>
+          <!-- <div class="mb-4 flex flex-wrap gap-2">
             <span
               v-for="tag in activeGame.tags"
               :key="tag"
@@ -353,7 +335,7 @@ watch(activeIndex, () => {
             >
               {{ tag }}
             </span>
-          </div>
+          </div> -->
           <p class="mb-6 text-purple-200">{{ activeGame.description }}</p>
           <div class="mt-6">
             <a
