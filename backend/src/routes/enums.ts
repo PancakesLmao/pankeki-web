@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 
-export const enumRoutes = new Elysia({ prefix: "/enums" })
+export const enumRoutes = new Elysia({ prefix: "/api/enums" })
   .get(
     "/project-statuses",
     () => ({

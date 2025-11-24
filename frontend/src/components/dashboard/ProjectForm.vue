@@ -1,14 +1,24 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useMode } from '@/composables/useMode'
 import { useEnums } from '@/composables/useEnums'
 import FormInput from './FormInput.vue'
 import FormSelect from './FormSelect.vue'
 import type { ProjectFormData } from '@/types/forms'
+import type { Project } from '@/types/profile'
+
+interface Props {
+  editingProject?: Project | null
+}
 
 interface Emits {
   (e: 'submit', data: ProjectFormData): void
+  (e: 'cancel'): void
 }
+
+const props = withDefaults(defineProps<Props>(), {
+  editingProject: null,
+})
 
 const emit = defineEmits<Emits>()
 
@@ -32,6 +42,36 @@ const errors = ref<Record<string, string>>({})
 onMounted(() => {
   fetchEnums()
 })
+
+// Watch editingProject to populate form
+watch(
+  () => props.editingProject,
+  (editingProject) => {
+    if (editingProject) {
+      form.value = {
+        title: editingProject.title,
+        description: editingProject.description,
+        tags: [...editingProject.tags],
+        status: editingProject.status as ProjectFormData['status'],
+        link: editingProject.link,
+        project_img: editingProject.project_img || '',
+        time_range: editingProject.time_range,
+      }
+    } else {
+      // Reset form when not editing
+      form.value = {
+        title: '',
+        description: '',
+        tags: [],
+        status: 'ongoing',
+        link: '',
+        project_img: '',
+        time_range: '',
+      }
+    }
+  },
+  { immediate: true },
+)
 
 const addTag = () => {
   const tag = tagInput.value.trim()
@@ -62,6 +102,18 @@ const handleSubmit = async () => {
   isSubmitting.value = true
   try {
     emit('submit', form.value)
+    // Reset form after successful submit
+    if (!props.editingProject) {
+      form.value = {
+        title: '',
+        description: '',
+        tags: [],
+        status: 'ongoing',
+        link: '',
+        project_img: '',
+        time_range: '',
+      }
+    }
   } finally {
     isSubmitting.value = false
   }
@@ -82,7 +134,7 @@ const handleSubmit = async () => {
         mode === 'developer' ? 'font-serif text-gray-900' : 'font-mono text-purple-100',
       ]"
     >
-      Create New Project
+      {{ editingProject ? 'Edit Project' : 'Create New Project' }}
     </h3>
 
     <!-- Title -->
@@ -217,7 +269,28 @@ const handleSubmit = async () => {
             : 'bg-purple-500 text-purple-100 hover:bg-purple-600',
         ]"
       >
-        {{ isSubmitting ? 'Creating...' : 'Create Project' }}
+        {{
+          isSubmitting
+            ? editingProject
+              ? 'Updating...'
+              : 'Creating...'
+            : editingProject
+              ? 'Update Project'
+              : 'Create Project'
+        }}
+      </button>
+      <button
+        v-if="editingProject"
+        type="button"
+        @click="emit('cancel')"
+        :class="[
+          'px-4 py-2 rounded-lg font-medium transition-colors',
+          mode === 'developer'
+            ? 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+            : 'bg-gray-700 text-purple-100 hover:bg-gray-600',
+        ]"
+      >
+        Cancel
       </button>
     </div>
   </form>

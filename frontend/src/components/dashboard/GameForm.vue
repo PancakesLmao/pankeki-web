@@ -1,14 +1,24 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useMode } from '@/composables/useMode'
 import { useEnums } from '@/composables/useEnums'
 import FormInput from './FormInput.vue'
 import FormCheckboxGroup from './FormCheckboxGroup.vue'
 import type { GameFormData } from '@/types/forms'
+import type { Game } from '@/types/profile'
+
+interface Props {
+  editingGame?: Game | null
+}
 
 interface Emits {
   (e: 'submit', data: GameFormData): void
+  (e: 'cancel'): void
 }
+
+const props = withDefaults(defineProps<Props>(), {
+  editingGame: null,
+})
 
 const emit = defineEmits<Emits>()
 
@@ -33,6 +43,38 @@ const errors = ref<Record<string, string>>({})
 onMounted(() => {
   fetchEnums()
 })
+
+// Watch editingGame to populate form
+watch(
+  () => props.editingGame,
+  (editingGame) => {
+    if (editingGame) {
+      form.value = {
+        title: editingGame.title,
+        description: editingGame.description,
+        tags: [...editingGame.tags],
+        genre: editingGame.genre as GameFormData['genre'],
+        platform: editingGame.platform as GameFormData['platform'],
+        link: editingGame.link,
+        cover_img: editingGame.cover_img || '',
+        icon_img: editingGame.icon_img || '',
+      }
+    } else {
+      // Reset form when not editing
+      form.value = {
+        title: '',
+        description: '',
+        tags: [],
+        genre: [],
+        platform: [],
+        link: '',
+        cover_img: '',
+        icon_img: '',
+      }
+    }
+  },
+  { immediate: true },
+)
 
 const addTag = () => {
   const tag = tagInput.value.trim()
@@ -69,6 +111,19 @@ const handleSubmit = async () => {
   isSubmitting.value = true
   try {
     emit('submit', form.value)
+    // Reset form after successful submit
+    if (!props.editingGame) {
+      form.value = {
+        title: '',
+        description: '',
+        tags: [],
+        genre: [],
+        platform: [],
+        link: '',
+        cover_img: '',
+        icon_img: '',
+      }
+    }
   } finally {
     isSubmitting.value = false
   }
@@ -89,7 +144,7 @@ const handleSubmit = async () => {
         mode === 'developer' ? 'font-serif text-gray-900' : 'font-mono text-purple-100',
       ]"
     >
-      Create New Game
+      {{ editingGame ? 'Edit Game' : 'Create New Game' }}
     </h3>
 
     <!-- Title -->
@@ -235,7 +290,28 @@ const handleSubmit = async () => {
             : 'bg-purple-500 text-purple-100 hover:bg-purple-600',
         ]"
       >
-        {{ isSubmitting ? 'Creating...' : 'Create Game' }}
+        {{
+          isSubmitting
+            ? editingGame
+              ? 'Updating...'
+              : 'Creating...'
+            : editingGame
+              ? 'Update Game'
+              : 'Create Game'
+        }}
+      </button>
+      <button
+        v-if="editingGame"
+        type="button"
+        @click="emit('cancel')"
+        :class="[
+          'px-4 py-2 rounded-lg font-medium transition-colors',
+          mode === 'developer'
+            ? 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+            : 'bg-gray-700 text-purple-100 hover:bg-gray-600',
+        ]"
+      >
+        Cancel
       </button>
     </div>
   </form>

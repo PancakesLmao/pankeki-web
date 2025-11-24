@@ -3,10 +3,11 @@ import { cookie } from "@elysiajs/cookie";
 import { prisma } from "../libs/prisma";
 import { requireAuth } from "../middleware/auth";
 
-// Helper function to serialize BigInt to string
+// Helper function to serialize BigInt to string and convert status to URL-friendly format
 const serializeProject = (project: any) => ({
   ...project,
   id: project.id.toString(),
+  status: reverseStatusMap[project.status] || project.status,
 });
 
 // Mapping between URL-friendly status and database enum

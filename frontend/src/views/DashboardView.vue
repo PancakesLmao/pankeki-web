@@ -20,6 +20,8 @@ const projects = ref<Project[]>([])
 const games = ref<Game[]>([])
 const loading = ref(false)
 const activeMenuId = ref<string | null>(null)
+const editingProject = ref<Project | null>(null)
+const editingGame = ref<Game | null>(null)
 
 onMounted(async () => {
   // Double-check authentication on mount
@@ -88,6 +90,26 @@ const deleteGame = async (id: string) => {
   }
 }
 
+const startEditProject = (project: Project) => {
+  editingProject.value = project
+  activeMenuId.value = null
+  activeTab.value = 'create-project'
+}
+
+const startEditGame = (game: Game) => {
+  editingGame.value = game
+  activeMenuId.value = null
+  activeTab.value = 'create-game'
+}
+
+const cancelEditProject = () => {
+  editingProject.value = null
+}
+
+const cancelEditGame = () => {
+  editingGame.value = null
+}
+
 const handleSignout = async () => {
   await authStore.signout()
   router.push('/')
@@ -95,21 +117,39 @@ const handleSignout = async () => {
 
 const handleProjectSubmit = async (data: ProjectFormData) => {
   try {
-    await projectsApi.create(data)
-    alert('Project created successfully!')
+    if (editingProject.value) {
+      // Update existing project
+      await projectsApi.update(editingProject.value.id, data)
+      alert('Project updated successfully!')
+      editingProject.value = null
+    } else {
+      // Create new project
+      await projectsApi.create(data)
+      alert('Project created successfully!')
+    }
+    fetchProjects()
   } catch (error) {
-    console.error('Error creating project:', error)
-    alert(error instanceof Error ? error.message : 'Failed to create project')
+    console.error('Error submitting project:', error)
+    alert(error instanceof Error ? error.message : 'Failed to submit project')
   }
 }
 
 const handleGameSubmit = async (data: GameFormData) => {
   try {
-    await gamesApi.create(data)
-    alert('Game created successfully!')
+    if (editingGame.value) {
+      // Update existing game
+      await gamesApi.update(editingGame.value.id, data)
+      alert('Game updated successfully!')
+      editingGame.value = null
+    } else {
+      // Create new game
+      await gamesApi.create(data)
+      alert('Game created successfully!')
+    }
+    fetchGames()
   } catch (error) {
-    console.error('Error creating game:', error)
-    alert(error instanceof Error ? error.message : 'Failed to create game')
+    console.error('Error submitting game:', error)
+    alert(error instanceof Error ? error.message : 'Failed to submit game')
   }
 }
 </script>
@@ -293,12 +333,20 @@ const handleGameSubmit = async (data: GameFormData) => {
 
         <!-- Create Project Form -->
         <div v-if="activeTab === 'create-project'">
-          <ProjectForm @submit="handleProjectSubmit" />
+          <ProjectForm
+            :editing-project="editingProject"
+            @submit="handleProjectSubmit"
+            @cancel="cancelEditProject"
+          />
         </div>
 
         <!-- Create Game Form -->
         <div v-if="activeTab === 'create-game'">
-          <GameForm @submit="handleGameSubmit" />
+          <GameForm
+            :editing-game="editingGame"
+            @submit="handleGameSubmit"
+            @cancel="cancelEditGame"
+          />
         </div>
 
         <!-- View Projects List -->
@@ -374,11 +422,7 @@ const handleGameSubmit = async (data: GameFormData) => {
                   ]"
                 >
                   <button
-                    @click="
-                      () => {
-                        /* TODO: implement edit */ activeMenuId = null
-                      }
-                    "
+                    @click="startEditProject(project)"
                     :class="[
                       'block w-full text-left px-4 py-2 hover:bg-opacity-75 transition-colors rounded-t-lg',
                       mode === 'developer'
@@ -491,11 +535,7 @@ const handleGameSubmit = async (data: GameFormData) => {
                   ]"
                 >
                   <button
-                    @click="
-                      () => {
-                        /* TODO: implement edit */ activeMenuId = null
-                      }
-                    "
+                    @click="startEditGame(game)"
                     :class="[
                       'block w-full text-left px-4 py-2 hover:bg-opacity-75 transition-colors rounded-t-lg',
                       mode === 'developer'

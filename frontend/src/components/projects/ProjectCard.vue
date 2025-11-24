@@ -68,31 +68,34 @@ const statusColor = computed(() => {
 <template>
   <div
     :class="[
-      'relative p-6 rounded-xl transition-all hover:-translate-y-1',
+      'p-6 rounded-xl transition-all hover:-translate-y-1',
       mode === 'developer'
         ? 'bg-white border border-gray-200 hover:shadow-md'
         : 'bg-gray-800 border border-gray-700 hover:border-purple-700',
     ]"
   >
-    <!-- Status Badge - Top Right -->
-    <span
-      :class="[
-        'absolute top-4 right-4 rounded-full border px-3 py-1 text-xs font-medium',
-        statusColor,
-      ]"
-    >
-      {{ statusLabel }}
-    </span>
+    <!-- Header with Title and Status Badge -->
+    <div class="flex justify-between items-start gap-3 mb-2">
+      <!-- Title -->
+      <h3
+        :class="[
+          'text-xl font-bold flex-1 transition-colors',
+          mode === 'developer' ? 'font-serif' : 'font-mono',
+        ]"
+      >
+        {{ title }}
+      </h3>
 
-    <!-- Title -->
-    <h3
-      :class="[
-        'text-xl font-bold mb-2 pr-24 transition-colors',
-        mode === 'developer' ? 'font-serif' : 'font-mono',
-      ]"
-    >
-      {{ title }}
-    </h3>
+      <!-- Status Badge -->
+      <span
+        :class="[
+          'flex-shrink-0 rounded-full border px-3 py-1 text-xs font-medium whitespace-nowrap',
+          statusColor,
+        ]"
+      >
+        {{ statusLabel }}
+      </span>
+    </div>
 
     <!-- Time Range -->
     <div :class="['mb-3 text-xs', mode === 'developer' ? 'text-gray-500' : 'text-gray-400']">

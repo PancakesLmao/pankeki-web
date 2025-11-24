@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { cookie } from "@elysiajs/cookie";
 import { supabase, createSupabaseClient } from "../libs/supabase";
 
-export const authRoutes = new Elysia({ prefix: "/auth" })
+export const authRoutes = new Elysia({ prefix: "/api/auth" })
   .use(cookie())
   // Sign in with email and password (admin only)
   .post(

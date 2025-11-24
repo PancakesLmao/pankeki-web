@@ -1,12 +1,11 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'
+import { authApi } from '@/api'
 
 interface User {
   id: string
   email: string
-  created_at: string
+  created_at?: string
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -19,20 +18,10 @@ export const useAuthStore = defineStore('auth', () => {
   const checkAuth = async () => {
     try {
       isLoading.value = true
-      const response = await fetch(`${BACKEND_URL}/auth/me`, {
-        credentials: 'include', // Include cookies
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        user.value = data.user
-        isAuthenticated.value = true
-        return true
-      } else {
-        user.value = null
-        isAuthenticated.value = false
-        return false
-      }
+      const data = await authApi.me()
+      user.value = data.user
+      isAuthenticated.value = true
+      return true
     } catch (err) {
       console.error('Auth check failed:', err)
       user.value = null
@@ -49,22 +38,7 @@ export const useAuthStore = defineStore('auth', () => {
       isLoading.value = true
       error.value = null
 
-      const response = await fetch(`${BACKEND_URL}/auth/signin`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include cookies
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        error.value = data.error || 'Sign in failed'
-        return { success: false, error: error.value }
-      }
-
+      const data = await authApi.signin(email, password)
       user.value = data.user
       isAuthenticated.value = true
       return { success: true }
@@ -80,10 +54,7 @@ export const useAuthStore = defineStore('auth', () => {
   // Sign out
   const signout = async () => {
     try {
-      await fetch(`${BACKEND_URL}/auth/signout`, {
-        method: 'POST',
-        credentials: 'include',
-      })
+      await authApi.signout()
     } catch (err) {
       console.error('Sign out error:', err)
     } finally {
