@@ -2,8 +2,8 @@
 import { RouterView } from 'vue-router'
 import { ref, provide } from 'vue';
 import { ModeInjectionKey } from '@/types/mode'
-import Header from './components/Header.vue';
-import Footer from './components/Footer.vue';
+import Header from './components/AppHeader.vue';
+import Footer from './components/AppFooter.vue';
 
 // Reactive mode state
 const mode = ref('developer')

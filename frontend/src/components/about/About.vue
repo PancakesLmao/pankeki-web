@@ -4,7 +4,7 @@ import { Globe, Cpu, Cloud, Terminal, MonitorSmartphone, Smartphone } from 'luci
 import { computed, ref } from 'vue'
 import { useMode } from '@/composables/useMode'
 import SectionTitle from '@/components/SectionTitle.vue'
-import SkillItem from './Skill.vue'
+import SkillItem from './SkillItem.vue'
 import SkillSlider from './SkillSlider.vue'
 import CustomTerminal from './Terminal.vue'
 

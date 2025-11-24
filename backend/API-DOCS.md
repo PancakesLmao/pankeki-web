@@ -355,7 +355,303 @@ Cookie: access_token=your_jwt_token
 
 ---
 
-## Error Responses
+## Enum Endpoints
+
+### GET /api/enums/project-statuses
+
+Get all available project statuses (public access).
+
+**Response:**
+
+```json
+{
+  "data": [
+    { "value": "completed-and-published", "label": "Completed & Published" },
+    { "value": "ongoing", "label": "Ongoing" },
+    { "value": "deprecated", "label": "Deprecated" },
+    {
+      "value": "completed-and-documenting",
+      "label": "Completed & Documenting"
+    },
+    { "value": "upcoming", "label": "Upcoming" },
+    { "value": "under-maintenance", "label": "Under Maintenance" }
+  ]
+}
+```
+
+### GET /api/enums/game-genres
+
+Get all available game genres (public access).
+
+**Response:**
+
+```json
+{
+  "data": [
+    { "value": "gacha", "label": "Gacha" },
+    { "value": "sci-fi", "label": "Sci-Fi" },
+    { "value": "fantasy", "label": "Fantasy" },
+    { "value": "hack-and-slash", "label": "Hack and Slash" },
+    { "value": "action-rpg", "label": "Action RPG" },
+    { "value": "rpg", "label": "RPG" },
+    { "value": "jrpg", "label": "JRPG" },
+    { "value": "visual-novel", "label": "Visual Novel" },
+    { "value": "turn-based", "label": "Turn-based" },
+    { "value": "open-world", "label": "Open World" }
+  ]
+}
+```
+
+### GET /api/enums/game-platforms
+
+Get all available game platforms (public access).
+
+**Response:**
+
+```json
+{
+  "data": [
+    { "value": "pc", "label": "PC" },
+    { "value": "mobile", "label": "Mobile" },
+    { "value": "playstation", "label": "PlayStation" }
+  ]
+}
+```
+
+---
+
+## Game Endpoints
+
+### GET /api/games
+
+Get all games (public access). Can be filtered by genre or platform.
+
+**Query Parameters:**
+
+- `genre` (optional, enum) - Filter games by genre (use lowercase with hyphens). Possible values:
+  - `gacha`, `sci-fi`, `fantasy`, `hack-and-slash`, `action-rpg`, `rpg`, `jrpg`, `visual-novel`, `turn-based`, `open-world`
+- `platform` (optional, enum) - Filter games by platform (use lowercase). Possible values:
+  - `pc`, `mobile`, `playstation`
+
+**Example:** `GET /api/games?genre=rpg&platform=pc`
+
+**Response:**
+
+```json
+{
+  "games": [
+    {
+      "id": "1",
+      "created_at": "2024-01-01T00:00:00Z",
+      "created_by": "user_uuid",
+      "title": "Game Title",
+      "description": "Game description",
+      "tags": ["Unity", "C#", "3D"],
+      "genre": ["rpg", "fantasy"],
+      "platform": ["pc"],
+      "link": "https://example.com/game",
+      "cover_img": "https://example.com/cover.jpg",
+      "icon_img": "https://example.com/icon.jpg"
+    }
+  ]
+}
+```
+
+### GET /api/games/:id
+
+Get a specific game by ID (public access).
+
+**Parameters:**
+
+- `id` (number) - Game ID
+
+**Response:**
+
+```json
+{
+  "game": {
+    "id": "1",
+    "created_at": "2024-01-01T00:00:00Z",
+    "created_by": "user_uuid",
+    "title": "Game Title",
+    "description": "Game description",
+    "tags": ["Unity", "C#", "3D"],
+    "genre": ["rpg", "fantasy"],
+    "platform": ["pc"],
+    "link": "https://example.com/game",
+    "cover_img": "https://example.com/cover.jpg",
+    "icon_img": "https://example.com/icon.jpg"
+  }
+}
+```
+
+**Response (Error - Not found):**
+
+```json
+{
+  "error": "Game not found"
+}
+```
+
+### POST /api/games
+
+Create a new game (admin only). The `created_by` field is automatically set from the authenticated user.
+
+**Headers:**
+
+```
+Cookie: access_token=your_jwt_token
+```
+
+**Request Body:**
+
+```json
+{
+  "title": "Game Title",
+  "description": "Game description",
+  "tags": ["Unity", "C#", "3D"],
+  "genre": ["rpg", "fantasy"],
+  "platform": ["pc"],
+  "link": "https://example.com/game",
+  "cover_img": "https://example.com/cover.jpg",
+  "icon_img": "https://example.com/icon.jpg"
+}
+```
+
+**Request Body Schema:**
+
+- `title` (required, string) - Game title
+- `description` (optional, string) - Game description
+- `tags` (required, array of strings) - Technology tags
+- `genre` (required, array of enums) - Game genres. Possible values: `gacha`, `sci-fi`, `fantasy`, `hack-and-slash`, `action-rpg`, `rpg`, `jrpg`, `visual-novel`, `turn-based`, `open-world`
+- `platform` (required, array of enums) - Target platforms. Possible values: `pc`, `mobile`, `playstation`
+- `link` (optional, string) - Game link (itch.io, Steam, etc.)
+- `cover_img` (optional, string) - Cover image URL
+- `icon_img` (optional, string) - Icon image URL
+
+**Response (Success):**
+
+```json
+{
+  "message": "Game created successfully",
+  "game": {
+    "id": "2",
+    "created_at": "2024-01-01T00:00:00Z",
+    "created_by": "user_uuid",
+    "title": "Game Title",
+    "description": "Game description",
+    "tags": ["Unity", "C#", "3D"],
+    "genre": ["rpg", "fantasy"],
+    "platform": ["pc"],
+    "link": "https://example.com/game",
+    "cover_img": "https://example.com/cover.jpg",
+    "icon_img": "https://example.com/icon.jpg"
+  }
+}
+```
+
+### PUT /api/games/:id
+
+Update an existing game (admin only). All fields are optional.
+
+**Headers:**
+
+```
+Cookie: access_token=your_jwt_token
+```
+
+**Parameters:**
+
+- `id` (number) - Game ID
+
+**Request Body (all fields optional):**
+
+```json
+{
+  "title": "Updated Title",
+  "description": "Updated description",
+  "tags": ["Updated", "Tags"],
+  "genre": ["action-rpg"],
+  "platform": ["pc", "mobile"],
+  "link": "https://example.com/updated-game",
+  "cover_img": "https://example.com/new-cover.jpg",
+  "icon_img": "https://example.com/new-icon.jpg"
+}
+```
+
+**Response (Success):**
+
+```json
+{
+  "message": "Game updated successfully",
+  "game": {
+    "id": "1",
+    "created_at": "2024-01-01T00:00:00Z",
+    "created_by": "user_uuid",
+    "title": "Updated Title",
+    "description": "Updated description",
+    "tags": ["Updated", "Tags"],
+    "genre": ["action-rpg"],
+    "platform": ["pc", "mobile"],
+    "link": "https://example.com/updated-game",
+    "cover_img": "https://example.com/new-cover.jpg",
+    "icon_img": "https://example.com/new-icon.jpg"
+  }
+}
+```
+
+### DELETE /api/games/:id
+
+Delete a game (admin only).
+
+**Headers:**
+
+```
+Cookie: access_token=your_jwt_token
+```
+
+**Parameters:**
+
+- `id` (number) - Game ID
+
+**Response (Success):**
+
+```json
+{
+  "message": "Game deleted successfully"
+}
+```
+
+---
+
+## Debug Endpoints
+
+### GET /debug/tables
+
+List all tables in the database (public access). Useful for debugging database schema.
+
+**Response:**
+
+```json
+{
+  "tables": [
+    "projects",
+    "games",
+    "users",
+    ...
+  ]
+}
+```
+
+**Response (Error):**
+
+```json
+{
+  "error": "error_code"
+}
+```
+
+---
 
 All endpoints may return the following error responses:
 
@@ -422,7 +718,54 @@ The `project_status` enum represents the current state of a project (use lowerca
 - `completed-and-documenting` - Project is complete but documentation is in progress
 - `upcoming` - Project is planned but not yet started
 - `under-maintenance` - Project is being maintained or updated
-- `Under_Maintenance` - Project is receiving updates or bug fixes
+
+### Game
+
+```typescript
+interface Game {
+  id: string; // BigInt serialized as string
+  created_at: Date;
+  created_by: string; // UUID
+  title: string;
+  description: string | null;
+  tags: string[]; // Array of technology tags
+  genre: game_genre[]; // Array of genres
+  platform: game_platform[]; // Array of platforms
+  link: string | null;
+  cover_img: string | null;
+  icon_img: string | null;
+}
+```
+
+### Game Genre Enum
+
+- `gacha` - Gacha/Loot box mechanic games
+- `sci-fi` - Science fiction themed
+- `fantasy` - Fantasy themed
+- `hack-and-slash` - Hack and slash action
+- `action-rpg` - Action RPG hybrid
+- `rpg` - Traditional RPG
+- `jrpg` - Japanese RPG
+- `visual-novel` - Visual novel/story-driven
+- `turn-based` - Turn-based combat
+- `open-world` - Open world exploration
+
+### Game Platform Enum
+
+- `pc` - Personal Computer (Windows/Mac/Linux)
+- `mobile` - Mobile platforms (iOS/Android)
+- `playstation` - PlayStation console
+
+### Project Status Enum
+
+The `project_status` enum represents the current state of a project (use lowercase with hyphens in API requests):
+
+- `completed-and-published` - Project is finished and publicly available
+- `ongoing` - Project is currently in active development
+- `deprecated` - Project is no longer maintained
+- `completed-and-documenting` - Project is complete but documentation is in progress
+- `upcoming` - Project is planned but not yet started
+- `under-maintenance` - Project is being maintained or updated
 
 **Note:** When using the API, use the underscore format (e.g., `Completed_and_Published`), not spaces.
 

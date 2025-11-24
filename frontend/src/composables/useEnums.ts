@@ -41,6 +41,7 @@ interface EnumCache {
   gamePlatforms: EnumOption[]
   loading: boolean
   error: string | null
+  fetched: boolean
 }
 
 const cache = ref<EnumCache>({
@@ -49,10 +50,16 @@ const cache = ref<EnumCache>({
   gamePlatforms: DEFAULT_GAME_PLATFORMS,
   loading: false,
   error: null,
+  fetched: false,
 })
 
 export const useEnums = () => {
   const fetchEnums = async () => {
+    // Only fetch once - if already fetched, return cached data
+    if (cache.value.fetched) {
+      return
+    }
+
     cache.value.loading = true
     cache.value.error = null
 
@@ -66,11 +73,13 @@ export const useEnums = () => {
       cache.value.projectStatuses = statusData.data || DEFAULT_PROJECT_STATUSES
       cache.value.gameGenres = genresData.data || DEFAULT_GAME_GENRES
       cache.value.gamePlatforms = platformsData.data || DEFAULT_GAME_PLATFORMS
+      cache.value.fetched = true
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Unknown error'
       cache.value.error = errorMsg
       console.error('Failed to fetch enums:', err)
       // Keep using defaults on error
+      cache.value.fetched = true // Mark as fetched even on error to avoid retry loops
     } finally {
       cache.value.loading = false
     }

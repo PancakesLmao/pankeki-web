@@ -2,8 +2,7 @@ node_modules
 npm-debug.log
 .git
 .gitignore
-README.md
-DOCKER.md
+*.md
 .env.example
 dist
 .turbo

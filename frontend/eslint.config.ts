@@ -12,6 +12,35 @@ export default defineConfigWithVueTs(
   {
     name: 'app/files-to-lint',
     files: ['**/*.{ts,mts,tsx,vue}'],
+    rules: {
+      'vue/multi-word-component-names': [
+        'error',
+        {
+          ignores: [
+            // Allow single-word icon components
+            'Arduino',
+            'Discord',
+            'Docker',
+            'Elysia',
+            'Git',
+            'Github',
+            'Javascript',
+            'Kotlin',
+            'Linux',
+            'Mongodb',
+            'Nextjs',
+            'Postgresql',
+            'Raspberry',
+            'React',
+            'Steam',
+            'Tailwind',
+            'Typescript',
+            'Vite',
+            'Vue',
+          ],
+        },
+      ],
+    },
   },
 
   globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),

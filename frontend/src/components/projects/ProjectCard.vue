@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useMode } from '@/composables/useMode'
 import { useEnums } from '@/composables/useEnums'
 
@@ -13,11 +13,25 @@ const props = defineProps<{
 }>()
 
 const { mode } = useMode()
-const { projectStatuses, fetchEnums } = useEnums()
+const { projectStatuses } = useEnums()
+const isVisible = ref(false)
+const cardRef = ref<HTMLElement | null>(null)
 
-// Fetch enums on mount
+// Scroll animation: fade in when visible
 onMounted(() => {
-  fetchEnums()
+  if (!cardRef.value) return
+
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        isVisible.value = true
+        observer.unobserve(entry.target)
+      }
+    },
+    { threshold: 0.1 },
+  )
+
+  observer.observe(cardRef.value)
 })
 
 // Get status label from enum
@@ -67,8 +81,10 @@ const statusColor = computed(() => {
 
 <template>
   <div
+    ref="cardRef"
     :class="[
-      'p-6 rounded-xl transition-all hover:-translate-y-1',
+      'p-6 rounded-xl transition-all duration-500 hover:-translate-y-1',
+      isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4',
       mode === 'developer'
         ? 'bg-white border border-gray-200 hover:shadow-md'
         : 'bg-gray-800 border border-gray-700 hover:border-purple-700',
