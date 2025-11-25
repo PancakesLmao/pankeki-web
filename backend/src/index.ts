@@ -48,10 +48,20 @@ const logResponse = (context: any, requestInfo: any) => {
   );
 };
 
+const allowedOrigins = (
+  process.env.FRONTEND_URL
+    ? [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        process.env.FRONTEND_URL,
+      ]
+    : ["http://localhost:3000", "http://localhost:5173"]
+) as string[];
+
 let app = new Elysia()
   .use(
     cors({
-      origin: true, // In production, specify your frontend domain
+      origin: allowedOrigins,
       credentials: true,
     })
   )
