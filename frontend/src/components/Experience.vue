@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 defineOptions({ name: 'ExperienceSection' })
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useMode } from '@/composables/useMode'
 import { Mode } from '@/types/mode'
 import SectionTitle from '@/components/SectionTitle.vue'
@@ -51,7 +51,8 @@ const timelineItems = computed(() =>
 // Scroll animation
 const timelineItemsRef = ref<HTMLElement[]>([])
 const observer = ref<IntersectionObserver | null>(null)
-onMounted(() => {
+
+const setupObserver = () => {
   observer.value = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -65,8 +66,16 @@ onMounted(() => {
     { threshold: 0.1 }, // Trigger when 10% of the item is visible
   )
 
+  // Observe all items
   timelineItemsRef.value.forEach((item) => {
     if (item) observer.value?.observe(item)
+  })
+}
+
+onMounted(() => {
+  // Use nextTick to ensure DOM is fully rendered
+  nextTick(() => {
+    setupObserver()
   })
 })
 
@@ -79,7 +88,9 @@ onUnmounted(() => {
 
 <style scoped>
 .timeline-item {
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  transition:
+    opacity 0.6s ease-out,
+    transform 0.6s ease-out;
   transition-delay: 200ms;
 }
 
