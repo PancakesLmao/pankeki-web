@@ -11,6 +11,43 @@ import { enumRoutes } from "./routes/enums";
 const PORT = process.env.PORT || 3000;
 const isDevelopment = process.env.NODE_ENV !== "production";
 
+// Request logging middleware inspired by Next.js
+const logRequest = (context: any) => {
+  const method = context.request.method;
+  const url = new URL(context.request.url);
+  const path = url.pathname + url.search;
+  const start = Date.now();
+
+  return {
+    method,
+    path,
+    start,
+  };
+};
+
+const logResponse = (context: any, requestInfo: any) => {
+  const duration = Date.now() - requestInfo.start;
+  const status = context.set.status || 200;
+
+  // Color codes for terminal output
+  const statusColor =
+    status >= 500
+      ? "\x1b[31m" // Red for 5xx
+      : status >= 400
+        ? "\x1b[33m" // Yellow for 4xx
+        : status >= 300
+          ? "\x1b[36m" // Cyan for 3xx
+          : status >= 200
+            ? "\x1b[32m" // Green for 2xx
+            : "\x1b[37m"; // White for other
+
+  const resetColor = "\x1b[0m";
+
+  console.log(
+    `${requestInfo.method.padEnd(6)} ${requestInfo.path.padEnd(40)} ${statusColor}${status}${resetColor} ${duration}ms`
+  );
+};
+
 let app = new Elysia()
   .use(
     cors({
@@ -18,7 +55,17 @@ let app = new Elysia()
       credentials: true,
     })
   )
-  .use(cookie());
+  .use(cookie())
+  .onBeforeHandle((context) => {
+    const requestInfo = logRequest(context);
+    (context as any).__requestInfo = requestInfo;
+  })
+  .onAfterHandle((context) => {
+    const requestInfo = (context as any).__requestInfo;
+    if (requestInfo) {
+      logResponse(context, requestInfo);
+    }
+  });
 
 // Add OpenAPI documentation only in development
 if (isDevelopment) {

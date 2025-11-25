@@ -29,16 +29,16 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
         status: t.Optional(
           t.Union(
             [
-              t.Literal("completed-and-published"),
-              t.Literal("ongoing"),
-              t.Literal("deprecated"),
-              t.Literal("completed-and-documenting"),
-              t.Literal("upcoming"),
-              t.Literal("under-maintenance"),
+              t.Literal("Completed and Published"),
+              t.Literal("Ongoing"),
+              t.Literal("Deprecated"),
+              t.Literal("Completed and Documenting"),
+              t.Literal("Upcoming"),
+              t.Literal("Under Maintenance"),
             ],
             {
               description:
-                "Filter projects by status. Use lowercase with hyphens. Omit to fetch all projects.",
+                "Filter projects by status. Use title case with spaces. Omit to fetch all projects.",
             }
           )
         ),
@@ -47,7 +47,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
         tags: ["Projects"],
         summary: "Get all projects",
         description:
-          "Retrieve all portfolio projects (public access). Can be filtered by status using URL-friendly format (e.g., 'completed-and-published'). Omit status parameter to get all projects.",
+          "Retrieve all portfolio projects (public access). Can be filtered by status using title case format (e.g., 'Ongoing'). Omit status parameter to get all projects.",
       },
     }
   )
@@ -150,17 +150,17 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
         ),
         status: t.Union(
           [
-            t.Literal("completed-and-published"),
-            t.Literal("ongoing"),
-            t.Literal("deprecated"),
-            t.Literal("completed-and-documenting"),
-            t.Literal("upcoming"),
-            t.Literal("under-maintenance"),
+            t.Literal("Completed and Published"),
+            t.Literal("Ongoing"),
+            t.Literal("Deprecated"),
+            t.Literal("Completed and Documenting"),
+            t.Literal("Upcoming"),
+            t.Literal("Under Maintenance"),
           ],
           {
             description:
-              "Project status (required). Use lowercase with hyphens.",
-            default: "ongoing",
+              "Project status (required). Use title case with spaces.",
+            default: "Ongoing",
           }
         ),
       }),
@@ -168,7 +168,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
         tags: ["Projects"],
         summary: "Create project",
         description:
-          "Create a new project (admin only). The created_by field is automatically set from the authenticated user. Use URL-friendly status format (e.g., 'ongoing', 'completed-and-published').",
+          "Create a new project (admin only). The created_by field is automatically set from the authenticated user. Use title case status format (e.g., 'Ongoing', 'Completed and Published').",
       },
     }
   )
@@ -178,7 +178,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
     "/:id",
     async ({ params, body, cookie, set }) => {
       try {
-        await requireAuth({ cookie, set });
+        const { supabase: authClient } = await requireAuth({ cookie, set });
 
         const updateData: Partial<Project> = {};
         if (body.title !== undefined) updateData.title = body.title;
@@ -194,7 +194,11 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
           updateData.status = body.status;
         }
 
-        const project = await updateProject(BigInt(params.id), updateData);
+        const project = await updateProject(
+          BigInt(params.id),
+          updateData,
+          authClient
+        );
 
         return {
           message: "Project updated successfully",
@@ -247,16 +251,16 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
           }),
           status: t.Union(
             [
-              t.Literal("completed-and-published"),
-              t.Literal("ongoing"),
-              t.Literal("deprecated"),
-              t.Literal("completed-and-documenting"),
-              t.Literal("upcoming"),
-              t.Literal("under-maintenance"),
+              t.Literal("Completed and Published"),
+              t.Literal("Ongoing"),
+              t.Literal("Deprecated"),
+              t.Literal("Completed and Documenting"),
+              t.Literal("Upcoming"),
+              t.Literal("Under Maintenance"),
             ],
             {
-              description: "Project status. Use lowercase with hyphens.",
-              default: "ongoing",
+              description: "Project status. Use title case with spaces.",
+              default: "Ongoing",
             }
           ),
         })
@@ -275,9 +279,9 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
     "/:id",
     async ({ params, cookie, set }) => {
       try {
-        await requireAuth({ cookie, set });
+        const { supabase: authClient } = await requireAuth({ cookie, set });
 
-        await deleteProject(BigInt(params.id));
+        await deleteProject(BigInt(params.id), authClient);
 
         return { message: "Project deleted successfully" };
       } catch (error: any) {

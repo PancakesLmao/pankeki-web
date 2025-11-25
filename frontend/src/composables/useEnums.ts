@@ -6,14 +6,14 @@ export interface EnumOption {
   label: string
 }
 
-// Default values matching the Prisma schema
+// Default values matching the Postgres enum
 const DEFAULT_PROJECT_STATUSES: EnumOption[] = [
-  { value: 'completed-and-published', label: 'Completed & Published' },
-  { value: 'ongoing', label: 'Ongoing' },
-  { value: 'deprecated', label: 'Deprecated' },
-  { value: 'completed-and-documenting', label: 'Completed & Documenting' },
-  { value: 'upcoming', label: 'Upcoming' },
-  { value: 'under-maintenance', label: 'Under Maintenance' },
+  { value: 'Completed and Published', label: 'Completed & Published' },
+  { value: 'Ongoing', label: 'Ongoing' },
+  { value: 'Deprecated', label: 'Deprecated' },
+  { value: 'Completed and Documenting', label: 'Completed & Documenting' },
+  { value: 'Upcoming', label: 'Upcoming' },
+  { value: 'Under Maintenance', label: 'Under Maintenance' },
 ]
 
 const DEFAULT_GAME_GENRES: EnumOption[] = [

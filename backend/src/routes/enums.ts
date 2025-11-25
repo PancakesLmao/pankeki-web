@@ -5,15 +5,15 @@ export const enumRoutes = new Elysia({ prefix: "/api/enums" })
     "/project-statuses",
     () => ({
       data: [
-        { value: "completed-and-published", label: "Completed & Published" },
-        { value: "ongoing", label: "Ongoing" },
-        { value: "deprecated", label: "Deprecated" },
+        { value: "Completed and Published", label: "Completed & Published" },
+        { value: "Ongoing", label: "Ongoing" },
+        { value: "Deprecated", label: "Deprecated" },
         {
-          value: "completed-and-documenting",
+          value: "Completed and Documenting",
           label: "Completed & Documenting",
         },
-        { value: "upcoming", label: "Upcoming" },
-        { value: "under-maintenance", label: "Under Maintenance" },
+        { value: "Upcoming", label: "Upcoming" },
+        { value: "Under Maintenance", label: "Under Maintenance" },
       ],
     }),
     {

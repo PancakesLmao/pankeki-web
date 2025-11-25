@@ -32,27 +32,6 @@ export interface Game {
 }
 
 // ============================================================================
-// STATUS MAPPING (Projects)
-// ============================================================================
-
-const statusMap: Record<string, string> = {
-  "completed-and-published": "Completed_and_Published",
-  ongoing: "Ongoing",
-  deprecated: "Deprecated",
-  "completed-and-documenting": "Completed_and_Documenting",
-  upcoming: "Upcoming",
-  "under-maintenance": "Under_Maintenance",
-};
-
-const reverseStatusMap: Record<string, string> = {
-  Completed_and_Published: "completed-and-published",
-  Ongoing: "ongoing",
-  Deprecated: "deprecated",
-  Completed_and_Documenting: "completed-and-documenting",
-  Upcoming: "upcoming",
-  Under_Maintenance: "under-maintenance",
-};
-
 // ============================================================================
 // ENUM MAPPINGS (Games)
 // ============================================================================
@@ -102,7 +81,6 @@ const reversePlatformMap: Record<string, string> = {
 const serializeProject = (project: any): Project => ({
   ...project,
   id: project.id.toString(),
-  status: reverseStatusMap[project.status] || project.status,
 });
 
 const serializeGame = (game: any): Game => ({
@@ -123,8 +101,7 @@ export async function getProjects(status?: string): Promise<Project[]> {
     let query = supabase.from("projects").select("*");
 
     if (status) {
-      const dbStatus = statusMap[status] || status;
-      query = query.eq("status", dbStatus);
+      query = query.eq("status", status);
     }
 
     query = query.order("created_at", { ascending: false });
@@ -139,12 +116,18 @@ export async function getProjects(status?: string): Promise<Project[]> {
   }
 }
 
-export async function getProject(id: string | bigint): Promise<Project | null> {
+export async function getProject(
+  id: string | bigint,
+  client: any = supabase
+): Promise<Project | null> {
   try {
-    const { data, error } = await supabase
+    // Convert BigInt to string for consistency with Supabase
+    const projectId = typeof id === "bigint" ? id.toString() : id;
+
+    const { data, error } = await client
       .from("projects")
       .select("*")
-      .eq("id", id)
+      .eq("id", projectId)
       .single();
 
     if (error && error.code === "PGRST116") {
@@ -170,7 +153,7 @@ export async function createProject(data: {
   created_by: string;
 }): Promise<Project> {
   try {
-    const dbStatus = statusMap[data.status] || data.status;
+    console.log("DEBUG createProject - Input data:", JSON.stringify(data));
 
     const { data: project, error } = await supabase
       .from("projects")
@@ -181,7 +164,7 @@ export async function createProject(data: {
           tags: data.tags,
           link: data.link || null,
           project_img: data.project_img || null,
-          status: dbStatus,
+          status: data.status,
           time_range: data.time_range || null,
           created_by: data.created_by,
         },
@@ -207,9 +190,16 @@ export async function updateProject(
     project_img?: string | null;
     status?: string;
     time_range?: string | null;
-  }>
+  }>,
+  client: any = supabase
 ): Promise<Project> {
   try {
+    // Verify project exists first
+    const existing = await getProject(id, client);
+    if (!existing) {
+      throw new Error("Project not found");
+    }
+
     const updateData: any = {};
 
     if (data.title !== undefined) updateData.title = data.title;
@@ -221,27 +211,47 @@ export async function updateProject(
       updateData.project_img = data.project_img;
     if (data.time_range !== undefined) updateData.time_range = data.time_range;
     if (data.status !== undefined) {
-      updateData.status = statusMap[data.status] || data.status;
+      updateData.status = data.status;
     }
 
-    const { data: project, error } = await supabase
+    // Convert id to string for consistency with Supabase
+    const projectId = typeof id === "bigint" ? id.toString() : id;
+
+    // Update project (RLS policy will ensure user owns it)
+    const { error } = await client
       .from("projects")
       .update(updateData)
-      .eq("id", id)
-      .select()
-      .single();
+      .eq("id", projectId);
 
-    if (error) throw error;
-    return serializeProject(project);
+    if (error) {
+      throw error;
+    }
+
+    // Fetch the updated project
+    const updated = await getProject(projectId, client);
+    if (!updated) {
+      throw new Error("Project not found after update");
+    }
+
+    return updated;
   } catch (error) {
     console.error("Error updating project:", error);
     throw error;
   }
 }
 
-export async function deleteProject(id: string | bigint): Promise<void> {
+export async function deleteProject(
+  id: string | bigint,
+  client: any = supabase
+): Promise<void> {
   try {
-    const { error } = await supabase.from("projects").delete().eq("id", id);
+    // Convert id to string for consistency with Supabase
+    const projectId = typeof id === "bigint" ? id.toString() : id;
+
+    const { error } = await client
+      .from("projects")
+      .delete()
+      .eq("id", projectId);
 
     if (error) throw error;
   } catch (error) {
@@ -283,12 +293,18 @@ export async function getGames(
   }
 }
 
-export async function getGame(id: string | bigint): Promise<Game | null> {
+export async function getGame(
+  id: string | bigint,
+  client: any = supabase
+): Promise<Game | null> {
   try {
-    const { data, error } = await supabase
+    // Convert BigInt to string for consistency with Supabase
+    const gameId = typeof id === "bigint" ? id.toString() : id;
+
+    const { data, error } = await client
       .from("games")
       .select("*")
-      .eq("id", id)
+      .eq("id", gameId)
       .single();
 
     if (error && error.code === "PGRST116") {
@@ -349,9 +365,16 @@ export async function updateGame(
     platform?: string[];
     link?: string | null;
     game_img?: string | null;
-  }>
+  }>,
+  client: any = supabase
 ): Promise<Game> {
   try {
+    // Verify game exists first
+    const existing = await getGame(id, client);
+    if (!existing) {
+      throw new Error("Game not found");
+    }
+
     const updateData: any = {};
 
     if (data.title !== undefined) updateData.title = data.title;
@@ -366,24 +389,38 @@ export async function updateGame(
     if (data.link !== undefined) updateData.link = data.link;
     if (data.game_img !== undefined) updateData.game_img = data.game_img;
 
-    const { data: game, error } = await supabase
+    // Convert id to string for consistency with Supabase
+    const gameId = typeof id === "bigint" ? id.toString() : id;
+
+    const { error } = await client
       .from("games")
       .update(updateData)
-      .eq("id", id)
-      .select()
-      .single();
+      .eq("id", gameId);
 
     if (error) throw error;
-    return serializeGame(game);
+
+    // Fetch the updated game
+    const updated = await getGame(gameId, client);
+    if (!updated) {
+      throw new Error("Game not found after update");
+    }
+
+    return updated;
   } catch (error) {
     console.error("Error updating game:", error);
     throw error;
   }
 }
 
-export async function deleteGame(id: string | bigint): Promise<void> {
+export async function deleteGame(
+  id: string | bigint,
+  client: any = supabase
+): Promise<void> {
   try {
-    const { error } = await supabase.from("games").delete().eq("id", id);
+    // Convert id to string for consistency with Supabase
+    const gameId = typeof id === "bigint" ? id.toString() : id;
+
+    const { error } = await client.from("games").delete().eq("id", gameId);
 
     if (error) throw error;
   } catch (error) {

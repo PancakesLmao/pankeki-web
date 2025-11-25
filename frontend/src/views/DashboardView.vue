@@ -371,14 +371,46 @@ const handleGameSubmit = async (data: GameFormData) => {
               ]"
             >
               <div class="flex-1">
-                <h4
-                  :class="[
-                    'font-bold mb-1',
-                    mode === 'developer' ? 'text-gray-900' : 'text-purple-100',
-                  ]"
-                >
-                  {{ project.title }}
-                </h4>
+                <div class="flex items-center gap-3 mb-1">
+                  <h4
+                    :class="[
+                      'font-bold',
+                      mode === 'developer' ? 'text-gray-900' : 'text-purple-100',
+                    ]"
+                  >
+                    {{ project.title }}
+                  </h4>
+                  <span
+                    :class="[
+                      'text-xs font-semibold px-2 py-1 rounded',
+                      project.status === 'Completed and Published'
+                        ? mode === 'developer'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-green-900 text-green-200'
+                        : project.status === 'Ongoing'
+                          ? mode === 'developer'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-blue-900 text-blue-200'
+                          : project.status === 'Upcoming'
+                            ? mode === 'developer'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-yellow-900 text-yellow-200'
+                            : project.status === 'Deprecated'
+                              ? mode === 'developer'
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-red-900 text-red-200'
+                              : project.status === 'Under Maintenance'
+                                ? mode === 'developer'
+                                  ? 'bg-orange-100 text-orange-700'
+                                  : 'bg-orange-900 text-orange-200'
+                                : mode === 'developer'
+                                  ? 'bg-gray-100 text-gray-700'
+                                  : 'bg-gray-700 text-gray-200',
+                    ]"
+                  >
+                    {{ project.status }}
+                  </span>
+                </div>
                 <p
                   :class="[
                     'text-sm mb-2',

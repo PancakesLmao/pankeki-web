@@ -202,7 +202,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
     "/:id",
     async ({ params, body, cookie, set }) => {
       try {
-        await requireAuth({ cookie, set });
+        const { supabase: authClient } = await requireAuth({ cookie, set });
 
         const updateData: Partial<Game> = {};
         if (body.title !== undefined) updateData.title = body.title;
@@ -216,7 +216,11 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
         }
         if (body.link !== undefined) updateData.link = body.link;
 
-        const game = await updateGame(BigInt(params.id), updateData);
+        const game = await updateGame(
+          BigInt(params.id),
+          updateData,
+          authClient
+        );
 
         return {
           message: "Game updated successfully",
@@ -305,9 +309,9 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
     "/:id",
     async ({ params, cookie, set }) => {
       try {
-        await requireAuth({ cookie, set });
+        const { supabase: authClient } = await requireAuth({ cookie, set });
 
-        await deleteGame(BigInt(params.id));
+        await deleteGame(BigInt(params.id), authClient);
 
         return { message: "Game deleted successfully" };
       } catch (error: any) {
