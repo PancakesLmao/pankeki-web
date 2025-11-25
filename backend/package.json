@@ -1,0 +1,24 @@
+{
+  "name": "backend",
+  "version": "1.0.50",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun dist/index.js"
+  },
+  "dependencies": {
+    "@elysiajs/cookie": "^0.8.0",
+    "@elysiajs/cors": "^1.4.0",
+    "@elysiajs/openapi": "^1.4.11",
+    "@supabase/supabase-js": "^2.75.1",
+    "elysia": "^1.2.0-rc.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.8.1",
+    "bun-types": "latest",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "module": "src/index.js"
+}
