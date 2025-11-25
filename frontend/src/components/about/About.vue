@@ -58,7 +58,7 @@ const handleSkillClick = (skillText: string) => {
           {{
             mode === 'developer'
               ? 'I’m a third-year Software Development student who got hooked on web development after exploring big, interactive websites from major companies. I believe a great UI doesn’t just look good—it grabs attention and makes users want to stick around. That curiosity led me to frontend development with React, where I’ve spent over a year building projects, and recently to Cloud Computing with AWS and IoT, which opened my eyes to how different tech fields can work together. I love experimenting, like deploying web apps on AWS or connecting IoT devices to cloud services.'
-              : 'I love gaming because it’s a doorway to connection, creativity, and unwinding after a long day of coding. To me, games are more than fun—they bring people together, teach lessons about life, and tell stories that stick with you. Open-world RPGs are my jam, with their deep narratives and stunning designs that show the heart and effort poured into every detail. I’m a sucker for that kind of artistry, where every pixel feels like a labor of love.'
+              : 'I love gaming because it’s a doorway to connection, creativity, and unwinding after a long day of coding. Games are more than fun—they bring people together, raiding with friends or sharing wild plot theories.'
           }}
         </p>
         <p
@@ -67,7 +67,7 @@ const handleSkillClick = (skillText: string) => {
           {{
             mode === 'developer'
               ? 'My approach is all about staying versatile and learning as much as I can across web, cloud, and IoT, so I’m ready for today’s fast-moving tech world, where startups expect freshers to wear multiple hats. With about six months of AWS experience and a hunger to grow, I’m chasing internships to dive into real-world projects, level up my skills, and help teams build something awesome.'
-              : 'My approach to gaming is about chasing those moments of awe and community, whether I’m exploring a vast RPG world or chatting with friends online. Games inspire me to think creatively, just like coding does, and I’m excited to bring that passion to internships where I can blend my love for tech and gaming to help build projects that spark joy for others.'
+              : 'Modern RPGs are my jam, with deep narratives and stunning designs that show the heart poured into every detail. I’m a sucker for that artistry in character designs, surrounding worlds, and stories that hook you right away—simulation and sandbox vibes included. Every pixel feels like a labor of love. Well except for gacha, its pain, we all know that.'
           }}
         </p>
       </div>

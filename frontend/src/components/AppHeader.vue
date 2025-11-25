@@ -1,20 +1,22 @@
 <script setup lang="ts">
-import { useMode } from '@/composables/useMode';
-import { Mode } from '@/types/mode';
+import { useMode } from '@/composables/useMode'
+import { Mode } from '@/types/mode'
+import { RouterLink } from 'vue-router'
 import { Gamepad2, Code } from 'lucide-vue-next'
 // import { useRoute } from 'vue-router'
 const { mode, setMode } = useMode()
 </script>
 <template>
   <header class="flex justify-between items-center mb-16">
-    <h1
+    <RouterLink
+      to="/"
       :class="[
-        'text-2xl font-medium transition-colors',
+        'text-2xl font-medium transition-colors hover:opacity-80 cursor-pointer',
         mode === Mode.Developer ? 'font-serif' : 'font-mono',
       ]"
     >
       {{ mode === Mode.Developer ? 'Nguyen Thinh' : 'Pankeki' }}
-    </h1>
+    </RouterLink>
 
     <div class="flex items-center gap-3">
       <span
@@ -29,9 +31,7 @@ const { mode, setMode } = useMode()
         @click="setMode(mode === Mode.Developer ? 'gamer' : 'developer')"
         :class="[
           'p-2 rounded-full transition-colors',
-          mode === Mode.Developer
-            ? 'bg-gray-200'
-            : 'bg-purple-900',
+          mode === Mode.Developer ? 'bg-gray-200' : 'bg-purple-900',
         ]"
         :aria-label="`Switch to ${mode === Mode.Developer ? 'gamer' : 'developer'} mode`"
       >

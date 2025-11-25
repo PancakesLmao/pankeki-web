@@ -68,7 +68,7 @@ const writerArray = computed(() => {
     >
       {{ mode === 'developer'
         ? 'Sparking curiosity through vibrant web apps and cloud-powered solutions'
-        : '"Gamers don’t check the time, we check the pity counter"' }}
+        : '"I don’t check the time, I check the pity counter"' }}
     </p>
 
     <div class="flex gap-4">

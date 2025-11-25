@@ -21,16 +21,40 @@ const games = ref<GameProject[]>([])
 const loadingGames = ref(false)
 const fetchError = ref<string | null>(null)
 
+// Genre display mapping
+const genreDisplayMap: Record<string, string> = {
+  gacha: 'Gacha',
+  'sci-fi': 'Sci-Fi',
+  fantasy: 'Fantasy',
+  'hack-and-slash': 'Hack and Slash',
+  'action-rpg': 'Action RPG',
+  rpg: 'RPG',
+  jrpg: 'JRPG',
+  'visual-novel': 'Visual Novel',
+  'turn-based': 'Turn-based',
+  'open-world': 'Open World',
+}
+
+// Platform display mapping
+const platformDisplayMap: Record<string, string> = {
+  pc: 'PC',
+  mobile: 'Mobile',
+  playstation: 'PlayStation',
+}
+
 // Helper function to map API Game to GameProject format
 const mapGameToGameProject = (game: Game): GameProject => {
+  const displayGenres = game.genre.map((g) => genreDisplayMap[g] || g)
+  const displayPlatforms = game.platform.map((p) => platformDisplayMap[p] || p)
+
   return {
     id: game.id,
     title: game.title,
     description: game.description,
     coverImage: game.cover_img || '',
     iconImage: game.icon_img || '',
-    platform: game.platform.join(' / '),
-    genre: game.genre.join(', '),
+    platform: displayPlatforms.join(' / '),
+    genre: displayGenres.join(', '),
     tags: game.tags,
     link: game.link || '#',
   }
