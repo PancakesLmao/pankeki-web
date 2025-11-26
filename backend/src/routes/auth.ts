@@ -22,19 +22,18 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
           return { error: error.message };
         }
 
-        // Set cookies for session management
+        // Set access token cookie for session management
         if (data.session) {
+          const sameSite = process.env.COOKIE_SAMESITE || "none";
+          const secure =
+            process.env.COOKIE_SECURE === "true" ||
+            process.env.NODE_ENV === "production";
+
           cookie.access_token.value = data.session.access_token;
           cookie.access_token.httpOnly = true;
-          cookie.access_token.secure = process.env.NODE_ENV === "production";
-          cookie.access_token.sameSite = "strict";
+          cookie.access_token.secure = secure;
+          cookie.access_token.sameSite = sameSite as any;
           cookie.access_token.maxAge = data.session.expires_in;
-
-          cookie.refresh_token.value = data.session.refresh_token;
-          cookie.refresh_token.httpOnly = true;
-          cookie.refresh_token.secure = process.env.NODE_ENV === "production";
-          cookie.refresh_token.sameSite = "strict";
-          cookie.refresh_token.maxAge = 60 * 60 * 24 * 7; // 7 days
         }
 
         return {
@@ -96,7 +95,6 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
 
         // Clear cookies
         cookie.access_token.remove();
-        cookie.refresh_token.remove();
 
         return { message: "Signed out successfully" };
       } catch (error: any) {
@@ -168,73 +166,6 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
         summary: "Get current user",
         description:
           "Retrieve authenticated user information using access token from cookies",
-      },
-    }
-  )
-
-  // Refresh token
-  .post(
-    "/refresh",
-    async ({ cookie, set }) => {
-      try {
-        const refreshToken = cookie.refresh_token.value;
-
-        if (!refreshToken) {
-          set.status = 401;
-          return { error: "No refresh token found" };
-        }
-
-        const supabase = createSupabaseClient();
-        const { data, error } = await supabase.auth.refreshSession({
-          refresh_token: refreshToken,
-        });
-
-        if (error) {
-          set.status = 401;
-          return { error: error.message };
-        }
-
-        if (data.session) {
-          cookie.access_token.value = data.session.access_token;
-          cookie.access_token.httpOnly = true;
-          cookie.access_token.secure = process.env.NODE_ENV === "production";
-          cookie.access_token.sameSite = "strict";
-          cookie.access_token.maxAge = data.session.expires_in;
-
-          cookie.refresh_token.value = data.session.refresh_token;
-          cookie.refresh_token.httpOnly = true;
-          cookie.refresh_token.secure = process.env.NODE_ENV === "production";
-          cookie.refresh_token.sameSite = "strict";
-          cookie.refresh_token.maxAge = 60 * 60 * 24 * 7;
-        }
-
-        return {
-          message: "Token refreshed successfully",
-          session: data.session,
-        };
-      } catch (error: any) {
-        set.status = 500;
-        return { error: error.message };
-      }
-    },
-    {
-      response: {
-        200: t.Object({
-          message: t.String(),
-          session: t.Any(),
-        }),
-        401: t.Object({
-          error: t.String(),
-        }),
-        500: t.Object({
-          error: t.String(),
-        }),
-      },
-      detail: {
-        tags: ["Auth"],
-        summary: "Refresh token",
-        description:
-          "Refresh access token using refresh token from cookies. Sets new access and refresh tokens.",
       },
     }
   );

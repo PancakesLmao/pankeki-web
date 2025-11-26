@@ -10,6 +10,8 @@ import { enumRoutes } from "./routes/enums";
 
 const PORT = process.env.PORT || 3000;
 const isDevelopment = process.env.NODE_ENV !== "production";
+const DOMAIN = process.env.DOMAIN || "localhost";
+const FRONTEND_PORT = process.env.FRONTEND_PORT || "5173";
 
 // Request logging middleware inspired by Next.js
 const logRequest = (context: any) => {
@@ -48,21 +50,42 @@ const logResponse = (context: any, requestInfo: any) => {
   );
 };
 
-const allowedOrigins = (
-  process.env.FRONTEND_URL
-    ? [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        process.env.FRONTEND_URL,
-      ]
-    : ["http://localhost:3000", "http://localhost:5173"]
-) as string[];
+const getFrontendUrl = (): string => {
+  if (isDevelopment) {
+    return `http://${DOMAIN}:${FRONTEND_PORT}`;
+  }
+  if (!DOMAIN || DOMAIN === "localhost") {
+    throw new Error("DOMAIN environment variable must be set in production");
+  }
+  return `https://${DOMAIN}`;
+};
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  getFrontendUrl(),
+] as string[];
+
+// Cookie configuration for cross-domain authentication
+// - COOKIE_SAMESITE: Controls whether cookies are sent across origins
+//   * "strict": Same-site requests only (default for same-domain deployments)
+//   * "lax": Sent on top-level navigation and same-site requests (recommended for cross-domain)
+//   * "none": Sent on all requests (requires secure: true and HTTPS)
+// - COOKIE_SECURE: Only send cookies over HTTPS (required for production)
+const cookieSameSite = (process.env.COOKIE_SAMESITE || "lax") as
+  | "strict"
+  | "lax"
+  | "none";
+const cookieSecure =
+  process.env.COOKIE_SECURE === "true" || process.env.NODE_ENV === "production";
 
 let app = new Elysia()
   .use(
     cors({
       origin: allowedOrigins,
       credentials: true,
+      allowedHeaders: ["Content-Type"],
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     })
   )
   .use(cookie())

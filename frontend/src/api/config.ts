@@ -1,6 +1,20 @@
-// API Configuration
+const DOMAIN = import.meta.env.VITE_DOMAIN || 'localhost'
+const BACKEND_PORT = import.meta.env.VITE_BACKEND_PORT || '3000'
+const isDevelopment = !import.meta.env.PROD
+
+const getBackendUrl = (): string => {
+  if (isDevelopment) {
+    return `http://${DOMAIN}:${BACKEND_PORT}`
+  }
+  // Production: use VITE_DOMAIN env variable (must be set in production)
+  if (!DOMAIN || DOMAIN === 'localhost') {
+    throw new Error('VITE_DOMAIN environment variable must be set in production')
+  }
+  return `https://${DOMAIN}`
+}
+
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000',
+  BASE_URL: getBackendUrl(),
   ENDPOINTS: {
     // Auth
     AUTH: {
