@@ -9,6 +9,7 @@ import {
   type Project,
 } from "../libs/db";
 import { requireAuth } from "../middleware/auth";
+import { getSignedImageUrl } from "../libs/storage";
 
 export const projectRoutes = new Elysia({ prefix: "/api/projects" })
   .use(cookie())
@@ -18,7 +19,24 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
     async ({ query, set }) => {
       try {
         const projects = await getProjects(query.status);
-        return { projects };
+
+        // Generate public URLs for all project images
+        const projectsWithUrls = await Promise.all(
+          projects.map(async (project) => {
+            const imageUrl = (project as any).project_img
+              ? await getSignedImageUrl((project as any).project_img)
+              : null;
+
+            // Exclude internal path from response
+            const { project_img, ...projectData } = project as any;
+            return {
+              ...projectData,
+              image_url: imageUrl,
+            };
+          })
+        );
+
+        return { projects: projectsWithUrls };
       } catch (error: any) {
         set.status = 500;
         return { error: error.message };
@@ -64,7 +82,20 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
           return { error: "Project not found" };
         }
 
-        return { project };
+        // Generate public URL for the project image
+        const imageUrl = (project as any).project_img
+          ? await getSignedImageUrl((project as any).project_img)
+          : null;
+
+        // Exclude internal path from response
+        const { project_img, ...projectData } = project as any;
+
+        return {
+          project: {
+            ...projectData,
+            image_url: imageUrl,
+          },
+        };
       } catch (error: any) {
         set.status = 500;
         return { error: error.message };

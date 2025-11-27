@@ -6,7 +6,8 @@ export interface Project {
   tags: string[]
   link: string
   time_range: string
-  project_img: string
+  image_url: string | null
+  project_img?: string
   created_at: string
   created_by: string
 }
@@ -19,7 +20,9 @@ export interface Game {
   platform: string[]
   tags: string[]
   link: string
-  cover_img: string
-  icon_img: string
+  cover_url: string | null
+  icon_url: string | null
+  cover_img?: string
+  icon_img?: string
   created_at: string
 }

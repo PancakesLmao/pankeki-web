@@ -27,6 +27,7 @@ const DEFAULT_GAME_GENRES: EnumOption[] = [
   { value: 'visual-novel', label: 'Visual Novel' },
   { value: 'turn-based', label: 'Turn-based' },
   { value: 'open-world', label: 'Open World' },
+  { value: 'simulation', label: 'Simulation' },
 ]
 
 const DEFAULT_GAME_PLATFORMS: EnumOption[] = [

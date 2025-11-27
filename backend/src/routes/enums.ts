@@ -1,4 +1,5 @@
 import { Elysia } from "elysia";
+import { getGameGenres, getGamePlatforms } from "../libs/db";
 
 export const enumRoutes = new Elysia({ prefix: "/api/enums" })
   .get(
@@ -25,20 +26,16 @@ export const enumRoutes = new Elysia({ prefix: "/api/enums" })
   )
   .get(
     "/game-genres",
-    () => ({
-      data: [
-        { value: "gacha", label: "Gacha" },
-        { value: "sci-fi", label: "Sci-Fi" },
-        { value: "fantasy", label: "Fantasy" },
-        { value: "hack-and-slash", label: "Hack and Slash" },
-        { value: "action-rpg", label: "Action RPG" },
-        { value: "rpg", label: "RPG" },
-        { value: "jrpg", label: "JRPG" },
-        { value: "visual-novel", label: "Visual Novel" },
-        { value: "turn-based", label: "Turn-based" },
-        { value: "open-world", label: "Open World" },
-      ],
-    }),
+    async () => {
+      const genres = await getGameGenres();
+      const data = Object.entries(genres).map(
+        ([apiValue, { displayValue }]) => ({
+          value: apiValue,
+          label: displayValue,
+        })
+      );
+      return { data };
+    },
     {
       detail: {
         tags: ["Enums"],
@@ -48,13 +45,16 @@ export const enumRoutes = new Elysia({ prefix: "/api/enums" })
   )
   .get(
     "/game-platforms",
-    () => ({
-      data: [
-        { value: "pc", label: "PC" },
-        { value: "mobile", label: "Mobile" },
-        { value: "playstation", label: "PlayStation" },
-      ],
-    }),
+    async () => {
+      const platforms = await getGamePlatforms();
+      const data = Object.entries(platforms).map(
+        ([apiValue, { displayValue }]) => ({
+          value: apiValue,
+          label: displayValue,
+        })
+      );
+      return { data };
+    },
     {
       detail: {
         tags: ["Enums"],

@@ -9,6 +9,7 @@ import {
   type Game,
 } from "../libs/db";
 import { requireAuth } from "../middleware/auth";
+import { getMultipleSignedUrls } from "../libs/storage";
 
 export const gameRoutes = new Elysia({ prefix: "/api/games" })
   .use(cookie())
@@ -18,7 +19,52 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
     async ({ query, set }) => {
       try {
         const games = await getGames(query.genre, query.platform);
-        return { games };
+
+        // Normalize enum mappings
+        const genreReverseMap: Record<string, string> = {
+          Gacha: "gacha",
+          "Sci-Fi": "sci-fi",
+          Fantasy: "fantasy",
+          "Hack And Slash": "hack-and-slash",
+          "Action RPG": "action-rpg",
+          RPG: "rpg",
+          JRPG: "jrpg",
+          "Visual Novel": "visual-novel",
+          "Turn-based": "turn-based",
+          "Open World": "open-world",
+          Simulation: "simulation",
+        };
+        const platformReverseMap: Record<string, string> = {
+          PC: "pc",
+          Mobile: "mobile",
+          PlayStation: "playstation",
+        };
+
+        // Generate public URLs for all image fields
+        const imagePaths = games.flatMap((game: any) => [
+          game.cover_img,
+          game.icon_img,
+        ]);
+        const signedUrls = await getMultipleSignedUrls(imagePaths);
+
+        // Map URLs back to games (exclude internal paths and normalize enum values)
+        let urlIndex = 0;
+        const gamesWithUrls = games.map((game: any) => {
+          const { cover_img, icon_img, ...gameData } = game;
+          return {
+            ...gameData,
+            genre: (game.genre || []).map(
+              (g: string) => genreReverseMap[g] || g
+            ),
+            platform: (game.platform || []).map(
+              (p: string) => platformReverseMap[p] || p
+            ),
+            cover_url: signedUrls[urlIndex++],
+            icon_url: signedUrls[urlIndex++],
+          };
+        });
+
+        return { games: gamesWithUrls };
       } catch (error: any) {
         set.status = 500;
         return { error: error.message };
@@ -39,6 +85,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
               t.Literal("visual-novel"),
               t.Literal("turn-based"),
               t.Literal("open-world"),
+              t.Literal("simulation"),
             ],
             {
               description:
@@ -77,7 +124,48 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
           return { error: "Game not found" };
         }
 
-        return { game };
+        // Generate public URLs for the game images
+        const [coverUrl, iconUrl] = await getMultipleSignedUrls([
+          (game as any).cover_img,
+          (game as any).icon_img,
+        ]);
+
+        // Normalize enum values
+        const genreReverseMap: Record<string, string> = {
+          Gacha: "gacha",
+          "Sci-Fi": "sci-fi",
+          Fantasy: "fantasy",
+          "Hack And Slash": "hack-and-slash",
+          "Action RPG": "action-rpg",
+          RPG: "rpg",
+          JRPG: "jrpg",
+          "Visual Novel": "visual-novel",
+          "Turn-based": "turn-based",
+          "Open World": "open-world",
+          Simulation: "simulation",
+        };
+        const platformReverseMap: Record<string, string> = {
+          PC: "pc",
+          Mobile: "mobile",
+          PlayStation: "playstation",
+        };
+
+        // Exclude internal paths from response
+        const { cover_img, icon_img, ...gameData } = game as any;
+
+        return {
+          game: {
+            ...gameData,
+            genre: (game.genre || []).map(
+              (g: string) => genreReverseMap[g] || g
+            ),
+            platform: (game.platform || []).map(
+              (p: string) => platformReverseMap[p] || p
+            ),
+            cover_url: coverUrl,
+            icon_url: iconUrl,
+          },
+        };
       } catch (error: any) {
         set.status = 500;
         return { error: error.message };
@@ -171,6 +259,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
             t.Literal("visual-novel"),
             t.Literal("turn-based"),
             t.Literal("open-world"),
+            t.Literal("simulation"),
           ]),
           {
             description: "Array of game genres. Use lowercase with hyphens.",
@@ -279,6 +368,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
               t.Literal("visual-novel"),
               t.Literal("turn-based"),
               t.Literal("open-world"),
+              t.Literal("simulation"),
             ]),
             {
               description: "Array of game genres. Use lowercase with hyphens.",

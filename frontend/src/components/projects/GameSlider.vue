@@ -33,6 +33,7 @@ const genreDisplayMap: Record<string, string> = {
   'visual-novel': 'Visual Novel',
   'turn-based': 'Turn-based',
   'open-world': 'Open World',
+  simulation: 'Simulation',
 }
 
 // Platform display mapping
@@ -51,8 +52,8 @@ const mapGameToGameProject = (game: Game): GameProject => {
     id: game.id,
     title: game.title,
     description: game.description,
-    coverImage: game.cover_img || '',
-    iconImage: game.icon_img || '',
+    coverImage: game.cover_url || '',
+    iconImage: game.icon_url || '',
     platform: displayPlatforms.join(' / '),
     genre: displayGenres.join(', '),
     tags: game.tags,

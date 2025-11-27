@@ -38,28 +38,30 @@ export interface Game {
 
 const genreMap: Record<string, string> = {
   gacha: "Gacha",
-  "sci-fi": "Sci_Fi",
+  "sci-fi": "Sci-Fi",
   fantasy: "Fantasy",
-  "hack-and-slash": "Hack_And_Slash",
-  "action-rpg": "Action_RPG",
+  "hack-and-slash": "Hack And Slash",
+  "action-rpg": "Action RPG",
   rpg: "RPG",
   jrpg: "JRPG",
-  "visual-novel": "Visual_Novel",
-  "turn-based": "Turn_based",
-  "open-world": "Open_World",
+  "visual-novel": "Visual Novel",
+  "turn-based": "Turn-based",
+  "open-world": "Open World",
+  simulation: "Simulation",
 };
 
 const reverseGenreMap: Record<string, string> = {
   Gacha: "gacha",
-  Sci_Fi: "sci-fi",
+  "Sci-Fi": "sci-fi",
   Fantasy: "fantasy",
-  Hack_And_Slash: "hack-and-slash",
-  Action_RPG: "action-rpg",
+  "Hack And Slash": "hack-and-slash",
+  "Action RPG": "action-rpg",
   RPG: "rpg",
   JRPG: "jrpg",
-  Visual_Novel: "visual-novel",
-  Turn_based: "turn-based",
-  Open_World: "open-world",
+  "Visual Novel": "visual-novel",
+  "Turn-based": "turn-based",
+  "Open World": "open-world",
+  Simulation: "simulation",
 };
 
 const platformMap: Record<string, string> = {
@@ -460,21 +462,22 @@ export async function getGameGenres(): Promise<
 > {
   return {
     gacha: { dbValue: "Gacha", displayValue: "Gacha" },
-    "sci-fi": { dbValue: "Sci_Fi", displayValue: "Sci-Fi" },
+    "sci-fi": { dbValue: "Sci-Fi", displayValue: "Sci-Fi" },
     fantasy: { dbValue: "Fantasy", displayValue: "Fantasy" },
     "hack-and-slash": {
-      dbValue: "Hack_And_Slash",
+      dbValue: "Hack And Slash",
       displayValue: "Hack and Slash",
     },
-    "action-rpg": { dbValue: "Action_RPG", displayValue: "Action RPG" },
+    "action-rpg": { dbValue: "Action RPG", displayValue: "Action RPG" },
     rpg: { dbValue: "RPG", displayValue: "RPG" },
     jrpg: { dbValue: "JRPG", displayValue: "JRPG" },
     "visual-novel": {
-      dbValue: "Visual_Novel",
+      dbValue: "Visual Novel",
       displayValue: "Visual Novel",
     },
-    "turn-based": { dbValue: "Turn_based", displayValue: "Turn-based" },
-    "open-world": { dbValue: "Open_World", displayValue: "Open World" },
+    "turn-based": { dbValue: "Turn-based", displayValue: "Turn-based" },
+    "open-world": { dbValue: "Open World", displayValue: "Open World" },
+    simulation: { dbValue: "Simulation", displayValue: "Simulation" },
   };
 }
 
