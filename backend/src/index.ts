@@ -98,6 +98,20 @@ let app = new Elysia()
     if (requestInfo) {
       logResponse(context, requestInfo);
     }
+  })
+  .onError(({ code, error, set }) => {
+    // Don't log 404 errors (common for missing resources like favicon)
+    if (code !== 'NOT_FOUND') {
+      console.error("❌ Global error handler:", code, error);
+    }
+    
+    if (code === 'NOT_FOUND') {
+      set.status = 404;
+      return { error: 'Not found' };
+    }
+    
+    set.status = 500;
+    return { error: error.message || "Internal server error" };
   });
 
 // Add OpenAPI documentation only in development

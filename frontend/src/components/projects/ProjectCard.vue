@@ -3,14 +3,18 @@ import { computed, ref, onMounted } from 'vue'
 import { useMode } from '@/composables/useMode'
 import { useEnums } from '@/composables/useEnums'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   title: string
-  description: string
+  description?: string | undefined
   tags: string[]
-  link: string
+  link?: string | undefined
   status: string
-  timeRange: string
-}>()
+  timeRange?: string | undefined
+}>(), {
+  description: '',
+  link: '',
+  timeRange: ''
+})
 
 const { mode } = useMode()
 const { projectStatuses } = useEnums()

@@ -191,7 +191,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
     "/",
     async ({ body, cookie, set }) => {
       try {
-        const { user } = await requireAuth({ cookie, set });
+        const { user, supabase: authClient } = await requireAuth({ cookie, set });
 
         const game = await createGame({
           title: body.title,
@@ -201,7 +201,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
           link: body.link,
           game_img: body.icon_img,
           created_by: user!.id,
-        });
+        }, authClient);
 
         return {
           message: "Game created successfully",

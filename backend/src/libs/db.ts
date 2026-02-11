@@ -144,20 +144,23 @@ export async function getProject(
   }
 }
 
-export async function createProject(data: {
-  title: string;
-  description?: string;
-  tags: string[];
-  link?: string;
-  project_img?: string;
-  status: string;
-  time_range?: string;
-  created_by: string;
-}): Promise<Project> {
+export async function createProject(
+  data: {
+    title: string;
+    description?: string;
+    tags: string[];
+    link?: string;
+    project_img?: string;
+    status: string;
+    time_range?: string;
+    created_by: string;
+  },
+  client: any = supabase
+): Promise<Project> {
   try {
     console.log("DEBUG createProject - Input data:", JSON.stringify(data));
 
-    const { data: project, error } = await supabase
+    const { data: project, error } = await client
       .from("projects")
       .insert([
         {
@@ -321,20 +324,23 @@ export async function getGame(
   }
 }
 
-export async function createGame(data: {
-  title: string;
-  description?: string;
-  genre: string[];
-  platform: string[];
-  link?: string;
-  game_img?: string;
-  created_by: string;
-}): Promise<Game> {
+export async function createGame(
+  data: {
+    title: string;
+    description?: string;
+    genre: string[];
+    platform: string[];
+    link?: string;
+    game_img?: string;
+    created_by: string;
+  },
+  client: any = supabase
+): Promise<Game> {
   try {
     const dbGenre = data.genre.map((g) => genreMap[g] || g);
     const dbPlatform = data.platform.map((p) => platformMap[p] || p);
 
-    const { data: game, error } = await supabase
+    const { data: game, error } = await client
       .from("games")
       .insert([
         {

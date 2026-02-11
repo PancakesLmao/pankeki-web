@@ -397,7 +397,8 @@ Get all available game genres (public access).
     { "value": "jrpg", "label": "JRPG" },
     { "value": "visual-novel", "label": "Visual Novel" },
     { "value": "turn-based", "label": "Turn-based" },
-    { "value": "open-world", "label": "Open World" }
+    { "value": "open-world", "label": "Open World" },
+    { "value": "simulation", "label": "Simulation" }
   ]
 }
 ```
@@ -429,7 +430,7 @@ Get all games (public access). Can be filtered by genre or platform.
 **Query Parameters:**
 
 - `genre` (optional, enum) - Filter games by genre (use lowercase with hyphens). Possible values:
-  - `gacha`, `sci-fi`, `fantasy`, `hack-and-slash`, `action-rpg`, `rpg`, `jrpg`, `visual-novel`, `turn-based`, `open-world`
+  - `gacha`, `sci-fi`, `fantasy`, `hack-and-slash`, `action-rpg`, `rpg`, `jrpg`, `visual-novel`, `turn-based`, `open-world`, `simulation`
 - `platform` (optional, enum) - Filter games by platform (use lowercase). Possible values:
   - `pc`, `mobile`, `playstation`
 
@@ -523,7 +524,7 @@ Cookie: access_token=your_jwt_token
 - `title` (required, string) - Game title
 - `description` (optional, string) - Game description
 - `tags` (required, array of strings) - Technology tags
-- `genre` (required, array of enums) - Game genres. Possible values: `gacha`, `sci-fi`, `fantasy`, `hack-and-slash`, `action-rpg`, `rpg`, `jrpg`, `visual-novel`, `turn-based`, `open-world`
+- `genre` (required, array of enums) - Game genres. Possible values: `gacha`, `sci-fi`, `fantasy`, `hack-and-slash`, `action-rpg`, `rpg`, `jrpg`, `visual-novel`, `turn-based`, `open-world`, `simulation`
 - `platform` (required, array of enums) - Target platforms. Possible values: `pc`, `mobile`, `playstation`
 - `link` (optional, string) - Game link (itch.io, Steam, etc.)
 - `cover_img` (optional, string) - Cover image URL
@@ -749,6 +750,7 @@ interface Game {
 - `visual-novel` - Visual novel/story-driven
 - `turn-based` - Turn-based combat
 - `open-world` - Open world exploration
+- `simulation` - Simulation games
 
 ### Game Platform Enum
 

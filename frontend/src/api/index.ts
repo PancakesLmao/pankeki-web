@@ -12,10 +12,17 @@ class ApiClient {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`
+    
+    // Only include Content-Type header if there's a body
+    const headers: HeadersInit = {}
+    if (options.body) {
+      headers['Content-Type'] = 'application/json'
+    }
+    
     const config: RequestInit = {
       ...options,
       headers: {
-        ...DEFAULT_HEADERS,
+        ...headers,
         ...options.headers,
       },
       credentials: 'include', // Always include cookies for auth

@@ -117,14 +117,31 @@ const handleSignout = async () => {
 
 const handleProjectSubmit = async (data: ProjectFormData) => {
   try {
+    // Filter out empty string values for optional fields
+    const cleanedData: Partial<ProjectFormData> = { ...data }
+    
+    // Remove empty optional fields to avoid validation errors
+    if (!cleanedData.description || cleanedData.description.trim() === '') {
+      delete cleanedData.description
+    }
+    if (!cleanedData.link || cleanedData.link.trim() === '') {
+      delete cleanedData.link
+    }
+    if (!cleanedData.project_img || cleanedData.project_img.trim() === '') {
+      delete cleanedData.project_img
+    }
+    if (!cleanedData.time_range || cleanedData.time_range.trim() === '') {
+      delete cleanedData.time_range
+    }
+
     if (editingProject.value) {
       // Update existing project
-      await projectsApi.update(editingProject.value.id, data)
+      await projectsApi.update(editingProject.value.id, cleanedData)
       alert('Project updated successfully!')
       editingProject.value = null
     } else {
       // Create new project
-      await projectsApi.create(data)
+      await projectsApi.create(cleanedData as ProjectFormData)
       alert('Project created successfully!')
     }
     fetchProjects()
@@ -136,14 +153,31 @@ const handleProjectSubmit = async (data: ProjectFormData) => {
 
 const handleGameSubmit = async (data: GameFormData) => {
   try {
+    // Filter out empty string values for optional fields
+    const cleanedData: Partial<GameFormData> = { ...data }
+    
+    // Remove empty optional fields to avoid validation errors
+    if (!cleanedData.description || cleanedData.description.trim() === '') {
+      delete cleanedData.description
+    }
+    if (!cleanedData.link || cleanedData.link.trim() === '') {
+      delete cleanedData.link
+    }
+    if (!cleanedData.cover_img || cleanedData.cover_img.trim() === '') {
+      delete cleanedData.cover_img
+    }
+    if (!cleanedData.icon_img || cleanedData.icon_img.trim() === '') {
+      delete cleanedData.icon_img
+    }
+
     if (editingGame.value) {
       // Update existing game
-      await gamesApi.update(editingGame.value.id, data)
+      await gamesApi.update(editingGame.value.id, cleanedData)
       alert('Game updated successfully!')
       editingGame.value = null
     } else {
       // Create new game
-      await gamesApi.create(data)
+      await gamesApi.create(cleanedData as GameFormData)
       alert('Game created successfully!')
     }
     fetchGames()

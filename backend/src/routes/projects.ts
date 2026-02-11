@@ -121,7 +121,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
     "/",
     async ({ body, cookie, set }) => {
       try {
-        const { user } = await requireAuth({ cookie, set });
+        const { user, supabase: authClient } = await requireAuth({ cookie, set });
 
         const project = await createProject({
           title: body.title,
@@ -132,7 +132,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
           status: body.status,
           time_range: body.time_range,
           created_by: user!.id,
-        });
+        }, authClient);
 
         return {
           message: "Project created successfully",
@@ -253,10 +253,10 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
             description: "Project title",
             default: "Updated Weather Platform",
           }),
-          description: t.String({
+          description: t.Optional(t.String({
             description: "Project description",
             default: "Enhanced IoT platform with real-time analytics",
-          }),
+          })),
           tags: t.Array(t.String(), {
             description: "Array of technology tags",
             default: [
@@ -267,19 +267,19 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
               "Redis",
             ],
           }),
-          link: t.String({
+          link: t.Optional(t.String({
             description: "Project link",
             default: "https://github.com/username/weather-platform-v2",
-          }),
-          project_img: t.String({
+          })),
+          project_img: t.Optional(t.String({
             description: "Project image URL",
             default: "https://placehold.co/600x400/png",
-          }),
-          time_range: t.String({
+          })),
+          time_range: t.Optional(t.String({
             description:
               "Development time range (e.g., 'February 2025 - March 2025')",
             default: "January 2025 - March 2025",
-          }),
+          })),
           status: t.Union(
             [
               t.Literal("Completed and Published"),

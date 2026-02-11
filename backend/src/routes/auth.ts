@@ -86,23 +86,35 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
     "/signout",
     async ({ cookie, set }) => {
       try {
-        const accessToken = cookie.access_token.value;
+        const accessToken = cookie.access_token?.value;
+        console.log("Access token:", accessToken ? "exists" : "missing");
 
         if (accessToken) {
+          console.log("Signing out...");
           const supabase = createSupabaseClient(accessToken);
           await supabase.auth.signOut();
+          console.log("Signout successful");
         }
 
-        // Clear cookies
-        cookie.access_token.remove();
+        // Clear cookies by setting maxAge to 0
+        console.log("Clearing cookies...");
+        if (cookie.access_token) {
+          cookie.access_token.value = '';
+          cookie.access_token.maxAge = 0;
+        }
+        console.log("Cookies cleared");
 
-        return { message: "Signed out successfully" };
+        const response = { message: "Signed out successfully" };
+        console.log("Returning response:", response);
+        return response;
       } catch (error: any) {
+        console.error("Signout error:", error);
         set.status = 500;
-        return { error: error.message };
+        return { error: error.message || "Failed to sign out" };
       }
     },
     {
+      body: t.Undefined(),
       response: {
         200: t.Object({
           message: t.String(),
