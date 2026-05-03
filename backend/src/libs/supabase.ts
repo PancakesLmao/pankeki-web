@@ -8,6 +8,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Missing Supabase environment variables");
 }
 
+export async function checkDatabaseConnection(): Promise<void> {
+  const { error } = await supabase.from("projects").select("id").limit(1);
+  if (error) throw new Error(error.message);
+}
+
 // Admin client for server-side database operations
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

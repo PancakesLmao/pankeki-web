@@ -17,7 +17,7 @@ const { mode } = useMode()
 
 const developerExperience: TimelineItem[] = [
   {
-    date: 'Spring 2025 - Present',
+    date: 'January 2025 - Present',
     title: 'ITea Lab Operations',
     company: 'ITea Lab Community',
     location: 'HCM, Vietnam',
@@ -33,7 +33,7 @@ const developerExperience: TimelineItem[] = [
       'Participate in FCJ community where I gain hands-on experience in cloud computing and AWS services. My role involves assisting in the development and deployment of cloud-based solutions, as well as learning about best practices in cloud architecture',
   },
   {
-    date: 'Spring 2024 - December 2024',
+    date: 'January 2024 - December 2024',
     title: 'IT Lab Assistant',
     company: 'Swinburne Vietnam HCMC',
     location: 'HCM, Vietnam',

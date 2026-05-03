@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { cookie } from "@elysiajs/cookie";
 import { openapi } from "@elysiajs/openapi";
-import { supabase } from "./libs/supabase";
+import { supabase, checkDatabaseConnection } from "./libs/supabase";
 import { authRoutes } from "./routes/auth";
 import { projectRoutes } from "./routes/projects";
 import { gameRoutes } from "./routes/games";
@@ -46,7 +46,7 @@ const logResponse = (context: any, requestInfo: any) => {
   const resetColor = "\x1b[0m";
 
   console.log(
-    `${requestInfo.method.padEnd(6)} ${requestInfo.path.padEnd(40)} ${statusColor}${status}${resetColor} ${duration}ms`
+    `${requestInfo.method.padEnd(6)} ${requestInfo.path.padEnd(40)} ${statusColor}${status}${resetColor} ${duration}ms`,
   );
 };
 
@@ -86,7 +86,7 @@ let app = new Elysia()
       credentials: true,
       allowedHeaders: ["Content-Type"],
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    })
+    }),
   )
   .use(cookie())
   .onBeforeHandle((context) => {
@@ -101,15 +101,15 @@ let app = new Elysia()
   })
   .onError(({ code, error, set }) => {
     // Don't log 404 errors (common for missing resources like favicon)
-    if (code !== 'NOT_FOUND') {
+    if (code !== "NOT_FOUND") {
       console.error("❌ Global error handler:", code, error);
     }
-    
-    if (code === 'NOT_FOUND') {
+
+    if (code === "NOT_FOUND") {
       set.status = 404;
-      return { error: 'Not found' };
+      return { error: "Not found" };
     }
-    
+
     set.status = 500;
     return { error: error.message || "Internal server error" };
   });
@@ -133,7 +133,7 @@ if (isDevelopment) {
         ],
       },
       path: "/swagger",
-    })
+    }),
   );
 }
 
@@ -172,7 +172,7 @@ app = app
         tags: ["Debug"],
         description: "List all tables in the database",
       },
-    }
+    },
   )
   .use(authRoutes)
   .use(projectRoutes)
@@ -180,12 +180,46 @@ app = app
   .use(enumRoutes)
   .listen(PORT);
 
-console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-);
+const reset = "\x1b[0m";
+const bold = "\x1b[1m";
+const green = "\x1b[32m";
+const red = "\x1b[31m";
+const cyan = "\x1b[36m";
+const gray = "\x1b[90m";
 
-if (isDevelopment) {
+async function logStartup() {
+  const host = app.server?.hostname;
+  const port = app.server?.port;
+
+  console.log("");
+  console.log(`${bold}  Portfolio API${reset}`);
+  console.log(`${gray}  ─────────────────────────────────${reset}`);
   console.log(
-    `📚 API Documentation available at http://localhost:${PORT}/swagger`
+    `${green}  ✓${reset} Server     ${bold}http://${host}:${port}${reset}`,
   );
+
+  try {
+    await checkDatabaseConnection();
+    console.log(`${green}  ✓${reset} Database   connected`);
+  } catch (err: any) {
+    console.log(
+      `${red}  ✗${reset} Database   ${red}connection failed — ${err.message}${reset}`,
+    );
+  }
+
+  console.log(
+    `${green}  ✓${reset} Mode       ${isDevelopment ? "development" : "production"}`,
+  );
+  console.log(`${green}  ✓${reset} CORS       ${getFrontendUrl()}`);
+
+  if (isDevelopment) {
+    console.log(
+      `${cyan}  ↗${reset} Swagger    http://localhost:${port}/swagger`,
+    );
+  }
+
+  console.log(`${gray}  ─────────────────────────────────${reset}`);
+  console.log("");
 }
+
+logStartup();

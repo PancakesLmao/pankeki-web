@@ -12,13 +12,13 @@ class ApiClient {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`
-    
+
     // Only include Content-Type header if there's a body
     const headers: HeadersInit = {}
     if (options.body) {
       headers['Content-Type'] = 'application/json'
     }
-    
+
     const config: RequestInit = {
       ...options,
       headers: {
@@ -32,16 +32,20 @@ class ApiClient {
       const response = await fetch(url, config)
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({
-          message: `HTTP ${response.status}: ${response.statusText}`,
-        }))
-        throw new Error(error.message || error.error || 'Request failed')
+        // Try to parse as JSON; if it fails (e.g. HTML error page from Cloudflare/proxy), use a generic message
+        const error = await response.json().catch(() => null)
+        const message = error?.message || error?.error || null
+        throw new Error(message || `Service unavailable (${response.status})`)
       }
 
       return await response.json()
     } catch (error) {
       console.error('API Request Error:', error)
-      throw error
+      // Re-throw only safe, non-sensitive error messages
+      if (error instanceof Error && error.message && !error.message.includes('<')) {
+        throw error
+      }
+      throw new Error('Unable to connect to the server. Please try again later.')
     }
   }
 
