@@ -65,3 +65,12 @@ export const GAME_PLATFORMS = [
   { value: 'Mobile', label: 'Mobile' },
   { value: 'PlayStation', label: 'PlayStation' },
 ] as const
+
+export interface ExperienceFormData {
+  title: string
+  company: string
+  location?: string
+  description: string
+  date: string
+  logo?: string
+}

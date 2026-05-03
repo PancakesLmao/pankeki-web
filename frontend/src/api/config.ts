@@ -38,6 +38,11 @@ export const API_CONFIG = {
       GAME_GENRES: '/api/enums/game-genres',
       GAME_PLATFORMS: '/api/enums/game-platforms',
     },
+    // Experiences
+    EXPERIENCES: {
+      BASE: '/api/experiences',
+      BY_ID: (id: string) => `/api/experiences/${id}`,
+    },
   },
 }
 

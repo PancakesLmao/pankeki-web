@@ -1,6 +1,6 @@
 import { API_CONFIG, DEFAULT_HEADERS } from './config'
-import type { Project, Game } from '@/types/profile'
-import type { ProjectFormData, GameFormData } from '@/types/forms'
+import type { Project, Game, Experience } from '@/types/profile'
+import type { ProjectFormData, GameFormData, ExperienceFormData } from '@/types/forms'
 
 // HTTP Client with error handling
 class ApiClient {
@@ -186,6 +186,34 @@ export const enumsApi = {
   // Get game platforms
   async getGamePlatforms(): Promise<{ data: Array<{ value: string; label: string }> }> {
     return apiClient.get(API_CONFIG.ENDPOINTS.ENUMS.GAME_PLATFORMS)
+  },
+}
+
+// ============================================
+// Experiences API
+// ============================================
+export const experiencesApi = {
+  async getAll(): Promise<{ experiences: Experience[] }> {
+    return apiClient.get(API_CONFIG.ENDPOINTS.EXPERIENCES.BASE)
+  },
+
+  async getById(id: string): Promise<{ experience: Experience }> {
+    return apiClient.get(API_CONFIG.ENDPOINTS.EXPERIENCES.BY_ID(id))
+  },
+
+  async create(data: ExperienceFormData): Promise<{ message: string; experience: Experience }> {
+    return apiClient.post(API_CONFIG.ENDPOINTS.EXPERIENCES.BASE, data)
+  },
+
+  async update(
+    id: string,
+    data: Partial<ExperienceFormData>,
+  ): Promise<{ message: string; experience: Experience }> {
+    return apiClient.put(API_CONFIG.ENDPOINTS.EXPERIENCES.BY_ID(id), data)
+  },
+
+  async delete(id: string): Promise<{ message: string }> {
+    return apiClient.delete(API_CONFIG.ENDPOINTS.EXPERIENCES.BY_ID(id))
   },
 }
 

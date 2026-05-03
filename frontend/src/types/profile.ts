@@ -26,3 +26,15 @@ export interface Game {
   icon_img?: string
   created_at: string
 }
+
+export interface Experience {
+  id: string
+  title: string
+  company: string
+  location: string | null
+  description: string
+  date: string
+  logo: string | null
+  created_at: string
+  created_by: string
+}

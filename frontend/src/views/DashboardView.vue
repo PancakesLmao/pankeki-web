@@ -7,21 +7,30 @@ import { useMode } from '@/composables/useMode'
 import CustomTerminal from '@/components/about/Terminal.vue'
 import ProjectForm from '@/components/dashboard/ProjectForm.vue'
 import GameForm from '@/components/dashboard/GameForm.vue'
-import type { ProjectFormData, GameFormData } from '@/types/forms'
-import { projectsApi, gamesApi } from '@/api'
+import ExperienceForm from '@/components/dashboard/ExperienceForm.vue'
+import type { ProjectFormData, GameFormData, ExperienceFormData } from '@/types/forms'
+import { projectsApi, gamesApi, experiencesApi } from '@/api'
+import type { Experience } from '@/types/profile'
 
 const authStore = useAuthStore()
 const router = useRouter()
 const { mode } = useMode()
-const activeTab = ref<'create-project' | 'create-game' | 'view-projects' | 'view-games'>(
-  'create-project',
-)
+const activeTab = ref<
+  | 'create-project'
+  | 'create-game'
+  | 'view-projects'
+  | 'view-games'
+  | 'create-experience'
+  | 'view-experiences'
+>('create-project')
 const projects = ref<Project[]>([])
 const games = ref<Game[]>([])
+const experiences = ref<Experience[]>([])
 const loading = ref(false)
 const activeMenuId = ref<string | null>(null)
 const editingProject = ref<Project | null>(null)
 const editingGame = ref<Game | null>(null)
+const editingExperience = ref<Experience | null>(null)
 
 onMounted(async () => {
   // Double-check authentication on mount
@@ -61,6 +70,8 @@ const handleTabChange = (tab: typeof activeTab.value) => {
     fetchProjects()
   } else if (tab === 'view-games') {
     fetchGames()
+  } else if (tab === 'view-experiences') {
+    fetchExperiences()
   }
 }
 
@@ -110,6 +121,61 @@ const cancelEditGame = () => {
   editingGame.value = null
 }
 
+const fetchExperiences = async () => {
+  try {
+    loading.value = true
+    const data = await experiencesApi.getAll()
+    experiences.value = data.experiences || []
+  } catch (error) {
+    console.error('Error fetching experiences:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const deleteExperience = async (id: string) => {
+  if (!confirm('Are you sure you want to delete this experience?')) return
+  try {
+    await experiencesApi.delete(id)
+    alert('Experience deleted successfully!')
+    fetchExperiences()
+  } catch (error) {
+    console.error('Error deleting experience:', error)
+    alert(error instanceof Error ? error.message : 'Failed to delete experience')
+  }
+}
+
+const startEditExperience = (exp: Experience) => {
+  editingExperience.value = exp
+  activeMenuId.value = null
+  activeTab.value = 'create-experience'
+}
+
+const cancelEditExperience = () => {
+  editingExperience.value = null
+}
+
+const handleExperienceSubmit = async (data: ExperienceFormData) => {
+  try {
+    const cleanedData: Partial<ExperienceFormData> = { ...data }
+    if (!cleanedData.location?.trim()) delete cleanedData.location
+    if (!cleanedData.logo?.trim()) delete cleanedData.logo
+
+    if (editingExperience.value) {
+      await experiencesApi.update(editingExperience.value.id, cleanedData)
+      alert('Experience updated successfully!')
+      editingExperience.value = null
+    } else {
+      await experiencesApi.create(cleanedData as ExperienceFormData)
+      alert('Experience created successfully!')
+    }
+    fetchExperiences()
+  } catch (error) {
+    console.error('Error submitting experience:', error)
+    alert(error instanceof Error ? error.message : 'Failed to submit experience')
+  }
+}
+
 const handleSignout = async () => {
   await authStore.signout()
   router.push('/')
@@ -119,7 +185,7 @@ const handleProjectSubmit = async (data: ProjectFormData) => {
   try {
     // Filter out empty string values for optional fields
     const cleanedData: Partial<ProjectFormData> = { ...data }
-    
+
     // Remove empty optional fields to avoid validation errors
     if (!cleanedData.description || cleanedData.description.trim() === '') {
       delete cleanedData.description
@@ -155,7 +221,7 @@ const handleGameSubmit = async (data: GameFormData) => {
   try {
     // Filter out empty string values for optional fields
     const cleanedData: Partial<GameFormData> = { ...data }
-    
+
     // Remove empty optional fields to avoid validation errors
     if (!cleanedData.description || cleanedData.description.trim() === '') {
       delete cleanedData.description
@@ -362,6 +428,36 @@ const handleGameSubmit = async (data: GameFormData) => {
             ]"
           >
             View Games
+          </button>
+          <button
+            @click="handleTabChange('create-experience')"
+            :class="[
+              'px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap',
+              activeTab === 'create-experience'
+                ? mode === 'developer'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-purple-500 text-purple-300'
+                : mode === 'developer'
+                  ? 'border-transparent text-gray-600 hover:text-gray-900'
+                  : 'border-transparent text-purple-400 hover:text-purple-200',
+            ]"
+          >
+            New Experience
+          </button>
+          <button
+            @click="handleTabChange('view-experiences')"
+            :class="[
+              'px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap',
+              activeTab === 'view-experiences'
+                ? mode === 'developer'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-purple-500 text-purple-300'
+                : mode === 'developer'
+                  ? 'border-transparent text-gray-600 hover:text-gray-900'
+                  : 'border-transparent text-purple-400 hover:text-purple-200',
+            ]"
+          >
+            View Experiences
           </button>
         </div>
 
@@ -615,6 +711,126 @@ const handleGameSubmit = async (data: GameFormData) => {
                     @click="
                       () => {
                         deleteGame(game.id)
+                        activeMenuId = null
+                      }
+                    "
+                    :class="[
+                      'block w-full text-left px-4 py-2 hover:bg-opacity-75 transition-colors rounded-b-lg text-red-600 hover:bg-red-50',
+                      mode === 'developer'
+                        ? ''
+                        : 'hover:bg-red-900 hover:bg-opacity-30 text-red-400',
+                    ]"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Create Experience Form -->
+        <div v-if="activeTab === 'create-experience'">
+          <ExperienceForm
+            :editing-experience="editingExperience"
+            @submit="handleExperienceSubmit"
+            @cancel="cancelEditExperience"
+          />
+        </div>
+
+        <!-- View Experiences List -->
+        <div v-if="activeTab === 'view-experiences'">
+          <div v-if="loading" class="text-center py-8">Loading...</div>
+          <div
+            v-else-if="experiences.length === 0"
+            class="text-center py-8"
+            :class="mode === 'developer' ? 'text-gray-600' : 'text-purple-300'"
+          >
+            No experiences found
+          </div>
+          <div v-else class="space-y-4">
+            <div
+              v-for="exp in experiences"
+              :key="exp.id"
+              :class="[
+                'p-4 rounded-lg border flex justify-between items-start transition-colors',
+                mode === 'developer'
+                  ? 'bg-white border-gray-200 hover:bg-gray-50'
+                  : 'bg-gray-800 border-purple-900 hover:bg-gray-700',
+              ]"
+            >
+              <div class="flex gap-3 flex-1">
+                <img
+                  v-if="exp.logo"
+                  :src="exp.logo"
+                  :alt="exp.company"
+                  class="w-10 h-10 rounded object-contain flex-shrink-0 mt-1"
+                />
+                <div class="flex-1">
+                  <h4
+                    :class="[
+                      'font-bold mb-0.5',
+                      mode === 'developer' ? 'text-gray-900' : 'text-purple-100',
+                    ]"
+                  >
+                    {{ exp.title }}
+                  </h4>
+                  <p
+                    :class="[
+                      'text-sm font-medium mb-1',
+                      mode === 'developer' ? 'text-gray-600' : 'text-purple-400',
+                    ]"
+                  >
+                    {{ exp.company }}{{ exp.location ? ` • ${exp.location}` : '' }}
+                  </p>
+                  <p
+                    :class="[
+                      'text-xs mb-2',
+                      mode === 'developer' ? 'text-gray-500' : 'text-gray-400',
+                    ]"
+                  >
+                    {{ exp.date }}
+                  </p>
+                  <p
+                    :class="['text-sm', mode === 'developer' ? 'text-gray-600' : 'text-purple-300']"
+                  >
+                    {{ exp.description }}
+                  </p>
+                </div>
+              </div>
+              <div class="relative ml-4">
+                <button
+                  @click="activeMenuId = activeMenuId === exp.id ? null : exp.id"
+                  :class="[
+                    'p-2 rounded hover:bg-opacity-75',
+                    mode === 'developer' ? 'hover:bg-gray-200' : 'hover:bg-gray-600',
+                  ]"
+                >
+                  ⋮
+                </button>
+                <div
+                  v-if="activeMenuId === exp.id"
+                  :class="[
+                    'absolute right-0 mt-1 w-40 rounded-lg shadow-lg z-10 border',
+                    mode === 'developer'
+                      ? 'bg-white border-gray-200'
+                      : 'bg-gray-700 border-purple-900',
+                  ]"
+                >
+                  <button
+                    @click="startEditExperience(exp)"
+                    :class="[
+                      'block w-full text-left px-4 py-2 hover:bg-opacity-75 transition-colors rounded-t-lg',
+                      mode === 'developer'
+                        ? 'text-gray-900 hover:bg-gray-100'
+                        : 'text-purple-100 hover:bg-gray-600',
+                    ]"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    @click="
+                      () => {
+                        deleteExperience(exp.id)
                         activeMenuId = null
                       }
                     "

@@ -1,89 +1,62 @@
 <script lang="ts" setup>
 defineOptions({ name: 'ExperienceSection' })
-import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useMode } from '@/composables/useMode'
 import { Mode } from '@/types/mode'
 import SectionTitle from '@/components/SectionTitle.vue'
-
-interface TimelineItem {
-  date: string
-  title: string
-  company?: string
-  location?: string
-  description: string
-}
+import { experiencesApi } from '@/api'
+import type { Experience } from '@/types/profile'
 
 const { mode } = useMode()
 
-const developerExperience: TimelineItem[] = [
-  {
-    date: 'January 2025 - Present',
-    title: 'ITea Lab Operations',
-    company: 'ITea Lab Community',
-    location: 'HCM, Vietnam',
-    description:
-      'Work along with head of ITea Lab to lead developer team in building projects and organizing community events. Collaborate with other industries to create a vibrant learning environment for CS students.',
-  },
-  {
-    date: 'May 2025 - August 2025',
-    title: 'Cloud Engineer Trainee',
-    company: 'AWS First Cloud Journey',
-    location: 'HCM, Vietnam',
-    description:
-      'Participate in FCJ community where I gain hands-on experience in cloud computing and AWS services. My role involves assisting in the development and deployment of cloud-based solutions, as well as learning about best practices in cloud architecture',
-  },
-  {
-    date: 'January 2024 - December 2024',
-    title: 'IT Lab Assistant',
-    company: 'Swinburne Vietnam HCMC',
-    location: 'HCM, Vietnam',
-    description:
-      'I joined the IT Lab as an assistant and worked with other members who share the same passion to improve my skills and gain practical experience in the field througn hands-on, real-life projects',
-  },
-]
+const experiences = ref<Experience[]>([])
+const loading = ref(false)
+const fetchError = ref(false)
 
-const gamerExperience: TimelineItem[] = []
+const fetchExperiences = async () => {
+  loading.value = true
+  fetchError.value = false
+  try {
+    const response = await experiencesApi.getAll()
+    experiences.value = response.experiences ?? []
+    nextTick(() => setupObserver())
+  } catch {
+    fetchError.value = true
+  } finally {
+    loading.value = false
+  }
+}
 
-const timelineItems = computed(() =>
-  mode.value === Mode.Developer ? developerExperience : gamerExperience,
-)
-
-// Scroll animation
 const timelineItemsRef = ref<HTMLElement[]>([])
 const observer = ref<IntersectionObserver | null>(null)
 
 const setupObserver = () => {
+  if (observer.value) observer.value.disconnect()
   observer.value = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
+          entry.target.classList.remove('below-fold')
           entry.target.classList.add('is-visible')
-          // Stop observing after animation triggers
           observer.value?.unobserve(entry.target)
         }
       })
     },
-    { threshold: 0.1 }, // Trigger when 10% of the item is visible
+    { threshold: 0.1 },
   )
-
-  // Observe all items
   timelineItemsRef.value.forEach((item) => {
-    if (item) observer.value?.observe(item)
+    if (!item) return
+    const rect = item.getBoundingClientRect()
+    // Only animate items that are below the current viewport
+    if (rect.top > window.innerHeight) {
+      item.classList.add('below-fold')
+      observer.value?.observe(item)
+    }
   })
 }
 
-onMounted(() => {
-  // Use nextTick to ensure DOM is fully rendered
-  nextTick(() => {
-    setupObserver()
-  })
-})
-
-onUnmounted(() => {
-  if (observer.value) {
-    observer.value.disconnect()
-  }
-})
+onMounted(() => fetchExperiences())
+onUnmounted(() => observer.value?.disconnect())
 </script>
 
 <style scoped>
@@ -91,24 +64,14 @@ onUnmounted(() => {
   transition:
     opacity 0.6s ease-out,
     transform 0.6s ease-out;
-  transition-delay: 200ms;
 }
-
-/* Initial state: hidden and slightly offset */
-.timeline-item:not(.is-visible) {
+.timeline-item.below-fold {
   opacity: 0;
   transform: translateY(20px);
 }
-
-/* Visible state: fully visible and in place */
 .timeline-item.is-visible {
   opacity: 1;
   transform: translateY(0);
-}
-
-/* Alternate direction for even-indexed items (slide from right) */
-.timeline-item.md\:flex-row-reverse:not(.is-visible) {
-  transform: translateY(20px);
 }
 </style>
 
@@ -116,8 +79,80 @@ onUnmounted(() => {
   <section :class="['mb-24', mode === Mode.Developer ? '' : 'hidden']" id="experience">
     <SectionTitle :title="mode === Mode.Developer ? 'Work Experience' : 'Gaming Milestones'" />
 
-    <div class="relative">
-      <!-- Timeline vertical line -->
+    <!-- Loading -->
+    <div v-if="loading" class="flex items-center justify-center py-12">
+      <div class="text-center">
+        <svg
+          :class="[
+            'mx-auto h-12 w-12 animate-spin',
+            mode === Mode.Developer ? 'text-gray-400' : 'text-purple-300',
+          ]"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          />
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          />
+        </svg>
+        <p :class="['mt-4', mode === Mode.Developer ? 'text-gray-500' : 'text-gray-400']">
+          Loading experience...
+        </p>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div v-else-if="fetchError" class="flex items-center justify-center py-12">
+      <div class="text-center">
+        <svg
+          :class="[
+            'mx-auto h-10 w-10 mb-3',
+            mode === Mode.Developer ? 'text-gray-400' : 'text-gray-500',
+          ]"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+          />
+        </svg>
+        <p
+          :class="['mb-1 font-medium', mode === Mode.Developer ? 'text-gray-700' : 'text-gray-300']"
+        >
+          Experience couldn't be loaded
+        </p>
+        <p :class="['mb-4 text-sm', mode === Mode.Developer ? 'text-gray-500' : 'text-gray-500']">
+          The service may be temporarily unavailable.
+        </p>
+        <button
+          @click="fetchExperiences"
+          :class="[
+            'rounded-md px-4 py-2 text-white transition-colors text-sm',
+            mode === Mode.Developer
+              ? 'bg-gray-700 hover:bg-gray-800'
+              : 'bg-purple-600 hover:bg-purple-700',
+          ]"
+        >
+          Retry
+        </button>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div v-else class="relative">
       <div
         :class="[
           'absolute left-0 md:left-1/2 h-full w-0.5 -translate-x-1/2 transform',
@@ -128,25 +163,25 @@ onUnmounted(() => {
 
       <div class="space-y-12">
         <div
-          v-for="(item, index) in timelineItems"
-          :key="index"
+          v-for="(item, index) in experiences"
+          :key="item.id"
           :class="[
-            'relative flex flex-col md:flex-row timeline-item opacity-0',
+            'relative flex flex-col md:flex-row timeline-item',
             index % 2 === 0 ? 'md:flex-row-reverse' : '',
           ]"
           ref="timelineItemsRef"
         >
-          <!-- Timeline dot -->
+          <!-- Dot -->
           <div
             :class="[
               'absolute left-0 md:left-1/2 w-5 h-5 rounded-full -translate-x-1/2 transform z-10',
-              mode === 'developer' ? 'bg-gray-900' : 'bg-purple-600',
+              mode === Mode.Developer ? 'bg-gray-900' : 'bg-purple-600',
             ]"
             style="top: 24px"
             aria-hidden="true"
           ></div>
 
-          <!-- Date column -->
+          <!-- Date -->
           <div
             :class="[
               'md:w-1/2 pb-8 md:pb-0 md:px-8',
@@ -156,42 +191,56 @@ onUnmounted(() => {
             <span
               :class="[
                 'inline-block text-sm font-medium px-3 py-1 rounded-full mb-2',
-                mode === 'developer' ? 'bg-gray-100 text-gray-700' : 'bg-gray-800 text-purple-300',
+                mode === Mode.Developer
+                  ? 'bg-gray-100 text-gray-700'
+                  : 'bg-gray-800 text-purple-300',
               ]"
             >
               {{ item.date }}
             </span>
           </div>
 
-          <!-- Content column -->
+          <!-- Content -->
           <div
             :class="[
               'md:w-1/2 pl-8 md:pl-0 md:px-8 border-l md:border-l-0',
-              mode === 'developer' ? 'border-gray-200' : 'border-purple-900',
+              mode === Mode.Developer ? 'border-gray-200' : 'border-purple-900',
               index % 2 === 0 ? 'md:pr-8 md:text-right' : 'md:pl-8',
             ]"
           >
-            <h3
+            <div
               :class="[
-                'text-xl font-bold mb-1 transition-colors',
-                mode === 'developer' ? 'font-serif' : 'font-mono',
+                'flex items-center gap-3 mb-1',
+                index % 2 === 0 ? 'md:flex-row-reverse' : '',
               ]"
             >
-              {{ item.title }}
-            </h3>
+              <img
+                v-if="item.logo"
+                :src="item.logo"
+                :alt="item.company"
+                class="w-8 h-8 rounded object-contain flex-shrink-0"
+              />
+              <h3
+                :class="[
+                  'text-xl font-bold transition-colors',
+                  mode === Mode.Developer ? 'font-serif' : 'font-mono',
+                ]"
+              >
+                {{ item.title }}
+              </h3>
+            </div>
             <p
-              v-if="item.company"
               :class="[
                 'text-sm font-medium mb-2',
-                mode === 'developer' ? 'text-gray-600' : 'text-purple-400',
+                mode === Mode.Developer ? 'text-gray-600' : 'text-purple-400',
               ]"
             >
-              {{ item.company }} {{ item.location ? ` • ${item.location}` : '' }}
+              {{ item.company }}{{ item.location ? ` • ${item.location}` : '' }}
             </p>
             <p
               :class="[
                 'transition-colors',
-                mode === 'developer' ? 'text-gray-600' : 'text-purple-200',
+                mode === Mode.Developer ? 'text-gray-600' : 'text-purple-200',
               ]"
             >
               {{ item.description }}

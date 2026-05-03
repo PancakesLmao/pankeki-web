@@ -90,7 +90,7 @@ const serializeGame = (game: any): Game => ({
   id: game.id.toString(),
   genre: (game.genre || []).map((g: string) => reverseGenreMap[g] || g),
   platform: (game.platform || []).map(
-    (p: string) => reversePlatformMap[p] || p
+    (p: string) => reversePlatformMap[p] || p,
   ),
 });
 
@@ -120,7 +120,7 @@ export async function getProjects(status?: string): Promise<Project[]> {
 
 export async function getProject(
   id: string | bigint,
-  client: any = supabase
+  client: any = supabase,
 ): Promise<Project | null> {
   try {
     // Convert BigInt to string for consistency with Supabase
@@ -155,7 +155,7 @@ export async function createProject(
     time_range?: string;
     created_by: string;
   },
-  client: any = supabase
+  client: any = supabase,
 ): Promise<Project> {
   try {
     console.log("DEBUG createProject - Input data:", JSON.stringify(data));
@@ -196,7 +196,7 @@ export async function updateProject(
     status?: string;
     time_range?: string | null;
   }>,
-  client: any = supabase
+  client: any = supabase,
 ): Promise<Project> {
   try {
     // Verify project exists first
@@ -247,7 +247,7 @@ export async function updateProject(
 
 export async function deleteProject(
   id: string | bigint,
-  client: any = supabase
+  client: any = supabase,
 ): Promise<void> {
   try {
     // Convert id to string for consistency with Supabase
@@ -271,7 +271,7 @@ export async function deleteProject(
 
 export async function getGames(
   genre?: string,
-  platform?: string
+  platform?: string,
 ): Promise<Game[]> {
   try {
     let query = supabase.from("games").select("*");
@@ -300,7 +300,7 @@ export async function getGames(
 
 export async function getGame(
   id: string | bigint,
-  client: any = supabase
+  client: any = supabase,
 ): Promise<Game | null> {
   try {
     // Convert BigInt to string for consistency with Supabase
@@ -334,7 +334,7 @@ export async function createGame(
     game_img?: string;
     created_by: string;
   },
-  client: any = supabase
+  client: any = supabase,
 ): Promise<Game> {
   try {
     const dbGenre = data.genre.map((g) => genreMap[g] || g);
@@ -374,7 +374,7 @@ export async function updateGame(
     link?: string | null;
     game_img?: string | null;
   }>,
-  client: any = supabase
+  client: any = supabase,
 ): Promise<Game> {
   try {
     // Verify game exists first
@@ -422,7 +422,7 @@ export async function updateGame(
 
 export async function deleteGame(
   id: string | bigint,
-  client: any = supabase
+  client: any = supabase,
 ): Promise<void> {
   try {
     // Convert id to string for consistency with Supabase
@@ -495,4 +495,160 @@ export async function getGamePlatforms(): Promise<
     mobile: { dbValue: "Mobile", displayValue: "Mobile" },
     playstation: { dbValue: "PlayStation", displayValue: "PlayStation" },
   };
+}
+
+// ============================================================================
+// EXPERIENCE QUERIES
+// ============================================================================
+
+export interface Experience {
+  id: string;
+  title: string;
+  company: string;
+  location: string | null;
+  description: string;
+  date: string;
+  logo: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+const serializeExperience = (exp: any): Experience => ({
+  ...exp,
+  id: exp.id.toString(),
+});
+
+export async function getExperiences(): Promise<Experience[]> {
+  try {
+    const { data, error } = await supabase
+      .from("experiences")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return (data || []).map(serializeExperience);
+  } catch (error) {
+    console.error("Error fetching experiences:", error);
+    throw error;
+  }
+}
+
+export async function getExperience(
+  id: string | bigint,
+  client: any = supabase,
+): Promise<Experience | null> {
+  try {
+    const expId = typeof id === "bigint" ? id.toString() : id;
+
+    const { data, error } = await client
+      .from("experiences")
+      .select("*")
+      .eq("id", expId)
+      .single();
+
+    if (error && error.code === "PGRST116") return null;
+    if (error) throw error;
+
+    return data ? serializeExperience(data) : null;
+  } catch (error) {
+    console.error("Error fetching experience:", error);
+    throw error;
+  }
+}
+
+export async function createExperience(
+  data: {
+    title: string;
+    company: string;
+    location?: string;
+    description: string;
+    date: string;
+    logo?: string;
+    created_by: string;
+  },
+  client: any = supabase,
+): Promise<Experience> {
+  try {
+    const { data: exp, error } = await client
+      .from("experiences")
+      .insert([
+        {
+          title: data.title,
+          company: data.company,
+          location: data.location || null,
+          description: data.description,
+          date: data.date,
+          logo: data.logo || null,
+          created_by: data.created_by,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return serializeExperience(exp);
+  } catch (error) {
+    console.error("Error creating experience:", error);
+    throw error;
+  }
+}
+
+export async function updateExperience(
+  id: string | bigint,
+  data: Partial<{
+    title?: string;
+    company?: string;
+    location?: string | null;
+    description?: string;
+    date?: string;
+    logo?: string | null;
+  }>,
+  client: any = supabase,
+): Promise<Experience> {
+  try {
+    const existing = await getExperience(id, client);
+    if (!existing) throw new Error("Experience not found");
+
+    const updateData: any = {};
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.company !== undefined) updateData.company = data.company;
+    if (data.location !== undefined) updateData.location = data.location;
+    if (data.description !== undefined)
+      updateData.description = data.description;
+    if (data.date !== undefined) updateData.date = data.date;
+    if (data.logo !== undefined) updateData.logo = data.logo;
+
+    const expId = typeof id === "bigint" ? id.toString() : id;
+
+    const { error } = await client
+      .from("experiences")
+      .update(updateData)
+      .eq("id", expId);
+
+    if (error) throw error;
+
+    const updated = await getExperience(expId, client);
+    if (!updated) throw new Error("Experience not found after update");
+    return updated;
+  } catch (error) {
+    console.error("Error updating experience:", error);
+    throw error;
+  }
+}
+
+export async function deleteExperience(
+  id: string | bigint,
+  client: any = supabase,
+): Promise<void> {
+  try {
+    const expId = typeof id === "bigint" ? id.toString() : id;
+
+    const { error } = await client.from("experiences").delete().eq("id", expId);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error("Error deleting experience:", error);
+    throw error;
+  }
 }
