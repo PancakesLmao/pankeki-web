@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
-import type { Project, Game } from '@/types/profile'
+import type { Project, Game, Experience } from '@/types/profile'
 import { useMode } from '@/composables/useMode'
 import CustomTerminal from '@/components/about/Terminal.vue'
 import ProjectForm from '@/components/dashboard/ProjectForm.vue'
@@ -10,169 +10,163 @@ import GameForm from '@/components/dashboard/GameForm.vue'
 import ExperienceForm from '@/components/dashboard/ExperienceForm.vue'
 import type { ProjectFormData, GameFormData, ExperienceFormData } from '@/types/forms'
 import { projectsApi, gamesApi, experiencesApi } from '@/api'
-import type { Experience } from '@/types/profile'
 
 const authStore = useAuthStore()
 const router = useRouter()
 const { mode } = useMode()
-const activeTab = ref<
-  | 'create-project'
-  | 'create-game'
-  | 'view-projects'
-  | 'view-games'
-  | 'create-experience'
-  | 'view-experiences'
->('create-project')
+
+type Section = 'projects' | 'games' | 'experiences'
+const activeSection = ref<Section>('projects')
+
 const projects = ref<Project[]>([])
 const games = ref<Game[]>([])
 const experiences = ref<Experience[]>([])
-const loading = ref(false)
+const loading = ref<Record<Section, boolean>>({ projects: false, games: false, experiences: false })
 const activeMenuId = ref<string | null>(null)
+
 const editingProject = ref<Project | null>(null)
 const editingGame = ref<Game | null>(null)
 const editingExperience = ref<Experience | null>(null)
 
 onMounted(async () => {
-  // Double-check authentication on mount
   const isAuth = await authStore.checkAuth()
-  if (!isAuth) {
-    router.push('/')
-  }
+  if (!isAuth) router.push('/')
+  // Load all sections upfront
+  fetchProjects()
+  fetchGames()
+  fetchExperiences()
 })
 
+// ── Fetch ────────────────────────────────────────────────────────────────────
+
 const fetchProjects = async () => {
+  loading.value.projects = true
   try {
-    loading.value = true
     const data = await projectsApi.getAll()
     projects.value = data.projects || []
-  } catch (error) {
-    console.error('Error fetching projects:', error)
+  } catch (e) {
+    console.error(e)
   } finally {
-    loading.value = false
+    loading.value.projects = false
   }
 }
 
 const fetchGames = async () => {
+  loading.value.games = true
   try {
-    loading.value = true
     const data = await gamesApi.getAll()
     games.value = data.games || []
-  } catch (error) {
-    console.error('Error fetching games:', error)
+  } catch (e) {
+    console.error(e)
   } finally {
-    loading.value = false
+    loading.value.games = false
   }
 }
 
-const handleTabChange = (tab: typeof activeTab.value) => {
-  activeTab.value = tab
-  if (tab === 'view-projects') {
-    fetchProjects()
-  } else if (tab === 'view-games') {
-    fetchGames()
-  } else if (tab === 'view-experiences') {
-    fetchExperiences()
+const fetchExperiences = async () => {
+  loading.value.experiences = true
+  try {
+    const data = await experiencesApi.getAll()
+    experiences.value = data.experiences || []
+  } catch (e) {
+    console.error(e)
+  } finally {
+    loading.value.experiences = false
   }
 }
+
+// ── Delete ───────────────────────────────────────────────────────────────────
 
 const deleteProject = async (id: string) => {
-  if (!confirm('Are you sure you want to delete this project?')) return
-
+  if (!confirm('Delete this project?')) return
   try {
     await projectsApi.delete(id)
-    alert('Project deleted successfully!')
     fetchProjects()
-  } catch (error) {
-    console.error('Error deleting project:', error)
-    alert(error instanceof Error ? error.message : 'Failed to delete project')
+  } catch (e) {
+    alert(e instanceof Error ? e.message : 'Failed')
+  } finally {
+    activeMenuId.value = null
   }
 }
 
 const deleteGame = async (id: string) => {
-  if (!confirm('Are you sure you want to delete this game?')) return
-
+  if (!confirm('Delete this game?')) return
   try {
     await gamesApi.delete(id)
-    alert('Game deleted successfully!')
     fetchGames()
-  } catch (error) {
-    console.error('Error deleting game:', error)
-    alert(error instanceof Error ? error.message : 'Failed to delete game')
-  }
-}
-
-const startEditProject = (project: Project) => {
-  editingProject.value = project
-  activeMenuId.value = null
-  activeTab.value = 'create-project'
-}
-
-const startEditGame = (game: Game) => {
-  editingGame.value = game
-  activeMenuId.value = null
-  activeTab.value = 'create-game'
-}
-
-const cancelEditProject = () => {
-  editingProject.value = null
-}
-
-const cancelEditGame = () => {
-  editingGame.value = null
-}
-
-const fetchExperiences = async () => {
-  try {
-    loading.value = true
-    const data = await experiencesApi.getAll()
-    experiences.value = data.experiences || []
-  } catch (error) {
-    console.error('Error fetching experiences:', error)
+  } catch (e) {
+    alert(e instanceof Error ? e.message : 'Failed')
   } finally {
-    loading.value = false
+    activeMenuId.value = null
   }
 }
 
 const deleteExperience = async (id: string) => {
-  if (!confirm('Are you sure you want to delete this experience?')) return
+  if (!confirm('Delete this experience?')) return
   try {
     await experiencesApi.delete(id)
-    alert('Experience deleted successfully!')
     fetchExperiences()
-  } catch (error) {
-    console.error('Error deleting experience:', error)
-    alert(error instanceof Error ? error.message : 'Failed to delete experience')
+  } catch (e) {
+    alert(e instanceof Error ? e.message : 'Failed')
+  } finally {
+    activeMenuId.value = null
   }
 }
 
-const startEditExperience = (exp: Experience) => {
-  editingExperience.value = exp
-  activeMenuId.value = null
-  activeTab.value = 'create-experience'
+// ── Submit ───────────────────────────────────────────────────────────────────
+
+const handleProjectSubmit = async (data: ProjectFormData) => {
+  const clean: Partial<ProjectFormData> = { ...data }
+  if (!clean.description?.trim()) delete clean.description
+  if (!clean.link?.trim()) delete clean.link
+  if (!clean.project_img?.trim()) delete clean.project_img
+  if (!clean.time_range?.trim()) delete clean.time_range
+  try {
+    if (editingProject.value) {
+      await projectsApi.update(editingProject.value.id, clean)
+      editingProject.value = null
+    } else {
+      await projectsApi.create(clean as ProjectFormData)
+    }
+    fetchProjects()
+  } catch (e) {
+    alert(e instanceof Error ? e.message : 'Failed')
+  }
 }
 
-const cancelEditExperience = () => {
-  editingExperience.value = null
+const handleGameSubmit = async (data: GameFormData) => {
+  const clean: Partial<GameFormData> = { ...data }
+  if (!clean.description?.trim()) delete clean.description
+  if (!clean.link?.trim()) delete clean.link
+  if (!clean.cover_img?.trim()) delete clean.cover_img
+  if (!clean.icon_img?.trim()) delete clean.icon_img
+  try {
+    if (editingGame.value) {
+      await gamesApi.update(editingGame.value.id, clean)
+      editingGame.value = null
+    } else {
+      await gamesApi.create(clean as GameFormData)
+    }
+    fetchGames()
+  } catch (e) {
+    alert(e instanceof Error ? e.message : 'Failed')
+  }
 }
 
 const handleExperienceSubmit = async (data: ExperienceFormData) => {
+  const clean: Partial<ExperienceFormData> = { ...data }
+  if (!clean.location?.trim()) delete clean.location
+  if (!clean.logo?.trim()) delete clean.logo
   try {
-    const cleanedData: Partial<ExperienceFormData> = { ...data }
-    if (!cleanedData.location?.trim()) delete cleanedData.location
-    if (!cleanedData.logo?.trim()) delete cleanedData.logo
-
     if (editingExperience.value) {
-      await experiencesApi.update(editingExperience.value.id, cleanedData)
-      alert('Experience updated successfully!')
+      await experiencesApi.update(editingExperience.value.id, clean)
       editingExperience.value = null
     } else {
-      await experiencesApi.create(cleanedData as ExperienceFormData)
-      alert('Experience created successfully!')
+      await experiencesApi.create(clean as ExperienceFormData)
     }
     fetchExperiences()
-  } catch (error) {
-    console.error('Error submitting experience:', error)
-    alert(error instanceof Error ? error.message : 'Failed to submit experience')
+  } catch (e) {
+    alert(e instanceof Error ? e.message : 'Failed')
   }
 }
 
@@ -181,86 +175,34 @@ const handleSignout = async () => {
   router.push('/')
 }
 
-const handleProjectSubmit = async (data: ProjectFormData) => {
-  try {
-    // Filter out empty string values for optional fields
-    const cleanedData: Partial<ProjectFormData> = { ...data }
-
-    // Remove empty optional fields to avoid validation errors
-    if (!cleanedData.description || cleanedData.description.trim() === '') {
-      delete cleanedData.description
-    }
-    if (!cleanedData.link || cleanedData.link.trim() === '') {
-      delete cleanedData.link
-    }
-    if (!cleanedData.project_img || cleanedData.project_img.trim() === '') {
-      delete cleanedData.project_img
-    }
-    if (!cleanedData.time_range || cleanedData.time_range.trim() === '') {
-      delete cleanedData.time_range
-    }
-
-    if (editingProject.value) {
-      // Update existing project
-      await projectsApi.update(editingProject.value.id, cleanedData)
-      alert('Project updated successfully!')
-      editingProject.value = null
-    } else {
-      // Create new project
-      await projectsApi.create(cleanedData as ProjectFormData)
-      alert('Project created successfully!')
-    }
-    fetchProjects()
-  } catch (error) {
-    console.error('Error submitting project:', error)
-    alert(error instanceof Error ? error.message : 'Failed to submit project')
-  }
+const setSection = (s: string) => {
+  activeSection.value = s as Section
+  activeMenuId.value = null
 }
 
-const handleGameSubmit = async (data: GameFormData) => {
-  try {
-    // Filter out empty string values for optional fields
-    const cleanedData: Partial<GameFormData> = { ...data }
+const startEditProject = (p: Project) => {
+  editingProject.value = p
+  activeMenuId.value = null
+}
 
-    // Remove empty optional fields to avoid validation errors
-    if (!cleanedData.description || cleanedData.description.trim() === '') {
-      delete cleanedData.description
-    }
-    if (!cleanedData.link || cleanedData.link.trim() === '') {
-      delete cleanedData.link
-    }
-    if (!cleanedData.cover_img || cleanedData.cover_img.trim() === '') {
-      delete cleanedData.cover_img
-    }
-    if (!cleanedData.icon_img || cleanedData.icon_img.trim() === '') {
-      delete cleanedData.icon_img
-    }
+const startEditGame = (g: Game) => {
+  editingGame.value = g
+  activeMenuId.value = null
+}
 
-    if (editingGame.value) {
-      // Update existing game
-      await gamesApi.update(editingGame.value.id, cleanedData)
-      alert('Game updated successfully!')
-      editingGame.value = null
-    } else {
-      // Create new game
-      await gamesApi.create(cleanedData as GameFormData)
-      alert('Game created successfully!')
-    }
-    fetchGames()
-  } catch (error) {
-    console.error('Error submitting game:', error)
-    alert(error instanceof Error ? error.message : 'Failed to submit game')
-  }
+const startEditExperience = (e: Experience) => {
+  editingExperience.value = e
+  activeMenuId.value = null
 }
 </script>
 
 <template>
   <main>
     <section class="mb-24">
-      <!-- Welcome Section -->
+      <!-- Header -->
       <div
         :class="[
-          'mb-8 p-6 rounded-lg transition-colors',
+          'mb-6 p-6 rounded-lg',
           mode === 'developer' ? 'bg-white shadow-md' : 'bg-gray-800 border border-purple-900',
         ]"
       >
@@ -268,25 +210,20 @@ const handleGameSubmit = async (data: GameFormData) => {
           <div>
             <h2
               :class="[
-                'text-2xl font-bold mb-2 transition-colors',
+                'text-2xl font-bold mb-1',
                 mode === 'developer' ? 'font-serif text-gray-900' : 'font-mono text-purple-100',
               ]"
             >
               Portfolio Dashboard
             </h2>
-            <p
-              :class="[
-                'mb-4 transition-colors',
-                mode === 'developer' ? 'text-gray-600' : 'text-purple-200',
-              ]"
-            >
-              Update your information and manage your account settings below.
+            <p :class="['text-sm', mode === 'developer' ? 'text-gray-500' : 'text-purple-400']">
+              {{ authStore.user?.email }}
             </p>
           </div>
           <button
             @click="handleSignout"
             :class="[
-              'px-4 py-2 rounded-lg font-medium transition-colors',
+              'px-4 py-2 rounded-lg font-medium text-sm transition-colors',
               mode === 'developer'
                 ? 'bg-red-100 text-red-700 hover:bg-red-200'
                 : 'bg-purple-900 text-purple-100 hover:bg-purple-800',
@@ -295,280 +232,109 @@ const handleGameSubmit = async (data: GameFormData) => {
             Sign Out
           </button>
         </div>
-
-        <!-- User Info -->
-        <div
-          :class="[
-            'p-4 rounded-lg border transition-colors',
-            mode === 'developer' ? 'bg-gray-50 border-gray-200' : 'bg-gray-900 border-purple-800',
-          ]"
-        >
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p
-                :class="[
-                  'text-sm font-medium mb-1',
-                  mode === 'developer' ? 'text-gray-500' : 'text-purple-400',
-                ]"
-              >
-                User ID
-              </p>
-              <p
-                :class="[
-                  'font-mono text-sm break-all',
-                  mode === 'developer' ? 'text-gray-900' : 'text-purple-100',
-                ]"
-              >
-                {{ authStore.user?.id }}
-              </p>
-            </div>
-            <div>
-              <p
-                :class="[
-                  'text-sm font-medium mb-1',
-                  mode === 'developer' ? 'text-gray-500' : 'text-purple-400',
-                ]"
-              >
-                Email
-              </p>
-              <p
-                :class="[
-                  'font-mono text-sm',
-                  mode === 'developer' ? 'text-gray-900' : 'text-purple-100',
-                ]"
-              >
-                {{ authStore.user?.email }}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Terminal Section -->
-      <div
-        :class="[
-          'p-6 rounded-lg transition-colors',
-          mode === 'developer' ? 'bg-white shadow-md' : 'bg-gray-800 border border-purple-900',
-        ]"
-      >
-        <h3
-          :class="[
-            'text-xl font-bold mb-4 transition-colors',
-            mode === 'developer' ? 'font-serif text-gray-900' : 'font-mono text-purple-100',
-          ]"
-        >
-          Terminal
-        </h3>
         <CustomTerminal />
       </div>
 
-      <!-- Forms Section -->
-      <div class="mt-8">
-        <!-- Form Tabs -->
-        <div
-          class="flex gap-2 mb-6 border-b overflow-x-auto"
-          :class="mode === 'developer' ? 'border-gray-200' : 'border-purple-900'"
+      <!-- Section tabs -->
+      <div
+        :class="[
+          'flex gap-1 mb-6 p-1 rounded-lg w-fit',
+          mode === 'developer' ? 'bg-gray-100' : 'bg-gray-800',
+        ]"
+      >
+        <button
+          v-for="s in ['projects', 'games', 'experiences']"
+          :key="s"
+          @click="setSection(s)"
+          :class="[
+            'px-5 py-2 rounded-md font-medium text-sm capitalize transition-colors',
+            activeSection === s
+              ? mode === 'developer'
+                ? 'bg-white shadow text-gray-900'
+                : 'bg-gray-700 text-purple-100'
+              : mode === 'developer'
+                ? 'text-gray-500 hover:text-gray-800'
+                : 'text-purple-400 hover:text-purple-200',
+          ]"
         >
-          <button
-            @click="handleTabChange('create-project')"
-            :class="[
-              'px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap',
-              activeTab === 'create-project'
-                ? mode === 'developer'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-purple-500 text-purple-300'
-                : mode === 'developer'
-                  ? 'border-transparent text-gray-600 hover:text-gray-900'
-                  : 'border-transparent text-purple-400 hover:text-purple-200',
-            ]"
-          >
-            New Project
-          </button>
-          <button
-            @click="handleTabChange('create-game')"
-            :class="[
-              'px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap',
-              activeTab === 'create-game'
-                ? mode === 'developer'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-purple-500 text-purple-300'
-                : mode === 'developer'
-                  ? 'border-transparent text-gray-600 hover:text-gray-900'
-                  : 'border-transparent text-purple-400 hover:text-purple-200',
-            ]"
-          >
-            New Game
-          </button>
-          <button
-            @click="handleTabChange('view-projects')"
-            :class="[
-              'px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap',
-              activeTab === 'view-projects'
-                ? mode === 'developer'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-purple-500 text-purple-300'
-                : mode === 'developer'
-                  ? 'border-transparent text-gray-600 hover:text-gray-900'
-                  : 'border-transparent text-purple-400 hover:text-purple-200',
-            ]"
-          >
-            View Projects
-          </button>
-          <button
-            @click="handleTabChange('view-games')"
-            :class="[
-              'px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap',
-              activeTab === 'view-games'
-                ? mode === 'developer'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-purple-500 text-purple-300'
-                : mode === 'developer'
-                  ? 'border-transparent text-gray-600 hover:text-gray-900'
-                  : 'border-transparent text-purple-400 hover:text-purple-200',
-            ]"
-          >
-            View Games
-          </button>
-          <button
-            @click="handleTabChange('create-experience')"
-            :class="[
-              'px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap',
-              activeTab === 'create-experience'
-                ? mode === 'developer'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-purple-500 text-purple-300'
-                : mode === 'developer'
-                  ? 'border-transparent text-gray-600 hover:text-gray-900'
-                  : 'border-transparent text-purple-400 hover:text-purple-200',
-            ]"
-          >
-            New Experience
-          </button>
-          <button
-            @click="handleTabChange('view-experiences')"
-            :class="[
-              'px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap',
-              activeTab === 'view-experiences'
-                ? mode === 'developer'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-purple-500 text-purple-300'
-                : mode === 'developer'
-                  ? 'border-transparent text-gray-600 hover:text-gray-900'
-                  : 'border-transparent text-purple-400 hover:text-purple-200',
-            ]"
-          >
-            View Experiences
-          </button>
-        </div>
+          {{ s }}
+        </button>
+      </div>
 
-        <!-- Create Project Form -->
-        <div v-if="activeTab === 'create-project'">
-          <ProjectForm
-            :editing-project="editingProject"
-            @submit="handleProjectSubmit"
-            @cancel="cancelEditProject"
-          />
-        </div>
-
-        <!-- Create Game Form -->
-        <div v-if="activeTab === 'create-game'">
-          <GameForm
-            :editing-game="editingGame"
-            @submit="handleGameSubmit"
-            @cancel="cancelEditGame"
-          />
-        </div>
-
-        <!-- View Projects List -->
-        <div v-if="activeTab === 'view-projects'">
-          <div v-if="loading" class="text-center py-8">Loading...</div>
+      <!-- ── PROJECTS ─────────────────────────────────────────────────────── -->
+      <div v-if="activeSection === 'projects'" class="grid lg:grid-cols-2 gap-6 items-start">
+        <!-- List -->
+        <div>
+          <h3
+            :class="[
+              'text-sm font-semibold uppercase tracking-wide mb-3',
+              mode === 'developer' ? 'text-gray-400' : 'text-purple-500',
+            ]"
+          >
+            {{ projects.length }} project{{ projects.length !== 1 ? 's' : '' }}
+          </h3>
+          <div
+            v-if="loading.projects"
+            class="text-center py-8 text-sm"
+            :class="mode === 'developer' ? 'text-gray-400' : 'text-purple-400'"
+          >
+            Loading...
+          </div>
           <div
             v-else-if="projects.length === 0"
-            class="text-center py-8"
-            :class="mode === 'developer' ? 'text-gray-600' : 'text-purple-300'"
+            class="text-center py-8 text-sm"
+            :class="mode === 'developer' ? 'text-gray-400' : 'text-purple-400'"
           >
-            No projects found
+            No projects yet
           </div>
-          <div v-else class="space-y-4">
+          <div v-else class="space-y-3">
             <div
               v-for="project in projects"
               :key="project.id"
               :class="[
                 'p-4 rounded-lg border flex justify-between items-start transition-colors',
-                mode === 'developer'
-                  ? 'bg-white border-gray-200 hover:bg-gray-50'
-                  : 'bg-gray-800 border-purple-900 hover:bg-gray-700',
+                editingProject?.id === project.id
+                  ? mode === 'developer'
+                    ? 'border-blue-400 bg-blue-50'
+                    : 'border-purple-500 bg-gray-700'
+                  : mode === 'developer'
+                    ? 'bg-white border-gray-200 hover:bg-gray-50'
+                    : 'bg-gray-800 border-gray-700 hover:bg-gray-750',
               ]"
             >
-              <div class="flex-1">
-                <div class="flex items-center gap-3 mb-1">
-                  <h4
-                    :class="[
-                      'font-bold',
-                      mode === 'developer' ? 'text-gray-900' : 'text-purple-100',
-                    ]"
-                  >
-                    {{ project.title }}
-                  </h4>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1 flex-wrap">
                   <span
                     :class="[
-                      'text-xs font-semibold px-2 py-1 rounded',
-                      project.status === 'Completed and Published'
-                        ? mode === 'developer'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-green-900 text-green-200'
-                        : project.status === 'Ongoing'
-                          ? mode === 'developer'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-blue-900 text-blue-200'
-                          : project.status === 'Upcoming'
-                            ? mode === 'developer'
-                              ? 'bg-yellow-100 text-yellow-700'
-                              : 'bg-yellow-900 text-yellow-200'
-                            : project.status === 'Deprecated'
-                              ? mode === 'developer'
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-red-900 text-red-200'
-                              : project.status === 'Under Maintenance'
-                                ? mode === 'developer'
-                                  ? 'bg-orange-100 text-orange-700'
-                                  : 'bg-orange-900 text-orange-200'
-                                : mode === 'developer'
-                                  ? 'bg-gray-100 text-gray-700'
-                                  : 'bg-gray-700 text-gray-200',
+                      'font-semibold text-sm',
+                      mode === 'developer' ? 'text-gray-900' : 'text-purple-100',
                     ]"
+                    >{{ project.title }}</span
                   >
-                    {{ project.status }}
-                  </span>
+                  <span
+                    :class="[
+                      'text-xs px-2 py-0.5 rounded-full',
+                      mode === 'developer'
+                        ? 'bg-gray-100 text-gray-600'
+                        : 'bg-gray-700 text-gray-300',
+                    ]"
+                    >{{ project.status }}</span
+                  >
                 </div>
                 <p
                   :class="[
-                    'text-sm mb-2',
-                    mode === 'developer' ? 'text-gray-600' : 'text-purple-300',
+                    'text-xs truncate',
+                    mode === 'developer' ? 'text-gray-500' : 'text-gray-400',
                   ]"
                 >
-                  {{ project.description }}
+                  {{ project.time_range }}
                 </p>
-                <div class="flex gap-2 flex-wrap">
-                  <span
-                    v-for="tag in project.tags"
-                    :key="tag"
-                    :class="[
-                      'text-xs px-2 py-1 rounded',
-                      mode === 'developer'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-purple-900 text-purple-200',
-                    ]"
-                  >
-                    {{ tag }}
-                  </span>
-                </div>
               </div>
-              <div class="relative ml-4">
+              <div class="relative ml-3 flex-shrink-0">
                 <button
                   @click="activeMenuId = activeMenuId === project.id ? null : project.id"
                   :class="[
-                    'p-2 rounded hover:bg-opacity-75',
+                    'p-1.5 rounded text-lg leading-none',
                     mode === 'developer' ? 'hover:bg-gray-200' : 'hover:bg-gray-600',
                   ]"
                 >
@@ -577,35 +343,30 @@ const handleGameSubmit = async (data: GameFormData) => {
                 <div
                   v-if="activeMenuId === project.id"
                   :class="[
-                    'absolute right-0 mt-1 w-40 rounded-lg shadow-lg z-10 border',
+                    'absolute right-0 mt-1 w-36 rounded-lg shadow-lg z-10 border overflow-hidden',
                     mode === 'developer'
                       ? 'bg-white border-gray-200'
-                      : 'bg-gray-700 border-purple-900',
+                      : 'bg-gray-700 border-gray-600',
                   ]"
                 >
                   <button
                     @click="startEditProject(project)"
                     :class="[
-                      'block w-full text-left px-4 py-2 hover:bg-opacity-75 transition-colors rounded-t-lg',
+                      'block w-full text-left px-4 py-2 text-sm transition-colors',
                       mode === 'developer'
-                        ? 'text-gray-900 hover:bg-gray-100'
+                        ? 'text-gray-700 hover:bg-gray-100'
                         : 'text-purple-100 hover:bg-gray-600',
                     ]"
                   >
                     Edit
                   </button>
                   <button
-                    @click="
-                      () => {
-                        deleteProject(project.id)
-                        activeMenuId = null
-                      }
-                    "
+                    @click="deleteProject(project.id)"
                     :class="[
-                      'block w-full text-left px-4 py-2 hover:bg-opacity-75 transition-colors rounded-b-lg text-red-600 hover:bg-red-50',
+                      'block w-full text-left px-4 py-2 text-sm transition-colors',
                       mode === 'developer'
-                        ? ''
-                        : 'hover:bg-red-900 hover:bg-opacity-30 text-red-400',
+                        ? 'text-red-600 hover:bg-red-50'
+                        : 'text-red-400 hover:bg-red-900/30',
                     ]"
                   >
                     Delete
@@ -616,72 +377,83 @@ const handleGameSubmit = async (data: GameFormData) => {
           </div>
         </div>
 
-        <!-- View Games List -->
-        <div v-if="activeTab === 'view-games'">
-          <div v-if="loading" class="text-center py-8">Loading...</div>
+        <!-- Form -->
+        <div>
+          <h3
+            :class="[
+              'text-sm font-semibold uppercase tracking-wide mb-3',
+              mode === 'developer' ? 'text-gray-400' : 'text-purple-500',
+            ]"
+          >
+            {{ editingProject ? 'Editing project' : 'New project' }}
+          </h3>
+          <ProjectForm
+            :editing-project="editingProject"
+            @submit="handleProjectSubmit"
+            @cancel="editingProject = null"
+          />
+        </div>
+      </div>
+
+      <!-- ── GAMES ───────────────────────────────────────────────────────── -->
+      <div v-else-if="activeSection === 'games'" class="grid lg:grid-cols-2 gap-6 items-start">
+        <!-- List -->
+        <div>
+          <h3
+            :class="[
+              'text-sm font-semibold uppercase tracking-wide mb-3',
+              mode === 'developer' ? 'text-gray-400' : 'text-purple-500',
+            ]"
+          >
+            {{ games.length }} game{{ games.length !== 1 ? 's' : '' }}
+          </h3>
+          <div
+            v-if="loading.games"
+            class="text-center py-8 text-sm"
+            :class="mode === 'developer' ? 'text-gray-400' : 'text-purple-400'"
+          >
+            Loading...
+          </div>
           <div
             v-else-if="games.length === 0"
-            class="text-center py-8"
-            :class="mode === 'developer' ? 'text-gray-600' : 'text-purple-300'"
+            class="text-center py-8 text-sm"
+            :class="mode === 'developer' ? 'text-gray-400' : 'text-purple-400'"
           >
-            No games found
+            No games yet
           </div>
-          <div v-else class="space-y-4">
+          <div v-else class="space-y-3">
             <div
               v-for="game in games"
               :key="game.id"
               :class="[
                 'p-4 rounded-lg border flex justify-between items-start transition-colors',
-                mode === 'developer'
-                  ? 'bg-white border-gray-200 hover:bg-gray-50'
-                  : 'bg-gray-800 border-purple-900 hover:bg-gray-700',
+                editingGame?.id === game.id
+                  ? mode === 'developer'
+                    ? 'border-blue-400 bg-blue-50'
+                    : 'border-purple-500 bg-gray-700'
+                  : mode === 'developer'
+                    ? 'bg-white border-gray-200 hover:bg-gray-50'
+                    : 'bg-gray-800 border-gray-700 hover:bg-gray-750',
               ]"
             >
-              <div class="flex-1">
-                <h4
+              <div class="flex-1 min-w-0">
+                <p
                   :class="[
-                    'font-bold mb-1',
+                    'font-semibold text-sm mb-1',
                     mode === 'developer' ? 'text-gray-900' : 'text-purple-100',
                   ]"
                 >
                   {{ game.title }}
-                </h4>
-                <p
-                  :class="[
-                    'text-sm mb-2',
-                    mode === 'developer' ? 'text-gray-600' : 'text-purple-300',
-                  ]"
-                >
-                  {{ game.description }}
                 </p>
-                <div class="flex gap-4 mb-2 text-sm">
-                  <span :class="mode === 'developer' ? 'text-gray-600' : 'text-purple-400'">
-                    Genres: {{ game.genre.join(', ') }}
-                  </span>
-                  <span :class="mode === 'developer' ? 'text-gray-600' : 'text-purple-400'">
-                    Platforms: {{ game.platform.join(', ') }}
-                  </span>
-                </div>
-                <div class="flex gap-2 flex-wrap">
-                  <span
-                    v-for="tag in game.tags"
-                    :key="tag"
-                    :class="[
-                      'text-xs px-2 py-1 rounded',
-                      mode === 'developer'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-purple-900 text-purple-200',
-                    ]"
-                  >
-                    {{ tag }}
-                  </span>
-                </div>
+                <p :class="['text-xs', mode === 'developer' ? 'text-gray-500' : 'text-gray-400']">
+                  {{ game.platform.join(', ') }}
+                </p>
               </div>
-              <div class="relative ml-4">
+              <div class="relative ml-3 flex-shrink-0">
                 <button
                   @click="activeMenuId = activeMenuId === game.id ? null : game.id"
                   :class="[
-                    'p-2 rounded hover:bg-opacity-75',
+                    'p-1.5 rounded text-lg leading-none',
                     mode === 'developer' ? 'hover:bg-gray-200' : 'hover:bg-gray-600',
                   ]"
                 >
@@ -690,35 +462,30 @@ const handleGameSubmit = async (data: GameFormData) => {
                 <div
                   v-if="activeMenuId === game.id"
                   :class="[
-                    'absolute right-0 mt-1 w-40 rounded-lg shadow-lg z-10 border',
+                    'absolute right-0 mt-1 w-36 rounded-lg shadow-lg z-10 border overflow-hidden',
                     mode === 'developer'
                       ? 'bg-white border-gray-200'
-                      : 'bg-gray-700 border-purple-900',
+                      : 'bg-gray-700 border-gray-600',
                   ]"
                 >
                   <button
                     @click="startEditGame(game)"
                     :class="[
-                      'block w-full text-left px-4 py-2 hover:bg-opacity-75 transition-colors rounded-t-lg',
+                      'block w-full text-left px-4 py-2 text-sm transition-colors',
                       mode === 'developer'
-                        ? 'text-gray-900 hover:bg-gray-100'
+                        ? 'text-gray-700 hover:bg-gray-100'
                         : 'text-purple-100 hover:bg-gray-600',
                     ]"
                   >
                     Edit
                   </button>
                   <button
-                    @click="
-                      () => {
-                        deleteGame(game.id)
-                        activeMenuId = null
-                      }
-                    "
+                    @click="deleteGame(game.id)"
                     :class="[
-                      'block w-full text-left px-4 py-2 hover:bg-opacity-75 transition-colors rounded-b-lg text-red-600 hover:bg-red-50',
+                      'block w-full text-left px-4 py-2 text-sm transition-colors',
                       mode === 'developer'
-                        ? ''
-                        : 'hover:bg-red-900 hover:bg-opacity-30 text-red-400',
+                        ? 'text-red-600 hover:bg-red-50'
+                        : 'text-red-400 hover:bg-red-900/30',
                     ]"
                   >
                     Delete
@@ -728,80 +495,103 @@ const handleGameSubmit = async (data: GameFormData) => {
             </div>
           </div>
         </div>
-        <!-- Create Experience Form -->
-        <div v-if="activeTab === 'create-experience'">
-          <ExperienceForm
-            :editing-experience="editingExperience"
-            @submit="handleExperienceSubmit"
-            @cancel="cancelEditExperience"
+
+        <!-- Form -->
+        <div>
+          <h3
+            :class="[
+              'text-sm font-semibold uppercase tracking-wide mb-3',
+              mode === 'developer' ? 'text-gray-400' : 'text-purple-500',
+            ]"
+          >
+            {{ editingGame ? 'Editing game' : 'New game' }}
+          </h3>
+          <GameForm
+            :editing-game="editingGame"
+            @submit="handleGameSubmit"
+            @cancel="editingGame = null"
           />
         </div>
+      </div>
 
-        <!-- View Experiences List -->
-        <div v-if="activeTab === 'view-experiences'">
-          <div v-if="loading" class="text-center py-8">Loading...</div>
+      <!-- ── EXPERIENCES ──────────────────────────────────────────────────── -->
+      <div
+        v-else-if="activeSection === 'experiences'"
+        class="grid lg:grid-cols-2 gap-6 items-start"
+      >
+        <!-- List -->
+        <div>
+          <h3
+            :class="[
+              'text-sm font-semibold uppercase tracking-wide mb-3',
+              mode === 'developer' ? 'text-gray-400' : 'text-purple-500',
+            ]"
+          >
+            {{ experiences.length }} experience{{ experiences.length !== 1 ? 's' : '' }}
+          </h3>
+          <div
+            v-if="loading.experiences"
+            class="text-center py-8 text-sm"
+            :class="mode === 'developer' ? 'text-gray-400' : 'text-purple-400'"
+          >
+            Loading...
+          </div>
           <div
             v-else-if="experiences.length === 0"
-            class="text-center py-8"
-            :class="mode === 'developer' ? 'text-gray-600' : 'text-purple-300'"
+            class="text-center py-8 text-sm"
+            :class="mode === 'developer' ? 'text-gray-400' : 'text-purple-400'"
           >
-            No experiences found
+            No experiences yet
           </div>
-          <div v-else class="space-y-4">
+          <div v-else class="space-y-3">
             <div
               v-for="exp in experiences"
               :key="exp.id"
               :class="[
                 'p-4 rounded-lg border flex justify-between items-start transition-colors',
-                mode === 'developer'
-                  ? 'bg-white border-gray-200 hover:bg-gray-50'
-                  : 'bg-gray-800 border-purple-900 hover:bg-gray-700',
+                editingExperience?.id === exp.id
+                  ? mode === 'developer'
+                    ? 'border-blue-400 bg-blue-50'
+                    : 'border-purple-500 bg-gray-700'
+                  : mode === 'developer'
+                    ? 'bg-white border-gray-200 hover:bg-gray-50'
+                    : 'bg-gray-800 border-gray-700 hover:bg-gray-750',
               ]"
             >
-              <div class="flex gap-3 flex-1">
+              <div class="flex gap-3 flex-1 min-w-0">
                 <img
                   v-if="exp.logo"
                   :src="exp.logo"
                   :alt="exp.company"
-                  class="w-10 h-10 rounded object-contain flex-shrink-0 mt-1"
+                  class="w-8 h-8 rounded object-contain flex-shrink-0 mt-0.5"
                 />
-                <div class="flex-1">
-                  <h4
+                <div class="min-w-0">
+                  <p
                     :class="[
-                      'font-bold mb-0.5',
+                      'font-semibold text-sm',
                       mode === 'developer' ? 'text-gray-900' : 'text-purple-100',
                     ]"
                   >
                     {{ exp.title }}
-                  </h4>
-                  <p
-                    :class="[
-                      'text-sm font-medium mb-1',
-                      mode === 'developer' ? 'text-gray-600' : 'text-purple-400',
-                    ]"
-                  >
+                  </p>
+                  <p :class="['text-xs', mode === 'developer' ? 'text-gray-500' : 'text-gray-400']">
                     {{ exp.company }}{{ exp.location ? ` • ${exp.location}` : '' }}
                   </p>
                   <p
                     :class="[
-                      'text-xs mb-2',
-                      mode === 'developer' ? 'text-gray-500' : 'text-gray-400',
+                      'text-xs mt-0.5',
+                      mode === 'developer' ? 'text-gray-400' : 'text-gray-500',
                     ]"
                   >
                     {{ exp.date }}
                   </p>
-                  <p
-                    :class="['text-sm', mode === 'developer' ? 'text-gray-600' : 'text-purple-300']"
-                  >
-                    {{ exp.description }}
-                  </p>
                 </div>
               </div>
-              <div class="relative ml-4">
+              <div class="relative ml-3 flex-shrink-0">
                 <button
                   @click="activeMenuId = activeMenuId === exp.id ? null : exp.id"
                   :class="[
-                    'p-2 rounded hover:bg-opacity-75',
+                    'p-1.5 rounded text-lg leading-none',
                     mode === 'developer' ? 'hover:bg-gray-200' : 'hover:bg-gray-600',
                   ]"
                 >
@@ -810,35 +600,30 @@ const handleGameSubmit = async (data: GameFormData) => {
                 <div
                   v-if="activeMenuId === exp.id"
                   :class="[
-                    'absolute right-0 mt-1 w-40 rounded-lg shadow-lg z-10 border',
+                    'absolute right-0 mt-1 w-36 rounded-lg shadow-lg z-10 border overflow-hidden',
                     mode === 'developer'
                       ? 'bg-white border-gray-200'
-                      : 'bg-gray-700 border-purple-900',
+                      : 'bg-gray-700 border-gray-600',
                   ]"
                 >
                   <button
                     @click="startEditExperience(exp)"
                     :class="[
-                      'block w-full text-left px-4 py-2 hover:bg-opacity-75 transition-colors rounded-t-lg',
+                      'block w-full text-left px-4 py-2 text-sm transition-colors',
                       mode === 'developer'
-                        ? 'text-gray-900 hover:bg-gray-100'
+                        ? 'text-gray-700 hover:bg-gray-100'
                         : 'text-purple-100 hover:bg-gray-600',
                     ]"
                   >
                     Edit
                   </button>
                   <button
-                    @click="
-                      () => {
-                        deleteExperience(exp.id)
-                        activeMenuId = null
-                      }
-                    "
+                    @click="deleteExperience(exp.id)"
                     :class="[
-                      'block w-full text-left px-4 py-2 hover:bg-opacity-75 transition-colors rounded-b-lg text-red-600 hover:bg-red-50',
+                      'block w-full text-left px-4 py-2 text-sm transition-colors',
                       mode === 'developer'
-                        ? ''
-                        : 'hover:bg-red-900 hover:bg-opacity-30 text-red-400',
+                        ? 'text-red-600 hover:bg-red-50'
+                        : 'text-red-400 hover:bg-red-900/30',
                     ]"
                   >
                     Delete
@@ -847,6 +632,23 @@ const handleGameSubmit = async (data: GameFormData) => {
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Form -->
+        <div>
+          <h3
+            :class="[
+              'text-sm font-semibold uppercase tracking-wide mb-3',
+              mode === 'developer' ? 'text-gray-400' : 'text-purple-500',
+            ]"
+          >
+            {{ editingExperience ? 'Editing experience' : 'New experience' }}
+          </h3>
+          <ExperienceForm
+            :editing-experience="editingExperience"
+            @submit="handleExperienceSubmit"
+            @cancel="editingExperience = null"
+          />
         </div>
       </div>
     </section>

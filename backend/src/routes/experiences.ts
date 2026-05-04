@@ -61,7 +61,7 @@ export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
     },
   )
 
-  // Create experience (admin only)
+  // Add experience (admin only)
   .post(
     "/",
     async ({ body, cookie, set }) => {
@@ -117,8 +117,8 @@ export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
       }),
       detail: {
         tags: ["Experiences"],
-        summary: "Create experience",
-        description: "Create a new work experience entry (admin only)",
+        summary: "Add experience",
+        description: "Add a new work experience entry (admin only)",
       },
     },
   )

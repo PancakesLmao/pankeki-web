@@ -86,7 +86,7 @@ const handleSubmit = async () => {
         mode === 'developer' ? 'font-serif text-gray-900' : 'font-mono text-purple-100',
       ]"
     >
-      {{ editingExperience ? 'Edit Experience' : 'Create New Experience' }}
+      {{ editingExperience ? 'Edit Experience' : 'Add New Experience' }}
     </h3>
 
     <FormInput
@@ -155,7 +155,7 @@ const handleSubmit = async () => {
               : 'Creating...'
             : editingExperience
               ? 'Update Experience'
-              : 'Create Experience'
+              : 'Add Experience'
         }}
       </button>
       <button

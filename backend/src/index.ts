@@ -14,7 +14,7 @@ const isDevelopment = process.env.NODE_ENV !== "production";
 const DOMAIN = process.env.DOMAIN || "localhost";
 const FRONTEND_PORT = process.env.FRONTEND_PORT || "5173";
 
-// Request logging middleware inspired by Next.js
+// Request logging middleware
 const logRequest = (context: any) => {
   const method = context.request.method;
   const url = new URL(context.request.url);
