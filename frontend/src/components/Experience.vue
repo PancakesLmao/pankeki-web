@@ -21,10 +21,6 @@ const fetchExperiences = async () => {
   try {
     const response = await experiencesApi.getAll()
     experiences.value = response.experiences ?? []
-    // console.log('Experiences loaded:', experiences.value)
-    experiences.value.forEach((exp) => {
-      console.log(`${exp.company}: logo = ${exp.logo}`)
-    })
   } catch {
     fetchError.value = true
   } finally {
@@ -260,15 +256,10 @@ onMounted(() => fetchExperiences())
                   @error="
                     (e) => {
                       const img = e.target as HTMLImageElement
-                      console.error(`Failed to load logo for ${item.company}:`, item.logo)
                       img.style.display = 'none'
                     }
                   "
-                  @load="
-                    () => {
-                      console.log(`Logo loaded for ${item.company}:`, item.logo)
-                    }
-                  "
+                  @load="() => {}"
                 />
                 <div class="logo-tooltip">
                   <img
@@ -277,15 +268,10 @@ onMounted(() => fetchExperiences())
                     @error="
                       (e) => {
                         const img = e.target as HTMLImageElement
-                        console.error(`Failed to load tooltip logo for ${item.company}:`, item.logo)
                         img.parentElement!.textContent = 'Logo unavailable'
                       }
                     "
-                    @load="
-                      () => {
-                        console.log(`Tooltip logo loaded for ${item.company}:`, item.logo)
-                      }
-                    "
+                    @load="() => {}"
                   />
                 </div>
               </div>
