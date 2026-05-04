@@ -27,7 +27,7 @@ const fetchProjects = async () => {
       const dateB = new Date(b.created_at).getTime()
       return dateB - dateA
     })
-    console.log('Projects loaded:', projects.value.length)
+    // console.log('Projects loaded:', projects.value.length)
   } catch (error) {
     fetchError.value = error instanceof Error ? error.message : 'Failed to fetch projects'
     console.error('Error fetching projects:', error)

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 defineOptions({ name: 'ExperienceSection' })
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useMode } from '@/composables/useMode'
 import { Mode } from '@/types/mode'
 import SectionTitle from '@/components/SectionTitle.vue'
@@ -12,6 +12,8 @@ const { mode } = useMode()
 const experiences = ref<Experience[]>([])
 const loading = ref(false)
 const fetchError = ref(false)
+const visibleItems = ref<Set<string>>(new Set())
+const hoveredLogoId = ref<string | null>(null)
 
 const fetchExperiences = async () => {
   loading.value = true
@@ -19,7 +21,10 @@ const fetchExperiences = async () => {
   try {
     const response = await experiencesApi.getAll()
     experiences.value = response.experiences ?? []
-    nextTick(() => setupObserver())
+    // console.log('Experiences loaded:', experiences.value)
+    experiences.value.forEach((exp) => {
+      console.log(`${exp.company}: logo = ${exp.logo}`)
+    })
   } catch {
     fetchError.value = true
   } finally {
@@ -27,51 +32,83 @@ const fetchExperiences = async () => {
   }
 }
 
-const timelineItemsRef = ref<HTMLElement[]>([])
-const observer = ref<IntersectionObserver | null>(null)
+const setupItemObserver = (element: HTMLElement | null, itemId: string) => {
+  if (!element) return
 
-const setupObserver = () => {
-  if (observer.value) observer.value.disconnect()
-  observer.value = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.remove('below-fold')
-          entry.target.classList.add('is-visible')
-          observer.value?.unobserve(entry.target)
-        }
-      })
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        visibleItems.value.add(itemId)
+        observer.unobserve(entry.target)
+      }
     },
     { threshold: 0.1 },
   )
-  timelineItemsRef.value.forEach((item) => {
-    if (!item) return
-    const rect = item.getBoundingClientRect()
-    // Only animate items that are below the current viewport
-    if (rect.top > window.innerHeight) {
-      item.classList.add('below-fold')
-      observer.value?.observe(item)
-    }
-  })
+  observer.observe(element)
 }
 
 onMounted(() => fetchExperiences())
-onUnmounted(() => observer.value?.disconnect())
 </script>
 
 <style scoped>
 .timeline-item {
-  transition:
-    opacity 0.6s ease-out,
-    transform 0.6s ease-out;
-}
-.timeline-item.below-fold {
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(30px);
+  transition:
+    opacity 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
 .timeline-item.is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+.logo-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: white;
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.logo-wrapper:hover .logo-tooltip {
+  opacity: 1;
+}
+
+.logo-tooltip img {
+  max-width: 120px;
+  max-height: 120px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.dark-mode .logo-tooltip {
+  background: #1f2937;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  color: #999;
 }
 </style>
 
@@ -168,8 +205,9 @@ onUnmounted(() => observer.value?.disconnect())
           :class="[
             'relative flex flex-col md:flex-row timeline-item',
             index % 2 === 0 ? 'md:flex-row-reverse' : '',
+            visibleItems.has(item.id) ? 'is-visible' : '',
           ]"
-          ref="timelineItemsRef"
+          :ref="(el) => setupItemObserver(el as HTMLElement, item.id)"
         >
           <!-- Dot -->
           <div
@@ -214,12 +252,43 @@ onUnmounted(() => observer.value?.disconnect())
                 index % 2 === 0 ? 'md:flex-row-reverse' : '',
               ]"
             >
-              <img
-                v-if="item.logo"
-                :src="item.logo"
-                :alt="item.company"
-                class="w-8 h-8 rounded object-contain flex-shrink-0"
-              />
+              <div v-if="item.logo" class="logo-wrapper">
+                <img
+                  :src="item.logo"
+                  :alt="item.company"
+                  class="w-8 h-8 rounded object-contain flex-shrink-0"
+                  @error="
+                    (e) => {
+                      const img = e.target as HTMLImageElement
+                      console.error(`Failed to load logo for ${item.company}:`, item.logo)
+                      img.style.display = 'none'
+                    }
+                  "
+                  @load="
+                    () => {
+                      console.log(`Logo loaded for ${item.company}:`, item.logo)
+                    }
+                  "
+                />
+                <div class="logo-tooltip">
+                  <img
+                    :src="item.logo"
+                    :alt="item.company"
+                    @error="
+                      (e) => {
+                        const img = e.target as HTMLImageElement
+                        console.error(`Failed to load tooltip logo for ${item.company}:`, item.logo)
+                        img.parentElement!.textContent = 'Logo unavailable'
+                      }
+                    "
+                    @load="
+                      () => {
+                        console.log(`Tooltip logo loaded for ${item.company}:`, item.logo)
+                      }
+                    "
+                  />
+                </div>
+              </div>
               <h3
                 :class="[
                   'text-xl font-bold transition-colors',
