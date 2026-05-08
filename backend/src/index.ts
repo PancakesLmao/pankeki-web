@@ -80,32 +80,6 @@ const cookieSameSite = (process.env.COOKIE_SAMESITE || "lax") as
 const cookieSecure =
   process.env.COOKIE_SECURE === "true" || process.env.NODE_ENV === "production";
 
-// Cookie configuration for cross-domain authentication
-// - COOKIE_SAMESITE: Controls whether cookies are sent across origins
-//   * "strict": Same-site requests only (default for same-domain deployments)
-//   * "lax": Sent on top-level navigation and same-site requests (recommended for cross-domain)
-//   * "none": Sent on all requests (requires secure: true and HTTPS)
-// - COOKIE_SECURE: Only send cookies over HTTPS (required for production)
-const cookieSameSite = (process.env.COOKIE_SAMESITE || "lax") as
-  | "strict"
-  | "lax"
-  | "none";
-const cookieSecure =
-  process.env.COOKIE_SECURE === "true" || process.env.NODE_ENV === "production";
-
-// Cookie configuration for cross-domain authentication
-// - COOKIE_SAMESITE: Controls whether cookies are sent across origins
-//   * "strict": Same-site requests only (default for same-domain deployments)
-//   * "lax": Sent on top-level navigation and same-site requests (recommended for cross-domain)
-//   * "none": Sent on all requests (requires secure: true and HTTPS)
-// - COOKIE_SECURE: Only send cookies over HTTPS (required for production)
-const cookieSameSite = (process.env.COOKIE_SAMESITE || "lax") as
-  | "strict"
-  | "lax"
-  | "none";
-const cookieSecure =
-  process.env.COOKIE_SECURE === "true" || process.env.NODE_ENV === "production";
-
 let app = new Elysia()
   .use(
     cors({
@@ -149,7 +123,7 @@ if (isDevelopment) {
         info: {
           title: "Portfolio API",
           description: "API for managing portfolio projects and authentication",
-          version: "1.0.0",
+          version: "1.1.0",
         },
         tags: [
           { name: "Health", description: "Health check endpoints" },
@@ -168,7 +142,7 @@ if (isDevelopment) {
 app = app
   .get("/", () => ({
     message: "Elysia + Supabase API",
-    version: "1.0.0",
+    version: "1.1.0",
   }))
   .get("/health", () => ({ status: "ok" }), {
     detail: {
