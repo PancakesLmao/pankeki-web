@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import type { Project, Game, Experience } from '@/types/profile'
@@ -24,9 +24,61 @@ const experiences = ref<Experience[]>([])
 const loading = ref<Record<Section, boolean>>({ projects: false, games: false, experiences: false })
 const activeMenuId = ref<string | null>(null)
 
+const pageSize = {
+  projects: 5,
+  games: 5,
+  experiences: 5,
+}
+
+const currentPage = ref<Record<Section, number>>({
+  projects: 1,
+  games: 1,
+  experiences: 1,
+})
+
 const editingProject = ref<Project | null>(null)
 const editingGame = ref<Game | null>(null)
 const editingExperience = ref<Experience | null>(null)
+const projectFormRef = ref<InstanceType<typeof ProjectForm> | null>(null)
+const gameFormRef = ref<InstanceType<typeof GameForm> | null>(null)
+const experienceFormRef = ref<InstanceType<typeof ExperienceForm> | null>(null)
+
+const getPageCount = (total: number, size: number) => Math.max(1, Math.ceil(total / size))
+
+const paginate = <T,>(items: T[], page: number, size: number) => {
+  const start = (page - 1) * size
+  return items.slice(start, start + size)
+}
+
+const pagedProjects = computed(() =>
+  paginate(projects.value, currentPage.value.projects, pageSize.projects),
+)
+
+const pagedGames = computed(() => paginate(games.value, currentPage.value.games, pageSize.games))
+
+const pagedExperiences = computed(() =>
+  paginate(experiences.value, currentPage.value.experiences, pageSize.experiences),
+)
+
+const projectPageCount = computed(() => getPageCount(projects.value.length, pageSize.projects))
+
+const gamePageCount = computed(() => getPageCount(games.value.length, pageSize.games))
+
+const experiencePageCount = computed(() =>
+  getPageCount(experiences.value.length, pageSize.experiences),
+)
+
+const normalizePage = (section: Section, total: number, size: number) => {
+  const maxPage = getPageCount(total, size)
+  if (currentPage.value[section] > maxPage) {
+    currentPage.value[section] = maxPage
+  }
+}
+
+const setPage = (section: Section, page: number, maxPage: number) => {
+  const next = Math.min(Math.max(page, 1), maxPage)
+  currentPage.value[section] = next
+}
 
 onMounted(async () => {
   const isAuth = await authStore.checkAuth()
@@ -44,6 +96,7 @@ const fetchProjects = async () => {
   try {
     const data = await projectsApi.getAll()
     projects.value = data.projects || []
+    normalizePage('projects', projects.value.length, pageSize.projects)
   } catch (e) {
     console.error(e)
   } finally {
@@ -56,6 +109,7 @@ const fetchGames = async () => {
   try {
     const data = await gamesApi.getAll()
     games.value = data.games || []
+    normalizePage('games', games.value.length, pageSize.games)
   } catch (e) {
     console.error(e)
   } finally {
@@ -68,6 +122,7 @@ const fetchExperiences = async () => {
   try {
     const data = await experiencesApi.getAll()
     experiences.value = data.experiences || []
+    normalizePage('experiences', experiences.value.length, pageSize.experiences)
   } catch (e) {
     console.error(e)
   } finally {
@@ -123,10 +178,13 @@ const handleProjectSubmit = async (data: ProjectFormData) => {
   if (!clean.time_range?.trim()) delete clean.time_range
   try {
     if (editingProject.value) {
+      const uploadResult = await projectFormRef.value?.uploadImages(editingProject.value.id)
+      if (uploadResult?.uploaded) delete clean.project_img
       await projectsApi.update(editingProject.value.id, clean)
       editingProject.value = null
     } else {
-      await projectsApi.create(clean as ProjectFormData)
+      const created = await projectsApi.create(clean as ProjectFormData)
+      await projectFormRef.value?.uploadImages(created.project.id)
     }
     fetchProjects()
   } catch (e) {
@@ -142,10 +200,16 @@ const handleGameSubmit = async (data: GameFormData) => {
   if (!clean.icon_img?.trim()) delete clean.icon_img
   try {
     if (editingGame.value) {
+      const uploadResult = await gameFormRef.value?.uploadImages(editingGame.value.id)
+      if (uploadResult?.uploaded) {
+        delete clean.cover_img
+        delete clean.icon_img
+      }
       await gamesApi.update(editingGame.value.id, clean)
       editingGame.value = null
     } else {
-      await gamesApi.create(clean as GameFormData)
+      const created = await gamesApi.create(clean as GameFormData)
+      await gameFormRef.value?.uploadImages(created.game.id)
     }
     fetchGames()
   } catch (e) {
@@ -159,10 +223,13 @@ const handleExperienceSubmit = async (data: ExperienceFormData) => {
   if (!clean.logo?.trim()) delete clean.logo
   try {
     if (editingExperience.value) {
+      const uploadResult = await experienceFormRef.value?.uploadImages(editingExperience.value.id)
+      if (uploadResult?.uploaded) delete clean.logo
       await experiencesApi.update(editingExperience.value.id, clean)
       editingExperience.value = null
     } else {
-      await experiencesApi.create(clean as ExperienceFormData)
+      const created = await experiencesApi.create(clean as ExperienceFormData)
+      await experienceFormRef.value?.uploadImages(created.experience.id)
     }
     fetchExperiences()
   } catch (e) {
@@ -289,7 +356,7 @@ const startEditExperience = (e: Experience) => {
           </div>
           <div v-else class="space-y-3">
             <div
-              v-for="project in projects"
+              v-for="project in pagedProjects"
               :key="project.id"
               :class="[
                 'p-4 rounded-lg border flex justify-between items-start transition-colors',
@@ -375,6 +442,39 @@ const startEditExperience = (e: Experience) => {
               </div>
             </div>
           </div>
+          <div
+            v-if="projects.length > pageSize.projects"
+            class="flex items-center justify-between mt-4 text-xs"
+            :class="mode === 'developer' ? 'text-gray-500' : 'text-purple-400'"
+          >
+            <button
+              type="button"
+              @click="setPage('projects', currentPage.projects - 1, projectPageCount)"
+              :disabled="currentPage.projects === 1"
+              :class="[
+                'px-2 py-1 rounded transition-colors disabled:opacity-50',
+                mode === 'developer'
+                  ? 'bg-gray-100 hover:bg-gray-200'
+                  : 'bg-gray-700 hover:bg-gray-600',
+              ]"
+            >
+              Prev
+            </button>
+            <span>Page {{ currentPage.projects }} of {{ projectPageCount }}</span>
+            <button
+              type="button"
+              @click="setPage('projects', currentPage.projects + 1, projectPageCount)"
+              :disabled="currentPage.projects === projectPageCount"
+              :class="[
+                'px-2 py-1 rounded transition-colors disabled:opacity-50',
+                mode === 'developer'
+                  ? 'bg-gray-100 hover:bg-gray-200'
+                  : 'bg-gray-700 hover:bg-gray-600',
+              ]"
+            >
+              Next
+            </button>
+          </div>
         </div>
 
         <!-- Form -->
@@ -388,6 +488,7 @@ const startEditExperience = (e: Experience) => {
             {{ editingProject ? 'Editing project' : 'New project' }}
           </h3>
           <ProjectForm
+            ref="projectFormRef"
             :editing-project="editingProject"
             @submit="handleProjectSubmit"
             @cancel="editingProject = null"
@@ -423,7 +524,7 @@ const startEditExperience = (e: Experience) => {
           </div>
           <div v-else class="space-y-3">
             <div
-              v-for="game in games"
+              v-for="game in pagedGames"
               :key="game.id"
               :class="[
                 'p-4 rounded-lg border flex justify-between items-start transition-colors',
@@ -436,18 +537,26 @@ const startEditExperience = (e: Experience) => {
                     : 'bg-gray-800 border-gray-700 hover:bg-gray-750',
               ]"
             >
-              <div class="flex-1 min-w-0">
-                <p
-                  :class="[
-                    'font-semibold text-sm mb-1',
-                    mode === 'developer' ? 'text-gray-900' : 'text-purple-100',
-                  ]"
-                >
-                  {{ game.title }}
-                </p>
-                <p :class="['text-xs', mode === 'developer' ? 'text-gray-500' : 'text-gray-400']">
-                  {{ game.platform.join(', ') }}
-                </p>
+              <div class="flex items-start gap-3 flex-1 min-w-0">
+                <img
+                  v-if="game.icon_url || game.icon_img"
+                  :src="game.icon_url || game.icon_img"
+                  :alt="game.title"
+                  class="w-8 h-8 rounded object-contain flex-shrink-0"
+                />
+                <div class="min-w-0">
+                  <p
+                    :class="[
+                      'font-semibold text-sm mb-1',
+                      mode === 'developer' ? 'text-gray-900' : 'text-purple-100',
+                    ]"
+                  >
+                    {{ game.title }}
+                  </p>
+                  <p :class="['text-xs', mode === 'developer' ? 'text-gray-500' : 'text-gray-400']">
+                    {{ game.platform.join(', ') }}
+                  </p>
+                </div>
               </div>
               <div class="relative ml-3 flex-shrink-0">
                 <button
@@ -494,6 +603,39 @@ const startEditExperience = (e: Experience) => {
               </div>
             </div>
           </div>
+          <div
+            v-if="games.length > pageSize.games"
+            class="flex items-center justify-between mt-4 text-xs"
+            :class="mode === 'developer' ? 'text-gray-500' : 'text-purple-400'"
+          >
+            <button
+              type="button"
+              @click="setPage('games', currentPage.games - 1, gamePageCount)"
+              :disabled="currentPage.games === 1"
+              :class="[
+                'px-2 py-1 rounded transition-colors disabled:opacity-50',
+                mode === 'developer'
+                  ? 'bg-gray-100 hover:bg-gray-200'
+                  : 'bg-gray-700 hover:bg-gray-600',
+              ]"
+            >
+              Prev
+            </button>
+            <span>Page {{ currentPage.games }} of {{ gamePageCount }}</span>
+            <button
+              type="button"
+              @click="setPage('games', currentPage.games + 1, gamePageCount)"
+              :disabled="currentPage.games === gamePageCount"
+              :class="[
+                'px-2 py-1 rounded transition-colors disabled:opacity-50',
+                mode === 'developer'
+                  ? 'bg-gray-100 hover:bg-gray-200'
+                  : 'bg-gray-700 hover:bg-gray-600',
+              ]"
+            >
+              Next
+            </button>
+          </div>
         </div>
 
         <!-- Form -->
@@ -507,6 +649,7 @@ const startEditExperience = (e: Experience) => {
             {{ editingGame ? 'Editing game' : 'New game' }}
           </h3>
           <GameForm
+            ref="gameFormRef"
             :editing-game="editingGame"
             @submit="handleGameSubmit"
             @cancel="editingGame = null"
@@ -545,7 +688,7 @@ const startEditExperience = (e: Experience) => {
           </div>
           <div v-else class="space-y-3">
             <div
-              v-for="exp in experiences"
+              v-for="exp in pagedExperiences"
               :key="exp.id"
               :class="[
                 'p-4 rounded-lg border flex justify-between items-start transition-colors',
@@ -632,6 +775,39 @@ const startEditExperience = (e: Experience) => {
               </div>
             </div>
           </div>
+          <div
+            v-if="experiences.length > pageSize.experiences"
+            class="flex items-center justify-between mt-4 text-xs"
+            :class="mode === 'developer' ? 'text-gray-500' : 'text-purple-400'"
+          >
+            <button
+              type="button"
+              @click="setPage('experiences', currentPage.experiences - 1, experiencePageCount)"
+              :disabled="currentPage.experiences === 1"
+              :class="[
+                'px-2 py-1 rounded transition-colors disabled:opacity-50',
+                mode === 'developer'
+                  ? 'bg-gray-100 hover:bg-gray-200'
+                  : 'bg-gray-700 hover:bg-gray-600',
+              ]"
+            >
+              Prev
+            </button>
+            <span>Page {{ currentPage.experiences }} of {{ experiencePageCount }}</span>
+            <button
+              type="button"
+              @click="setPage('experiences', currentPage.experiences + 1, experiencePageCount)"
+              :disabled="currentPage.experiences === experiencePageCount"
+              :class="[
+                'px-2 py-1 rounded transition-colors disabled:opacity-50',
+                mode === 'developer'
+                  ? 'bg-gray-100 hover:bg-gray-200'
+                  : 'bg-gray-700 hover:bg-gray-600',
+              ]"
+            >
+              Next
+            </button>
+          </div>
         </div>
 
         <!-- Form -->
@@ -645,6 +821,7 @@ const startEditExperience = (e: Experience) => {
             {{ editingExperience ? 'Editing experience' : 'New experience' }}
           </h3>
           <ExperienceForm
+            ref="experienceFormRef"
             :editing-experience="editingExperience"
             @submit="handleExperienceSubmit"
             @cancel="editingExperience = null"

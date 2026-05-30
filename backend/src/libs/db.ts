@@ -25,7 +25,8 @@ export interface Game {
   genre: string[];
   platform: string[];
   link: string | null;
-  game_img: string | null;
+  cover_img: string | null;
+  icon_img: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -331,7 +332,8 @@ export async function createGame(
     genre: string[];
     platform: string[];
     link?: string;
-    game_img?: string;
+    cover_img?: string;
+    icon_img?: string;
     created_by: string;
   },
   client: any = supabase,
@@ -349,7 +351,8 @@ export async function createGame(
           genre: dbGenre,
           platform: dbPlatform,
           link: data.link || null,
-          game_img: data.game_img || null,
+          cover_img: data.cover_img || null,
+          icon_img: data.icon_img || null,
           created_by: data.created_by,
         },
       ])
@@ -372,7 +375,8 @@ export async function updateGame(
     genre?: string[];
     platform?: string[];
     link?: string | null;
-    game_img?: string | null;
+    cover_img?: string | null;
+    icon_img?: string | null;
   }>,
   client: any = supabase,
 ): Promise<Game> {
@@ -395,7 +399,8 @@ export async function updateGame(
       updateData.platform = data.platform.map((p) => platformMap[p] || p);
     }
     if (data.link !== undefined) updateData.link = data.link;
-    if (data.game_img !== undefined) updateData.game_img = data.game_img;
+    if (data.cover_img !== undefined) updateData.cover_img = data.cover_img;
+    if (data.icon_img !== undefined) updateData.icon_img = data.icon_img;
 
     // Convert id to string for consistency with Supabase
     const gameId = typeof id === "bigint" ? id.toString() : id;

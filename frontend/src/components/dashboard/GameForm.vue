@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { useMode } from '@/composables/useMode'
 import { useEnums } from '@/composables/useEnums'
 import FormInput from './FormInput.vue'
 import FormCheckboxGroup from './FormCheckboxGroup.vue'
+import ImageUpload from './ImageUpload.vue'
 import type { GameFormData } from '@/types/forms'
 import type { Game } from '@/types/profile'
 
@@ -39,6 +40,9 @@ const form = ref<GameFormData>({
 const tagInput = ref('')
 const isSubmitting = ref(false)
 const errors = ref<Record<string, string>>({})
+const coverUploadRef = ref<InstanceType<typeof ImageUpload> | null>(null)
+const iconUploadRef = ref<InstanceType<typeof ImageUpload> | null>(null)
+const pendingEntityId = ref<string | null>(null)
 
 onMounted(() => {
   fetchEnums()
@@ -48,6 +52,7 @@ onMounted(() => {
 watch(
   () => props.editingGame,
   (editingGame) => {
+    pendingEntityId.value = null
     if (editingGame) {
       form.value = {
         title: editingGame.title,
@@ -86,6 +91,24 @@ const addTag = () => {
 
 const removeTag = (index: number) => {
   form.value.tags.splice(index, 1)
+}
+
+const handleCoverImageUploadSuccess = (path: string) => {
+  form.value.cover_img = path
+  errors.value.cover_img = ''
+}
+
+const handleCoverImageUploadError = (error: string) => {
+  errors.value.cover_img = error
+}
+
+const handleIconImageUploadSuccess = (path: string) => {
+  form.value.icon_img = path
+  errors.value.icon_img = ''
+}
+
+const handleIconImageUploadError = (error: string) => {
+  errors.value.icon_img = error
 }
 
 const validateForm = (): boolean => {
@@ -128,6 +151,22 @@ const handleSubmit = async () => {
     isSubmitting.value = false
   }
 }
+
+const uploadImages = async (entityId?: string) => {
+  if (entityId) {
+    pendingEntityId.value = entityId
+    await nextTick()
+  }
+  const coverPath = await coverUploadRef.value?.uploadSelected()
+  const iconPath = await iconUploadRef.value?.uploadSelected()
+  return {
+    uploaded: !!coverPath || !!iconPath,
+    cover_img: coverPath || null,
+    icon_img: iconPath || null,
+  }
+}
+
+defineExpose({ uploadImages })
 </script>
 
 <template>
@@ -188,28 +227,40 @@ const handleSubmit = async () => {
     <!-- Link -->
     <FormInput
       v-model="form.link"
-      label="Game Link"
+      label="Game Official Page"
       type="url"
       placeholder="https://example.com"
       :error="errors.link"
     />
 
-    <!-- Cover Image URL -->
-    <FormInput
+    <!-- Cover Image Upload -->
+    <ImageUpload
+      ref="coverUploadRef"
       v-model="form.cover_img"
-      label="Cover Image URL"
-      type="url"
-      placeholder="https://example.com/cover.jpg"
+      label="Cover Image"
+      entityType="games"
+      imageType="cover"
+      :entityId="pendingEntityId || editingGame?.id"
+      :oldImagePath="editingGame?.cover_img || undefined"
+      :autoUpload="false"
       :error="errors.cover_img"
+      @upload:success="handleCoverImageUploadSuccess"
+      @upload:error="handleCoverImageUploadError"
     />
 
-    <!-- Icon Image URL -->
-    <FormInput
+    <!-- Icon Image Upload -->
+    <ImageUpload
+      ref="iconUploadRef"
       v-model="form.icon_img"
-      label="Icon Image URL"
-      type="url"
-      placeholder="https://example.com/icon.jpg"
+      label="Icon Image"
+      entityType="games"
+      imageType="icon"
+      :entityId="pendingEntityId || editingGame?.id"
+      :oldImagePath="editingGame?.icon_img || undefined"
+      :autoUpload="false"
       :error="errors.icon_img"
+      @upload:success="handleIconImageUploadSuccess"
+      @upload:error="handleIconImageUploadError"
     />
 
     <!-- Tags -->
@@ -285,6 +336,7 @@ const handleSubmit = async () => {
         :disabled="isSubmitting"
         :class="[
           'px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50',
+          isSubmitting ? 'form-submit--processing' : '',
           mode === 'developer'
             ? 'bg-gray-800 text-white hover:bg-gray-900'
             : 'bg-purple-500 text-purple-100 hover:bg-purple-600',
@@ -316,3 +368,25 @@ const handleSubmit = async () => {
     </div>
   </form>
 </template>
+
+<style scoped>
+.form-submit--processing {
+  position: relative;
+  overflow: hidden;
+}
+
+.form-submit--processing::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-100%);
+  animation: form-submit-shimmer 1s linear infinite;
+}
+
+@keyframes form-submit-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+</style>

@@ -8,6 +8,7 @@ import { projectRoutes } from "./routes/projects";
 import { gameRoutes } from "./routes/games";
 import { enumRoutes } from "./routes/enums";
 import { experienceRoutes } from "./routes/experiences";
+import { uploadRoutes } from "./routes/upload";
 
 const PORT = process.env.PORT || 3000;
 const isDevelopment = process.env.NODE_ENV !== "production";
@@ -132,6 +133,7 @@ if (isDevelopment) {
           { name: "Games", description: "Game management endpoints" },
           { name: "Enums", description: "Enum reference endpoints" },
           { name: "Experiences", description: "Work experience endpoints" },
+          { name: "Upload", description: "Image upload endpoints" },
         ],
       },
       path: "/swagger",
@@ -181,6 +183,7 @@ app = app
   .use(gameRoutes)
   .use(enumRoutes)
   .use(experienceRoutes)
+  .use(uploadRoutes)
   .listen(PORT);
 
 const reset = "\x1b[0m";

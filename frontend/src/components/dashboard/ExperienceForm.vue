@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { useMode } from '@/composables/useMode'
 import FormInput from './FormInput.vue'
+import ImageUpload from './ImageUpload.vue'
 import type { ExperienceFormData } from '@/types/forms'
 import type { Experience } from '@/types/profile'
 
@@ -33,10 +34,13 @@ const emptyForm = (): ExperienceFormData => ({
 const form = ref<ExperienceFormData>(emptyForm())
 const isSubmitting = ref(false)
 const errors = ref<Record<string, string>>({})
+const logoUploadRef = ref<InstanceType<typeof ImageUpload> | null>(null)
+const pendingEntityId = ref<string | null>(null)
 
 watch(
   () => props.editingExperience,
   (exp) => {
+    pendingEntityId.value = null
     form.value = exp
       ? {
           title: exp.title,
@@ -60,6 +64,15 @@ const validate = (): boolean => {
   return Object.keys(errors.value).length === 0
 }
 
+const handleLogoUploadSuccess = (path: string) => {
+  form.value.logo = path
+  errors.value.logo = ''
+}
+
+const handleLogoUploadError = (error: string) => {
+  errors.value.logo = error
+}
+
 const handleSubmit = async () => {
   if (!validate()) return
   isSubmitting.value = true
@@ -70,6 +83,20 @@ const handleSubmit = async () => {
     isSubmitting.value = false
   }
 }
+
+const uploadImages = async (entityId?: string) => {
+  if (entityId) {
+    pendingEntityId.value = entityId
+    await nextTick()
+  }
+  const path = await logoUploadRef.value?.uploadSelected()
+  return {
+    uploaded: !!path,
+    logo: path || null,
+  }
+}
+
+defineExpose({ uploadImages })
 </script>
 
 <template>
@@ -129,12 +156,18 @@ const handleSubmit = async () => {
       :error="errors.description"
     />
 
-    <FormInput
+    <ImageUpload
+      ref="logoUploadRef"
       v-model="form.logo"
-      label="Logo URL"
-      type="url"
-      placeholder="https://example.com/logo.svg"
+      label="Logo"
+      entityType="experiences"
+      imageType="logo"
+      :entityId="pendingEntityId || editingExperience?.id"
+      :oldImagePath="editingExperience?.logo || undefined"
+      :autoUpload="false"
       :error="errors.logo"
+      @upload:success="handleLogoUploadSuccess"
+      @upload:error="handleLogoUploadError"
     />
 
     <div class="flex gap-2">
@@ -143,6 +176,7 @@ const handleSubmit = async () => {
         :disabled="isSubmitting"
         :class="[
           'px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50',
+          isSubmitting ? 'form-submit--processing' : '',
           mode === 'developer'
             ? 'bg-gray-800 text-white hover:bg-gray-900'
             : 'bg-purple-500 text-purple-100 hover:bg-purple-600',
@@ -174,3 +208,25 @@ const handleSubmit = async () => {
     </div>
   </form>
 </template>
+
+<style scoped>
+.form-submit--processing {
+  position: relative;
+  overflow: hidden;
+}
+
+.form-submit--processing::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-100%);
+  animation: form-submit-shimmer 1s linear infinite;
+}
+
+@keyframes form-submit-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+</style>

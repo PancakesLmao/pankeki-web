@@ -10,6 +10,24 @@ import {
 import { requireAuth } from "../middleware/auth";
 import { getMultipleSignedUrls } from "../libs/storage";
 
+const BUCKET_NAME = "portfolio-bucket";
+
+function toStoragePath(value: string | null | undefined): string | null {
+  if (!value) return null;
+  if (!value.startsWith("http")) return value;
+
+  const baseUrl = process.env.SUPABASE_URL || "";
+  const publicPrefix = `${baseUrl}/storage/v1/object/public/${BUCKET_NAME}/`;
+  if (publicPrefix && value.startsWith(publicPrefix)) {
+    return value.slice(publicPrefix.length);
+  }
+
+  const fallbackMatch = value.match(
+    new RegExp(`/storage/v1/object/public/${BUCKET_NAME}/(.+)$`),
+  );
+  return fallbackMatch ? fallbackMatch[1] : null;
+}
+
 export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
   .use(cookie())
 
@@ -196,6 +214,19 @@ export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
     async ({ params, cookie, set }) => {
       try {
         const { supabase: authClient } = await requireAuth({ cookie, set });
+
+        const existing = await getExperience(BigInt(params.id), authClient);
+        if (existing?.logo) {
+          const deletePath = toStoragePath(existing.logo);
+          if (deletePath) {
+            const { error } = await authClient.storage
+              .from(BUCKET_NAME)
+              .remove([deletePath]);
+            if (error) {
+              console.warn("Failed to delete experience logo:", error.message);
+            }
+          }
+        }
 
         await deleteExperience(BigInt(params.id), authClient);
         return { message: "Experience deleted successfully" };

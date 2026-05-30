@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { useMode } from '@/composables/useMode'
 import { useEnums } from '@/composables/useEnums'
 import FormInput from './FormInput.vue'
 import FormSelect from './FormSelect.vue'
+import ImageUpload from './ImageUpload.vue'
 import type { ProjectFormData } from '@/types/forms'
 import type { Project } from '@/types/profile'
 
@@ -38,6 +39,8 @@ const form = ref<ProjectFormData>({
 const tagInput = ref('')
 const isSubmitting = ref(false)
 const errors = ref<Record<string, string>>({})
+const imageUploadRef = ref<InstanceType<typeof ImageUpload> | null>(null)
+const pendingEntityId = ref<string | null>(null)
 
 onMounted(() => {
   fetchEnums()
@@ -47,6 +50,7 @@ onMounted(() => {
 watch(
   () => props.editingProject,
   (editingProject) => {
+    pendingEntityId.value = null
     if (editingProject) {
       form.value = {
         title: editingProject.title,
@@ -96,6 +100,22 @@ const validateForm = (): boolean => {
   return Object.keys(errors.value).length === 0
 }
 
+const handleImageUploadSuccess = (path: string) => {
+  form.value.project_img = path
+  errors.value.project_img = ''
+}
+
+const handleImageUploadError = (error: string) => {
+  errors.value.project_img = error
+}
+
+const handleRemoveImage = async () => {
+  if (confirm('Are you sure you want to remove this image?')) {
+    form.value.project_img = ''
+    errors.value.project_img = ''
+  }
+}
+
 const handleSubmit = async () => {
   if (!validateForm()) return
 
@@ -118,6 +138,20 @@ const handleSubmit = async () => {
     isSubmitting.value = false
   }
 }
+
+const uploadImages = async (entityId?: string) => {
+  if (entityId) {
+    pendingEntityId.value = entityId
+    await nextTick()
+  }
+  const path = await imageUploadRef.value?.uploadSelected()
+  return {
+    uploaded: !!path,
+    project_img: path || null,
+  }
+}
+
+defineExpose({ uploadImages })
 </script>
 
 <template>
@@ -174,13 +208,19 @@ const handleSubmit = async () => {
       :error="errors.link"
     />
 
-    <!-- Image URL -->
-    <FormInput
+    <!-- Image Upload -->
+    <ImageUpload
+      ref="imageUploadRef"
       v-model="form.project_img"
-      label="Project Image URL"
-      type="url"
-      placeholder="https://example.com/image.jpg"
+      label="Project Image"
+      entityType="projects"
+      imageType="project"
+      :entityId="pendingEntityId || editingProject?.id"
+      :oldImagePath="editingProject?.project_img || undefined"
+      :autoUpload="false"
       :error="errors.project_img"
+      @upload:success="handleImageUploadSuccess"
+      @upload:error="handleImageUploadError"
     />
 
     <!-- Time Range -->
@@ -264,6 +304,7 @@ const handleSubmit = async () => {
         :disabled="isSubmitting"
         :class="[
           'px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50',
+          isSubmitting ? 'form-submit--processing' : '',
           mode === 'developer'
             ? 'bg-gray-800 text-white hover:bg-gray-900'
             : 'bg-purple-500 text-purple-100 hover:bg-purple-600',
@@ -295,3 +336,25 @@ const handleSubmit = async () => {
     </div>
   </form>
 </template>
+
+<style scoped>
+.form-submit--processing {
+  position: relative;
+  overflow: hidden;
+}
+
+.form-submit--processing::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-100%);
+  animation: form-submit-shimmer 1s linear infinite;
+}
+
+@keyframes form-submit-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+</style>

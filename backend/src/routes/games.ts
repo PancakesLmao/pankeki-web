@@ -11,6 +11,24 @@ import {
 import { requireAuth } from "../middleware/auth";
 import { getMultipleSignedUrls } from "../libs/storage";
 
+const BUCKET_NAME = "portfolio-bucket";
+
+function toStoragePath(value: string | null | undefined): string | null {
+  if (!value) return null;
+  if (!value.startsWith("http")) return value;
+
+  const baseUrl = process.env.SUPABASE_URL || "";
+  const publicPrefix = `${baseUrl}/storage/v1/object/public/${BUCKET_NAME}/`;
+  if (publicPrefix && value.startsWith(publicPrefix)) {
+    return value.slice(publicPrefix.length);
+  }
+
+  const fallbackMatch = value.match(
+    new RegExp(`/storage/v1/object/public/${BUCKET_NAME}/(.+)$`),
+  );
+  return fallbackMatch ? fallbackMatch[1] : null;
+}
+
 export const gameRoutes = new Elysia({ prefix: "/api/games" })
   .use(cookie())
   // Get all games (public access)
@@ -54,10 +72,10 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
           return {
             ...gameData,
             genre: (game.genre || []).map(
-              (g: string) => genreReverseMap[g] || g
+              (g: string) => genreReverseMap[g] || g,
             ),
             platform: (game.platform || []).map(
-              (p: string) => platformReverseMap[p] || p
+              (p: string) => platformReverseMap[p] || p,
             ),
             cover_url: signedUrls[urlIndex++],
             icon_url: signedUrls[urlIndex++],
@@ -90,8 +108,8 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
             {
               description:
                 "Filter games by genre. Use lowercase with hyphens. Omit to fetch all games.",
-            }
-          )
+            },
+          ),
         ),
         platform: t.Optional(
           t.Union(
@@ -99,8 +117,8 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
             {
               description:
                 "Filter games by platform. Use lowercase. Omit to fetch all games.",
-            }
-          )
+            },
+          ),
         ),
       }),
       detail: {
@@ -109,7 +127,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
         description:
           "Retrieve all games (public access). Can be filtered by genre or platform using URL-friendly format (e.g., 'rpg', 'action-rpg', 'pc'). Omit genre and platform parameters to get all games.",
       },
-    }
+    },
   )
 
   // Get a single game by ID (public access)
@@ -157,10 +175,10 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
           game: {
             ...gameData,
             genre: (game.genre || []).map(
-              (g: string) => genreReverseMap[g] || g
+              (g: string) => genreReverseMap[g] || g,
             ),
             platform: (game.platform || []).map(
-              (p: string) => platformReverseMap[p] || p
+              (p: string) => platformReverseMap[p] || p,
             ),
             cover_url: coverUrl,
             icon_url: iconUrl,
@@ -183,7 +201,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
         summary: "Get game by ID",
         description: "Retrieve a single game by its ID (public access).",
       },
-    }
+    },
   )
 
   // Create a new game (admin only)
@@ -191,17 +209,24 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
     "/",
     async ({ body, cookie, set }) => {
       try {
-        const { user, supabase: authClient } = await requireAuth({ cookie, set });
+        const { user, supabase: authClient } = await requireAuth({
+          cookie,
+          set,
+        });
 
-        const game = await createGame({
-          title: body.title,
-          description: body.description,
-          genre: body.genre,
-          platform: body.platform,
-          link: body.link,
-          game_img: body.icon_img,
-          created_by: user!.id,
-        }, authClient);
+        const game = await createGame(
+          {
+            title: body.title,
+            description: body.description,
+            genre: body.genre,
+            platform: body.platform,
+            link: body.link,
+            cover_img: body.cover_img,
+            icon_img: body.icon_img,
+            created_by: user!.id,
+          },
+          authClient,
+        );
 
         return {
           message: "Game created successfully",
@@ -222,19 +247,19 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
           t.String({
             description: "Game description",
             default: "A space fantasy RPG with strategic turn-based combat",
-          })
+          }),
         ),
         cover_img: t.Optional(
           t.String({
             description: "Cover image URL",
             default: "https://placehold.co/1920x1080/png",
-          })
+          }),
         ),
         icon_img: t.Optional(
           t.String({
             description: "Icon image URL",
             default: "https://placehold.co/256x256/png",
-          })
+          }),
         ),
         platform: t.Array(
           t.Union([
@@ -245,7 +270,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
           {
             description: "Array of gaming platforms. Use lowercase.",
             default: ["pc"],
-          }
+          },
         ),
         genre: t.Array(
           t.Union([
@@ -264,7 +289,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
           {
             description: "Array of game genres. Use lowercase with hyphens.",
             default: ["rpg", "turn-based", "gacha"],
-          }
+          },
         ),
         tags: t.Array(t.String(), {
           description: "Array of game tags",
@@ -274,7 +299,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
           t.String({
             description: "Game link or store URL",
             default: "https://hsr.hoyoverse.com/",
-          })
+          }),
         ),
       }),
       detail: {
@@ -283,7 +308,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
         description:
           "Create a new game entry (admin only). The created_by field is automatically set from the authenticated user. Use URL-friendly format for genres and platforms (e.g., 'rpg', 'action-rpg', 'pc').",
       },
-    }
+    },
   )
 
   // Update a game (admin only)
@@ -308,7 +333,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
         const game = await updateGame(
           BigInt(params.id),
           updateData,
-          authClient
+          authClient,
         );
 
         return {
@@ -354,7 +379,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
             {
               description: "Array of gaming platforms. Use lowercase.",
               default: ["pc"],
-            }
+            },
           ),
           genre: t.Array(
             t.Union([
@@ -373,7 +398,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
             {
               description: "Array of game genres. Use lowercase with hyphens.",
               default: ["rpg", "turn-based", "gacha", "sci-fi"],
-            }
+            },
           ),
           tags: t.Array(t.String(), {
             description: "Array of game tags",
@@ -383,7 +408,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
             description: "Game link or store URL",
             default: "https://hsr.hoyoverse.com/",
           }),
-        })
+        }),
       ),
       detail: {
         tags: ["Games"],
@@ -391,7 +416,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
         description:
           "Update an existing game entry (admin only). All fields are optional. Use URL-friendly format for genres and platforms (e.g., 'rpg', 'action-rpg', 'pc').",
       },
-    }
+    },
   )
 
   // Delete a game (admin only)
@@ -400,6 +425,24 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
     async ({ params, cookie, set }) => {
       try {
         const { supabase: authClient } = await requireAuth({ cookie, set });
+        const existing = await getGame(BigInt(params.id), authClient);
+
+        if (existing) {
+          const paths = [
+            toStoragePath(existing.cover_img),
+            toStoragePath(existing.icon_img),
+          ].filter((path): path is string => !!path);
+
+          if (paths.length) {
+            const { error } = await authClient.storage
+              .from(BUCKET_NAME)
+              .remove(paths);
+
+            if (error) {
+              console.warn("Failed to delete game images:", error.message);
+            }
+          }
+        }
 
         await deleteGame(BigInt(params.id), authClient);
 
@@ -421,5 +464,5 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
         summary: "Delete game",
         description: "Delete a game entry (admin only).",
       },
-    }
+    },
   );
