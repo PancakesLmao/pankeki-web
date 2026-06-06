@@ -5,7 +5,7 @@ import FormInput from './FormInput.vue'
 import ImageUpload from './ImageUpload.vue'
 import FormSubmitButton from './FormSubmitButton.vue'
 import type { ExperienceFormData } from '@/types/forms'
-import type { Experience } from '@/types/profile'
+import type { ExperiencePosition, Experience } from '@/types/profile'
 
 interface Props {
   editingExperience?: Experience | null
@@ -25,13 +25,13 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>()
 const { mode } = useMode()
 
+const emptyPosition = (): ExperiencePosition => ({ title: '', date: '', description: '' })
+
 const emptyForm = (): ExperienceFormData => ({
-  title: '',
   company: '',
   location: '',
-  description: '',
-  date: '',
   logo: '',
+  positions: [emptyPosition()],
 })
 
 const form = ref<ExperienceFormData>(emptyForm())
@@ -43,26 +43,41 @@ watch(
   () => props.editingExperience,
   (exp) => {
     pendingEntityId.value = null
-    form.value = exp
-      ? {
-          title: exp.title,
-          company: exp.company,
-          location: exp.location ?? '',
-          description: exp.description,
-          date: exp.date,
-          logo: exp.logo ?? '',
-        }
-      : emptyForm()
+    if (exp) {
+      const positions =
+        exp.positions && exp.positions.length > 0
+          ? exp.positions.map((p) => ({ ...p }))
+          : [{ title: exp.title, date: exp.date, description: exp.description }]
+      form.value = {
+        company: exp.company,
+        location: exp.location ?? '',
+        logo: exp.logo ?? '',
+        positions,
+      }
+    } else {
+      form.value = emptyForm()
+    }
   },
   { immediate: true },
 )
 
+const addPosition = () => {
+  form.value.positions.push(emptyPosition())
+}
+
+const removePosition = (index: number) => {
+  if (form.value.positions.length <= 1) return
+  form.value.positions.splice(index, 1)
+}
+
 const validate = (): boolean => {
   errors.value = {}
-  if (!form.value.title.trim()) errors.value.title = 'Title is required'
   if (!form.value.company.trim()) errors.value.company = 'Company is required'
-  if (!form.value.description.trim()) errors.value.description = 'Description is required'
-  if (!form.value.date.trim()) errors.value.date = 'Date range is required'
+  form.value.positions.forEach((pos, i) => {
+    if (!pos.title.trim()) errors.value[`pos_title_${i}`] = 'Title is required'
+    if (!pos.date.trim()) errors.value[`pos_date_${i}`] = 'Date range is required'
+    if (!pos.description.trim()) errors.value[`pos_desc_${i}`] = 'Description is required'
+  })
   return Object.keys(errors.value).length === 0
 }
 
@@ -77,7 +92,7 @@ const handleLogoUploadError = (error: string) => {
 
 const handleSubmit = async () => {
   if (!validate()) return
-  emit('submit', { ...form.value })
+  emit('submit', { ...form.value, positions: form.value.positions.map((p) => ({ ...p })) })
 }
 
 const reset = () => {
@@ -116,14 +131,7 @@ defineExpose({ uploadImages, reset })
       {{ editingExperience ? 'Edit Experience' : 'Add New Experience' }}
     </h3>
 
-    <FormInput
-      v-model="form.title"
-      label="Job Title"
-      placeholder="e.g. Lab Assistant"
-      required
-      :error="errors.title"
-    />
-
+    <!-- Company-level fields -->
     <FormInput
       v-model="form.company"
       label="Company"
@@ -139,22 +147,90 @@ defineExpose({ uploadImages, reset })
       :error="errors.location"
     />
 
-    <FormInput
-      v-model="form.date"
-      label="Date Range"
-      placeholder="e.g. January YYYY - December YYYY"
-      required
-      :error="errors.date"
-    />
+    <!-- Positions -->
+    <div class="mb-4">
+      <div class="flex items-center justify-between mb-2">
+        <label
+          :class="[
+            'text-sm font-medium',
+            mode === 'developer' ? 'text-gray-700' : 'text-purple-200',
+          ]"
+        >
+          Positions
+        </label>
+        <button
+          type="button"
+          @click="addPosition"
+          :class="[
+            'text-xs px-3 py-1 rounded-md font-medium transition-colors',
+            mode === 'developer'
+              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              : 'bg-purple-900 text-purple-100 hover:bg-purple-800',
+          ]"
+        >
+          + Add Position
+        </button>
+      </div>
 
-    <FormInput
-      v-model="form.description"
-      label="Description"
-      type="textarea"
-      placeholder="Describe your role and responsibilities..."
-      required
-      :error="errors.description"
-    />
+      <div class="space-y-4">
+        <div
+          v-for="(pos, i) in form.positions"
+          :key="i"
+          :class="[
+            'p-4 rounded-lg border relative',
+            mode === 'developer' ? 'bg-gray-50 border-gray-200' : 'bg-gray-700 border-gray-600',
+          ]"
+        >
+          <!-- Position header -->
+          <div class="flex items-center justify-between mb-3">
+            <span
+              :class="[
+                'text-xs font-semibold uppercase tracking-wide',
+                mode === 'developer' ? 'text-gray-400' : 'text-purple-400',
+              ]"
+            >
+              Position {{ i + 1 }}
+            </span>
+            <button
+              v-if="form.positions.length > 1"
+              type="button"
+              @click="removePosition(i)"
+              :class="[
+                'text-xs px-2 py-0.5 rounded transition-colors',
+                mode === 'developer'
+                  ? 'text-red-500 hover:bg-red-50'
+                  : 'text-red-400 hover:bg-red-900/30',
+              ]"
+            >
+              Remove
+            </button>
+          </div>
+
+          <FormInput
+            v-model="pos.title"
+            label="Job Title"
+            placeholder="e.g. Intern"
+            required
+            :error="errors[`pos_title_${i}`]"
+          />
+          <FormInput
+            v-model="pos.date"
+            label="Date Range"
+            placeholder="e.g. January 2024 - March 2024"
+            required
+            :error="errors[`pos_date_${i}`]"
+          />
+          <FormInput
+            v-model="pos.description"
+            label="Description"
+            type="textarea"
+            placeholder="Describe your role and responsibilities..."
+            required
+            :error="errors[`pos_desc_${i}`]"
+          />
+        </div>
+      </div>
+    </div>
 
     <ImageUpload
       ref="logoUploadRef"
@@ -192,5 +268,3 @@ defineExpose({ uploadImages, reset })
     </div>
   </form>
 </template>
-
-

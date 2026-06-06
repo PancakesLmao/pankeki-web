@@ -70,7 +70,7 @@ const { mode } = useMode()
             : 'bg-purple-600 text-white hover:bg-purple-700',
         ]"
       >
-        Send message
+        Send message (It's not working at the moment :C)
       </button>
     </form>
   </div>

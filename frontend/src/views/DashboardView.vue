@@ -768,19 +768,24 @@ const startEditExperience = (e: Experience) => {
                       mode === 'developer' ? 'text-gray-900' : 'text-purple-100',
                     ]"
                   >
-                    {{ exp.title }}
+                    {{ exp.company }}
                   </p>
-                  <p :class="['text-xs', mode === 'developer' ? 'text-gray-500' : 'text-gray-400']">
-                    {{ exp.company }}{{ exp.location ? ` • ${exp.location}` : '' }}
+                  <p :class="['text-xs mb-1', mode === 'developer' ? 'text-gray-500' : 'text-gray-400']">
+                    {{ exp.location || 'No location' }}
                   </p>
-                  <p
-                    :class="[
-                      'text-xs mt-0.5',
-                      mode === 'developer' ? 'text-gray-400' : 'text-gray-500',
-                    ]"
-                  >
-                    {{ exp.date }}
-                  </p>
+                  <div class="space-y-0.5">
+                    <p
+                      v-for="(pos, i) in (exp.positions?.length ? [...exp.positions].reverse() : [{title: exp.title, date: exp.date}])"
+                      :key="i"
+                      :class="[
+                        'text-xs flex justify-between gap-3',
+                        mode === 'developer' ? 'text-gray-600' : 'text-gray-400',
+                      ]"
+                    >
+                      <span class="truncate font-medium">• {{ pos.title }}</span>
+                      <span class="flex-shrink-0 opacity-75 whitespace-nowrap">{{ pos.date }}</span>
+                    </p>
+                  </div>
                 </div>
               </div>
               <div class="relative ml-3 flex-shrink-0">

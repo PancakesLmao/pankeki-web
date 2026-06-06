@@ -1,4 +1,5 @@
 // Type-safe form types matching Prisma schema
+import type { ExperiencePosition } from '@/types/profile'
 
 export interface ProjectFormData {
   title: string
@@ -67,10 +68,8 @@ export const GAME_PLATFORMS = [
 ] as const
 
 export interface ExperienceFormData {
-  title: string
   company: string
   location?: string
-  description: string
-  date: string
   logo?: string
+  positions: ExperiencePosition[]
 }

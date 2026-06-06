@@ -27,6 +27,12 @@ export interface Game {
   created_at: string
 }
 
+export interface ExperiencePosition {
+  title: string
+  date: string
+  description: string
+}
+
 export interface Experience {
   id: string
   title: string
@@ -35,6 +41,7 @@ export interface Experience {
   description: string
   date: string
   logo: string | null
+  positions: ExperiencePosition[]
   created_at: string
   created_by: string
 }
