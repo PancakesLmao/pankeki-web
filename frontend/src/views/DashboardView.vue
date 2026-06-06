@@ -43,6 +43,12 @@ const projectFormRef = ref<InstanceType<typeof ProjectForm> | null>(null)
 const gameFormRef = ref<InstanceType<typeof GameForm> | null>(null)
 const experienceFormRef = ref<InstanceType<typeof ExperienceForm> | null>(null)
 
+const submitLoading = ref({
+  projects: false,
+  games: false,
+  experiences: false,
+})
+
 const getPageCount = (total: number, size: number) => Math.max(1, Math.ceil(total / size))
 
 const paginate = <T,>(items: T[], page: number, size: number) => {
@@ -176,6 +182,8 @@ const handleProjectSubmit = async (data: ProjectFormData) => {
   if (!clean.link?.trim()) delete clean.link
   if (!clean.project_img?.trim()) delete clean.project_img
   if (!clean.time_range?.trim()) delete clean.time_range
+
+  submitLoading.value.projects = true
   try {
     if (editingProject.value) {
       const uploadResult = await projectFormRef.value?.uploadImages(editingProject.value.id)
@@ -184,11 +192,19 @@ const handleProjectSubmit = async (data: ProjectFormData) => {
       editingProject.value = null
     } else {
       const created = await projectsApi.create(clean as ProjectFormData)
-      await projectFormRef.value?.uploadImages(created.project.id)
+      try {
+        await projectFormRef.value?.uploadImages(String(created.project.id))
+        projectFormRef.value?.reset()
+      } catch (err) {
+        await projectsApi.delete(String(created.project.id))
+        throw new Error('Image upload failed. Record creation rolled back.')
+      }
     }
     fetchProjects()
   } catch (e) {
     alert(e instanceof Error ? e.message : 'Failed')
+  } finally {
+    submitLoading.value.projects = false
   }
 }
 
@@ -198,6 +214,8 @@ const handleGameSubmit = async (data: GameFormData) => {
   if (!clean.link?.trim()) delete clean.link
   if (!clean.cover_img?.trim()) delete clean.cover_img
   if (!clean.icon_img?.trim()) delete clean.icon_img
+
+  submitLoading.value.games = true
   try {
     if (editingGame.value) {
       const uploadResult = await gameFormRef.value?.uploadImages(editingGame.value.id)
@@ -209,11 +227,19 @@ const handleGameSubmit = async (data: GameFormData) => {
       editingGame.value = null
     } else {
       const created = await gamesApi.create(clean as GameFormData)
-      await gameFormRef.value?.uploadImages(created.game.id)
+      try {
+        await gameFormRef.value?.uploadImages(String(created.game.id))
+        gameFormRef.value?.reset()
+      } catch (err) {
+        await gamesApi.delete(String(created.game.id))
+        throw new Error('Image upload failed. Record creation rolled back.')
+      }
     }
     fetchGames()
   } catch (e) {
     alert(e instanceof Error ? e.message : 'Failed')
+  } finally {
+    submitLoading.value.games = false
   }
 }
 
@@ -221,6 +247,8 @@ const handleExperienceSubmit = async (data: ExperienceFormData) => {
   const clean: Partial<ExperienceFormData> = { ...data }
   if (!clean.location?.trim()) delete clean.location
   if (!clean.logo?.trim()) delete clean.logo
+
+  submitLoading.value.experiences = true
   try {
     if (editingExperience.value) {
       const uploadResult = await experienceFormRef.value?.uploadImages(editingExperience.value.id)
@@ -229,11 +257,19 @@ const handleExperienceSubmit = async (data: ExperienceFormData) => {
       editingExperience.value = null
     } else {
       const created = await experiencesApi.create(clean as ExperienceFormData)
-      await experienceFormRef.value?.uploadImages(created.experience.id)
+      try {
+        await experienceFormRef.value?.uploadImages(String(created.experience.id))
+        experienceFormRef.value?.reset()
+      } catch (err) {
+        await experiencesApi.delete(String(created.experience.id))
+        throw new Error('Image upload failed. Record creation rolled back.')
+      }
     }
     fetchExperiences()
   } catch (e) {
     alert(e instanceof Error ? e.message : 'Failed')
+  } finally {
+    submitLoading.value.experiences = false
   }
 }
 

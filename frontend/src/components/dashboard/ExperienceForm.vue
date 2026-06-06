@@ -3,11 +3,13 @@ import { ref, watch, nextTick } from 'vue'
 import { useMode } from '@/composables/useMode'
 import FormInput from './FormInput.vue'
 import ImageUpload from './ImageUpload.vue'
+import FormSubmitButton from './FormSubmitButton.vue'
 import type { ExperienceFormData } from '@/types/forms'
 import type { Experience } from '@/types/profile'
 
 interface Props {
   editingExperience?: Experience | null
+  loading?: boolean
 }
 
 interface Emits {
@@ -17,6 +19,7 @@ interface Emits {
 
 const props = withDefaults(defineProps<Props>(), {
   editingExperience: null,
+  loading: false,
 })
 
 const emit = defineEmits<Emits>()
@@ -32,7 +35,6 @@ const emptyForm = (): ExperienceFormData => ({
 })
 
 const form = ref<ExperienceFormData>(emptyForm())
-const isSubmitting = ref(false)
 const errors = ref<Record<string, string>>({})
 const logoUploadRef = ref<InstanceType<typeof ImageUpload> | null>(null)
 const pendingEntityId = ref<string | null>(null)
@@ -75,13 +77,11 @@ const handleLogoUploadError = (error: string) => {
 
 const handleSubmit = async () => {
   if (!validate()) return
-  isSubmitting.value = true
-  try {
-    emit('submit', { ...form.value })
-    if (!props.editingExperience) form.value = emptyForm()
-  } finally {
-    isSubmitting.value = false
-  }
+  emit('submit', { ...form.value })
+}
+
+const reset = () => {
+  if (!props.editingExperience) form.value = emptyForm()
 }
 
 const uploadImages = async (entityId?: string) => {
@@ -96,7 +96,7 @@ const uploadImages = async (entityId?: string) => {
   }
 }
 
-defineExpose({ uploadImages })
+defineExpose({ uploadImages, reset })
 </script>
 
 <template>
@@ -170,28 +170,12 @@ defineExpose({ uploadImages })
       @upload:error="handleLogoUploadError"
     />
 
-    <div class="flex gap-2">
-      <button
-        type="submit"
-        :disabled="isSubmitting"
-        :class="[
-          'px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50',
-          isSubmitting ? 'form-submit--processing' : '',
-          mode === 'developer'
-            ? 'bg-gray-800 text-white hover:bg-gray-900'
-            : 'bg-purple-500 text-purple-100 hover:bg-purple-600',
-        ]"
-      >
-        {{
-          isSubmitting
-            ? editingExperience
-              ? 'Updating...'
-              : 'Creating...'
-            : editingExperience
-              ? 'Update Experience'
-              : 'Add Experience'
-        }}
-      </button>
+    <div class="flex gap-2 mt-6">
+      <FormSubmitButton
+        :loading="loading"
+        :label="editingExperience ? 'Update Experience' : 'Add Experience'"
+        :loading-label="editingExperience ? 'Updating...' : 'Creating...'"
+      />
       <button
         v-if="editingExperience"
         type="button"
@@ -209,24 +193,4 @@ defineExpose({ uploadImages })
   </form>
 </template>
 
-<style scoped>
-.form-submit--processing {
-  position: relative;
-  overflow: hidden;
-}
 
-.form-submit--processing::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
-  transform: translateX(-100%);
-  animation: form-submit-shimmer 1s linear infinite;
-}
-
-@keyframes form-submit-shimmer {
-  100% {
-    transform: translateX(100%);
-  }
-}
-</style>

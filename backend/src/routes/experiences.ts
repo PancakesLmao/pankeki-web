@@ -9,6 +9,7 @@ import {
 } from "../libs/db";
 import { requireAuth } from "../middleware/auth";
 import { getMultipleSignedUrls } from "../libs/storage";
+import { createSupabaseServiceClient } from "../libs/supabase";
 
 const BUCKET_NAME = "portfolio-bucket";
 
@@ -16,10 +17,15 @@ function toStoragePath(value: string | null | undefined): string | null {
   if (!value) return null;
   if (!value.startsWith("http")) return value;
 
-  const baseUrl = process.env.SUPABASE_URL || "";
-  const publicPrefix = `${baseUrl}/storage/v1/object/public/${BUCKET_NAME}/`;
-  if (publicPrefix && value.startsWith(publicPrefix)) {
-    return value.slice(publicPrefix.length);
+  try {
+    const url = new URL(value);
+    const prefix = `/storage/v1/object/public/${BUCKET_NAME}/`;
+    const index = url.pathname.indexOf(prefix);
+    if (index >= 0) {
+      return url.pathname.slice(index + prefix.length);
+    }
+  } catch {
+    // Ignore invalid URLs and fall through to regex
   }
 
   const fallbackMatch = value.match(
@@ -214,12 +220,15 @@ export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
     async ({ params, cookie, set }) => {
       try {
         const { supabase: authClient } = await requireAuth({ cookie, set });
+        const storageClient = process.env.SUPABASE_SERVICE_ROLE_KEY
+          ? createSupabaseServiceClient()
+          : authClient;
 
         const existing = await getExperience(BigInt(params.id), authClient);
         if (existing?.logo) {
           const deletePath = toStoragePath(existing.logo);
           if (deletePath) {
-            const { error } = await authClient.storage
+            const { error } = await storageClient.storage
               .from(BUCKET_NAME)
               .remove([deletePath]);
             if (error) {
