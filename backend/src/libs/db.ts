@@ -506,6 +506,12 @@ export async function getGamePlatforms(): Promise<
 // EXPERIENCE QUERIES
 // ============================================================================
 
+export interface ExperiencePosition {
+  title: string;
+  date: string;
+  description: string;
+}
+
 export interface Experience {
   id: string;
   title: string;
@@ -514,6 +520,7 @@ export interface Experience {
   description: string;
   date: string;
   logo: string | null;
+  positions: ExperiencePosition[];
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -522,6 +529,7 @@ export interface Experience {
 const serializeExperience = (exp: any): Experience => ({
   ...exp,
   id: exp.id.toString(),
+  positions: exp.positions ?? [],
 });
 
 export async function getExperiences(): Promise<Experience[]> {
@@ -564,27 +572,32 @@ export async function getExperience(
 
 export async function createExperience(
   data: {
-    title: string;
     company: string;
     location?: string;
-    description: string;
-    date: string;
     logo?: string;
+    positions: ExperiencePosition[];
     created_by: string;
+    // legacy flat fields kept for DB NOT NULL constraint sync
+    title?: string;
+    date?: string;
+    description?: string;
   },
   client: any = supabase,
 ): Promise<Experience> {
   try {
+    const first = data.positions[0];
     const { data: exp, error } = await client
       .from("experiences")
       .insert([
         {
-          title: data.title,
           company: data.company,
           location: data.location || null,
-          description: data.description,
-          date: data.date,
           logo: data.logo || null,
+          positions: data.positions,
+          // sync flat columns from first position (NOT NULL constraint)
+          title: first?.title ?? "",
+          date: first?.date ?? "",
+          description: first?.description ?? "",
           created_by: data.created_by,
         },
       ])
@@ -602,12 +615,14 @@ export async function createExperience(
 export async function updateExperience(
   id: string | bigint,
   data: Partial<{
-    title?: string;
     company?: string;
     location?: string | null;
-    description?: string;
-    date?: string;
     logo?: string | null;
+    positions?: ExperiencePosition[];
+    // legacy flat fields (still accepted for backward compat)
+    title?: string;
+    date?: string;
+    description?: string;
   }>,
   client: any = supabase,
 ): Promise<Experience> {
@@ -616,13 +631,19 @@ export async function updateExperience(
     if (!existing) throw new Error("Experience not found");
 
     const updateData: any = {};
-    if (data.title !== undefined) updateData.title = data.title;
     if (data.company !== undefined) updateData.company = data.company;
     if (data.location !== undefined) updateData.location = data.location;
-    if (data.description !== undefined)
-      updateData.description = data.description;
-    if (data.date !== undefined) updateData.date = data.date;
     if (data.logo !== undefined) updateData.logo = data.logo;
+    if (data.positions !== undefined) {
+      updateData.positions = data.positions;
+      // sync flat columns from first position
+      const first = data.positions[0];
+      if (first) {
+        updateData.title = first.title;
+        updateData.date = first.date;
+        updateData.description = first.description;
+      }
+    }
 
     const expId = typeof id === "bigint" ? id.toString() : id;
 
@@ -654,6 +675,164 @@ export async function deleteExperience(
     if (error) throw error;
   } catch (error) {
     console.error("Error deleting experience:", error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// CERTIFICATION QUERIES
+// ============================================================================
+
+export interface Certification {
+  id: string;
+  title: string;
+  issuer: string;
+  date: string | null;
+  icon: string | null;
+  image_url: string | null;
+  url: string | null;
+  created_at: string;
+  created_by: string;
+}
+
+const serializeCertification = (cert: any): Certification => ({
+  ...cert,
+  id: cert.id.toString(),
+  url: cert.url ?? null,
+});
+
+export async function getCertifications(): Promise<Certification[]> {
+  try {
+    const { data, error } = await supabase
+      .from("certifications")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return (data || []).map(serializeCertification);
+  } catch (error) {
+    console.error("Error fetching certifications:", error);
+    throw error;
+  }
+}
+
+export async function getCertification(
+  id: string | bigint,
+  client: any = supabase,
+): Promise<Certification | null> {
+  try {
+    const certId = typeof id === "bigint" ? id.toString() : id;
+
+    const { data, error } = await client
+      .from("certifications")
+      .select("*")
+      .eq("id", certId)
+      .single();
+
+    if (error && error.code === "PGRST116") return null;
+    if (error) throw error;
+
+    return data ? serializeCertification(data) : null;
+  } catch (error) {
+    console.error("Error fetching certification:", error);
+    throw error;
+  }
+}
+
+export async function createCertification(
+  data: {
+    title: string;
+    issuer: string;
+    date?: string | null;
+    icon?: string | null;
+    image_url?: string | null;
+    url?: string | null;
+    created_by: string;
+  },
+  client: any = supabase,
+): Promise<Certification> {
+  try {
+    const { data: cert, error } = await client
+      .from("certifications")
+      .insert([
+        {
+          title: data.title,
+          issuer: data.issuer,
+          date: data.date || null,
+          icon: data.icon || null,
+          image_url: data.image_url || null,
+          url: data.url || null,
+          created_by: data.created_by,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return serializeCertification(cert);
+  } catch (error) {
+    console.error("Error creating certification:", error);
+    throw error;
+  }
+}
+
+export async function updateCertification(
+  id: string | bigint,
+  data: Partial<{
+    title?: string;
+    issuer?: string;
+    date?: string | null;
+    icon?: string | null;
+    image_url?: string | null;
+    url?: string | null;
+  }>,
+  client: any = supabase,
+): Promise<Certification> {
+  try {
+    const existing = await getCertification(id, client);
+    if (!existing) throw new Error("Certification not found");
+
+    const updateData: any = {};
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.issuer !== undefined) updateData.issuer = data.issuer;
+    if (data.date !== undefined) updateData.date = data.date;
+    if (data.icon !== undefined) updateData.icon = data.icon;
+    if (data.image_url !== undefined) updateData.image_url = data.image_url;
+    if (data.url !== undefined) updateData.url = data.url;
+
+    const certId = typeof id === "bigint" ? id.toString() : id;
+
+    const { error } = await client
+      .from("certifications")
+      .update(updateData)
+      .eq("id", certId);
+
+    if (error) throw error;
+
+    const updated = await getCertification(certId, client);
+    if (!updated) throw new Error("Certification not found after update");
+    return updated;
+  } catch (error) {
+    console.error("Error updating certification:", error);
+    throw error;
+  }
+}
+
+export async function deleteCertification(
+  id: string | bigint,
+  client: any = supabase,
+): Promise<void> {
+  try {
+    const certId = typeof id === "bigint" ? id.toString() : id;
+
+    const { error } = await client
+      .from("certifications")
+      .delete()
+      .eq("id", certId);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error("Error deleting certification:", error);
     throw error;
   }
 }

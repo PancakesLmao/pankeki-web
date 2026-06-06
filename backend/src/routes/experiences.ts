@@ -122,12 +122,10 @@ export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
 
         const experience = await createExperience(
           {
-            title: body.title,
             company: body.company,
             location: body.location,
-            description: body.description,
-            date: body.date,
             logo: body.logo,
+            positions: body.positions ?? [],
             created_by: user!.id,
           },
           authClient,
@@ -141,10 +139,6 @@ export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
     },
     {
       body: t.Object({
-        title: t.String({
-          description: "Job title",
-          default: "Software Engineer",
-        }),
         company: t.String({
           description: "Company name",
           default: "Acme Corp",
@@ -152,16 +146,18 @@ export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
         location: t.Optional(
           t.String({ description: "Location", default: "HCM, Vietnam" }),
         ),
-        description: t.String({
-          description: "Role description",
-          default: "Worked on...",
-        }),
-        date: t.String({
-          description: "Date range",
-          default: "January 2025 - Present",
-        }),
         logo: t.Optional(
           t.String({ description: "Logo URL or storage path", default: "" }),
+        ),
+        positions: t.Optional(
+          t.Array(
+            t.Object({
+              title: t.String({ description: "Job title" }),
+              date: t.String({ description: "Date range" }),
+              description: t.String({ description: "Role description" }),
+            }),
+            { description: "List of positions at this company" },
+          ),
         ),
       }),
       detail: {
@@ -196,13 +192,19 @@ export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
       }),
       body: t.Partial(
         t.Object({
-          title: t.String({ description: "Job title" }),
           company: t.String({ description: "Company name" }),
           location: t.Optional(t.String({ description: "Location" })),
-          description: t.String({ description: "Role description" }),
-          date: t.String({ description: "Date range" }),
           logo: t.Optional(
             t.String({ description: "Logo URL or storage path" }),
+          ),
+          positions: t.Optional(
+            t.Array(
+              t.Object({
+                title: t.String({ description: "Job title" }),
+                date: t.String({ description: "Date range" }),
+                description: t.String({ description: "Role description" }),
+              }),
+            ),
           ),
         }),
       ),

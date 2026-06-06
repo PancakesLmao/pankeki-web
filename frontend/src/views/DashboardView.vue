@@ -9,47 +9,55 @@ import CustomTerminal from '@/components/about/Terminal.vue'
 import ProjectForm from '@/components/dashboard/ProjectForm.vue'
 import GameForm from '@/components/dashboard/GameForm.vue'
 import ExperienceForm from '@/components/dashboard/ExperienceForm.vue'
+import CertificationForm from '@/components/dashboard/CertificationForm.vue'
 import ToastNotification from '@/components/dashboard/ToastNotification.vue'
-import type { ProjectFormData, GameFormData, ExperienceFormData } from '@/types/forms'
-import { projectsApi, gamesApi, experiencesApi } from '@/api'
+import type { ProjectFormData, GameFormData, ExperienceFormData, CertificationFormData } from '@/types/forms'
+import { projectsApi, gamesApi, experiencesApi, certificationsApi } from '@/api'
+import type { Certification } from '@/types/profile'
 
 const authStore = useAuthStore()
 const router = useRouter()
 const { mode } = useMode()
 const toast = useToast()
 
-type Section = 'projects' | 'games' | 'experiences'
+type Section = 'projects' | 'games' | 'experiences' | 'certifications'
 const activeSection = ref<Section>('projects')
 
 const projects = ref<Project[]>([])
 const games = ref<Game[]>([])
 const experiences = ref<Experience[]>([])
-const loading = ref<Record<Section, boolean>>({ projects: false, games: false, experiences: false })
+const certifications = ref<Certification[]>([])
+const loading = ref<Record<Section, boolean>>({ projects: false, games: false, experiences: false, certifications: false })
 const activeMenuId = ref<string | null>(null)
 
 const pageSize = {
   projects: 5,
   games: 5,
   experiences: 5,
+  certifications: 5,
 }
 
 const currentPage = ref<Record<Section, number>>({
   projects: 1,
   games: 1,
   experiences: 1,
+  certifications: 1,
 })
 
 const editingProject = ref<Project | null>(null)
 const editingGame = ref<Game | null>(null)
 const editingExperience = ref<Experience | null>(null)
+const editingCertification = ref<Certification | null>(null)
 const projectFormRef = ref<InstanceType<typeof ProjectForm> | null>(null)
 const gameFormRef = ref<InstanceType<typeof GameForm> | null>(null)
 const experienceFormRef = ref<InstanceType<typeof ExperienceForm> | null>(null)
+const certificationFormRef = ref<InstanceType<typeof CertificationForm> | null>(null)
 
 const submitLoading = ref({
   projects: false,
   games: false,
   experiences: false,
+  certifications: false,
 })
 
 const getPageCount = (total: number, size: number) => Math.max(1, Math.ceil(total / size))
@@ -69,12 +77,20 @@ const pagedExperiences = computed(() =>
   paginate(experiences.value, currentPage.value.experiences, pageSize.experiences),
 )
 
+const pagedCertifications = computed(() =>
+  paginate(certifications.value, currentPage.value.certifications, pageSize.certifications),
+)
+
 const projectPageCount = computed(() => getPageCount(projects.value.length, pageSize.projects))
 
 const gamePageCount = computed(() => getPageCount(games.value.length, pageSize.games))
 
 const experiencePageCount = computed(() =>
   getPageCount(experiences.value.length, pageSize.experiences),
+)
+
+const certificationPageCount = computed(() =>
+  getPageCount(certifications.value.length, pageSize.certifications),
 )
 
 const normalizePage = (section: Section, total: number, size: number) => {
@@ -96,6 +112,7 @@ onMounted(async () => {
   fetchProjects()
   fetchGames()
   fetchExperiences()
+  fetchCertifications()
 })
 
 // ── Fetch ────────────────────────────────────────────────────────────────────
@@ -139,6 +156,19 @@ const fetchExperiences = async () => {
   }
 }
 
+const fetchCertifications = async () => {
+  loading.value.certifications = true
+  try {
+    const data = await certificationsApi.getAll()
+    certifications.value = data.certifications || []
+    normalizePage('certifications', certifications.value.length, pageSize.certifications)
+  } catch (e) {
+    console.error(e)
+  } finally {
+    loading.value.certifications = false
+  }
+}
+
 // ── Delete ───────────────────────────────────────────────────────────────────
 
 const deleteProject = async (id: string) => {
@@ -175,6 +205,19 @@ const deleteExperience = async (id: string) => {
     fetchExperiences()
   } catch (e) {
     toast.error(e instanceof Error ? e.message : 'Failed to delete experience')
+  } finally {
+    activeMenuId.value = null
+  }
+}
+
+const deleteCertification = async (id: string) => {
+  if (!confirm('Delete this certification?')) return
+  try {
+    await certificationsApi.delete(id)
+    toast.success('Certification deleted successfully')
+    fetchCertifications()
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Failed to delete certification')
   } finally {
     activeMenuId.value = null
   }
@@ -285,6 +328,43 @@ const handleExperienceSubmit = async (data: ExperienceFormData) => {
   }
 }
 
+const handleCertificationSubmit = async (data: CertificationFormData) => {
+  const clean: Partial<CertificationFormData> = { ...data }
+  if (!clean.date?.trim()) delete clean.date
+  if (!clean.icon?.trim()) delete clean.icon
+  if (!clean.image_url?.trim()) delete clean.image_url
+  if (!clean.url?.trim()) delete clean.url
+
+  submitLoading.value.certifications = true
+  try {
+    if (editingCertification.value) {
+      const uploadResult = await certificationFormRef.value?.uploadImages(editingCertification.value.id)
+      if (uploadResult?.uploaded) {
+        if (uploadResult.icon) delete clean.icon
+        if (uploadResult.image_url) delete clean.image_url
+      }
+      await certificationsApi.update(editingCertification.value.id, clean)
+      editingCertification.value = null
+      toast.success('Certification updated successfully')
+    } else {
+      const created = await certificationsApi.create(clean as CertificationFormData)
+      try {
+        await certificationFormRef.value?.uploadImages(String(created.certification.id))
+        certificationFormRef.value?.reset()
+      } catch (err) {
+        await certificationsApi.delete(String(created.certification.id))
+        throw new Error('Image upload failed. Record creation rolled back.')
+      }
+      toast.success('Certification created successfully')
+    }
+    fetchCertifications()
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Failed to save certification')
+  } finally {
+    submitLoading.value.certifications = false
+  }
+}
+
 const handleSignout = async () => {
   await authStore.signout()
   router.push('/')
@@ -307,6 +387,11 @@ const startEditGame = (g: Game) => {
 
 const startEditExperience = (e: Experience) => {
   editingExperience.value = e
+  activeMenuId.value = null
+}
+
+const startEditCertification = (c: Certification) => {
+  editingCertification.value = c
   activeMenuId.value = null
 }
 </script>
@@ -361,7 +446,7 @@ const startEditExperience = (e: Experience) => {
         ]"
       >
         <button
-          v-for="s in ['projects', 'games', 'experiences']"
+          v-for="s in ['projects', 'games', 'experiences', 'certifications']"
           :key="s"
           @click="setSection(s)"
           :class="[
@@ -884,6 +969,177 @@ const startEditExperience = (e: Experience) => {
             :loading="submitLoading.experiences"
             @submit="handleExperienceSubmit"
             @cancel="editingExperience = null"
+          />
+        </div>
+      </div>
+
+      <!-- ── CERTIFICATIONS ─────────────────────────────────────────────────── -->
+      <div
+        v-else-if="activeSection === 'certifications'"
+        class="grid lg:grid-cols-2 gap-6 items-start"
+      >
+        <!-- List -->
+        <div>
+          <h3
+            :class="[
+              'text-sm font-semibold uppercase tracking-wide mb-3',
+              mode === 'developer' ? 'text-gray-400' : 'text-purple-500',
+            ]"
+          >
+            {{ certifications.length }} certification{{ certifications.length !== 1 ? 's' : '' }}
+          </h3>
+          <div
+            v-if="loading.certifications"
+            class="text-center py-8 text-sm"
+            :class="mode === 'developer' ? 'text-gray-400' : 'text-purple-400'"
+          >
+            Loading...
+          </div>
+          <div
+            v-else-if="certifications.length === 0"
+            class="text-center py-8 text-sm"
+            :class="mode === 'developer' ? 'text-gray-400' : 'text-purple-400'"
+          >
+            No certifications yet
+          </div>
+          <div v-else class="space-y-3">
+            <div
+              v-for="cert in pagedCertifications"
+              :key="cert.id"
+              :class="[
+                'p-4 rounded-lg border flex justify-between items-start transition-colors',
+                editingCertification?.id === cert.id
+                  ? mode === 'developer'
+                    ? 'border-blue-400 bg-blue-50'
+                    : 'border-purple-500 bg-gray-700'
+                  : mode === 'developer'
+                    ? 'bg-white border-gray-200 hover:bg-gray-50'
+                    : 'bg-gray-800 border-gray-700 hover:bg-gray-750',
+              ]"
+            >
+              <div class="flex gap-3 flex-1 min-w-0">
+                <img
+                  v-if="cert.icon"
+                  :src="cert.icon"
+                  :alt="cert.title"
+                  class="w-8 h-8 rounded object-contain flex-shrink-0 mt-0.5"
+                />
+                <div class="min-w-0">
+                  <p
+                    :class="[
+                      'font-semibold text-sm',
+                      mode === 'developer' ? 'text-gray-900' : 'text-purple-100',
+                    ]"
+                  >
+                    {{ cert.title }}
+                  </p>
+                  <p :class="['text-xs mb-1', mode === 'developer' ? 'text-gray-500' : 'text-gray-400']">
+                    {{ cert.issuer }}
+                  </p>
+                  <p :class="['text-xs opacity-75', mode === 'developer' ? 'text-gray-600' : 'text-gray-400']">
+                    {{ cert.date || 'No date' }}
+                  </p>
+                  <p v-if="cert.url" :class="['text-xs truncate max-w-[200px] hover:underline', mode === 'developer' ? 'text-blue-600' : 'text-blue-400']">
+                    <a :href="cert.url" target="_blank" rel="noopener noreferrer">{{ cert.url }}</a>
+                  </p>
+                </div>
+              </div>
+              <div class="relative ml-3 flex-shrink-0">
+                <button
+                  @click="activeMenuId = activeMenuId === cert.id ? null : cert.id"
+                  :class="[
+                    'p-1.5 rounded text-lg leading-none',
+                    mode === 'developer' ? 'hover:bg-gray-200' : 'hover:bg-gray-600',
+                  ]"
+                >
+                  ⋮
+                </button>
+                <div
+                  v-if="activeMenuId === cert.id"
+                  :class="[
+                    'absolute right-0 mt-1 w-36 rounded-lg shadow-lg z-10 border overflow-hidden',
+                    mode === 'developer'
+                      ? 'bg-white border-gray-200'
+                      : 'bg-gray-700 border-gray-600',
+                  ]"
+                >
+                  <button
+                    @click="startEditCertification(cert)"
+                    :class="[
+                      'block w-full text-left px-4 py-2 text-sm transition-colors',
+                      mode === 'developer'
+                        ? 'text-gray-700 hover:bg-gray-100'
+                        : 'text-purple-100 hover:bg-gray-600',
+                    ]"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    @click="deleteCertification(cert.id)"
+                    :class="[
+                      'block w-full text-left px-4 py-2 text-sm transition-colors',
+                      mode === 'developer'
+                        ? 'text-red-600 hover:bg-red-50'
+                        : 'text-red-400 hover:bg-red-900/30',
+                    ]"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            v-if="certifications.length > pageSize.certifications"
+            class="flex items-center justify-between mt-4 text-xs"
+            :class="mode === 'developer' ? 'text-gray-500' : 'text-purple-400'"
+          >
+            <button
+              type="button"
+              @click="setPage('certifications', currentPage.certifications - 1, certificationPageCount)"
+              :disabled="currentPage.certifications === 1"
+              :class="[
+                'px-2 py-1 rounded transition-colors disabled:opacity-50',
+                mode === 'developer'
+                  ? 'bg-gray-100 hover:bg-gray-200'
+                  : 'bg-gray-700 hover:bg-gray-600',
+              ]"
+            >
+              Prev
+            </button>
+            <span>Page {{ currentPage.certifications }} of {{ certificationPageCount }}</span>
+            <button
+              type="button"
+              @click="setPage('certifications', currentPage.certifications + 1, certificationPageCount)"
+              :disabled="currentPage.certifications === certificationPageCount"
+              :class="[
+                'px-2 py-1 rounded transition-colors disabled:opacity-50',
+                mode === 'developer'
+                  ? 'bg-gray-100 hover:bg-gray-200'
+                  : 'bg-gray-700 hover:bg-gray-600',
+              ]"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+
+        <!-- Form -->
+        <div>
+          <h3
+            :class="[
+              'text-sm font-semibold uppercase tracking-wide mb-3',
+              mode === 'developer' ? 'text-gray-400' : 'text-purple-500',
+            ]"
+          >
+            {{ editingCertification ? 'Editing certification' : 'New certification' }}
+          </h3>
+          <CertificationForm
+            ref="certificationFormRef"
+            :editing-certification="editingCertification"
+            :loading="submitLoading.certifications"
+            @submit="handleCertificationSubmit"
+            @cancel="editingCertification = null"
           />
         </div>
       </div>

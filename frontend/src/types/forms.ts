@@ -73,3 +73,12 @@ export interface ExperienceFormData {
   logo?: string
   positions: ExperiencePosition[]
 }
+
+export interface CertificationFormData {
+  title: string
+  issuer: string
+  date?: string | null
+  icon?: string | null
+  image_url?: string | null
+  url?: string | null
+}

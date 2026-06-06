@@ -1,6 +1,6 @@
 import { API_CONFIG, DEFAULT_HEADERS } from './config'
-import type { Project, Game, Experience } from '@/types/profile'
-import type { ProjectFormData, GameFormData, ExperienceFormData } from '@/types/forms'
+import type { Project, Game, Experience, Certification } from '@/types/profile'
+import type { ProjectFormData, GameFormData, ExperienceFormData, CertificationFormData } from '@/types/forms'
 
 // HTTP Client with error handling
 class ApiClient {
@@ -213,6 +213,34 @@ export const experiencesApi = {
 
   async delete(id: string): Promise<{ message: string }> {
     return apiClient.delete(API_CONFIG.ENDPOINTS.EXPERIENCES.BY_ID(id))
+  },
+}
+
+// ============================================
+// Certifications API
+// ============================================
+export const certificationsApi = {
+  async getAll(): Promise<{ certifications: Certification[] }> {
+    return apiClient.get(API_CONFIG.ENDPOINTS.CERTIFICATIONS.BASE)
+  },
+
+  async getById(id: string): Promise<{ certification: Certification }> {
+    return apiClient.get(API_CONFIG.ENDPOINTS.CERTIFICATIONS.BY_ID(id))
+  },
+
+  async create(data: CertificationFormData): Promise<{ message: string; certification: Certification }> {
+    return apiClient.post(API_CONFIG.ENDPOINTS.CERTIFICATIONS.BASE, data)
+  },
+
+  async update(
+    id: string,
+    data: Partial<CertificationFormData>,
+  ): Promise<{ message: string; certification: Certification }> {
+    return apiClient.put(API_CONFIG.ENDPOINTS.CERTIFICATIONS.BY_ID(id), data)
+  },
+
+  async delete(id: string): Promise<{ message: string }> {
+    return apiClient.delete(API_CONFIG.ENDPOINTS.CERTIFICATIONS.BY_ID(id))
   },
 }
 

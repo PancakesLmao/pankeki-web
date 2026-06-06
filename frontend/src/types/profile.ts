@@ -45,3 +45,15 @@ export interface Experience {
   created_at: string
   created_by: string
 }
+
+export interface Certification {
+  id: string
+  title: string
+  issuer: string
+  date: string | null
+  icon: string | null
+  image_url: string | null
+  url: string | null
+  created_at: string
+  created_by: string
+}

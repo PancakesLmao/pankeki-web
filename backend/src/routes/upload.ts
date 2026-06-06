@@ -88,6 +88,10 @@ export const uploadRoutes = new Elysia({ prefix: "/api" }).post(
               ? imageType === "icon"
                 ? "icon_img"
                 : "cover_img"
+              : entityType === "certifications"
+                ? imageType === "image"
+                  ? "image_url"
+                  : "icon"
               : "logo";
 
         const dbClient = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -137,12 +141,14 @@ export const uploadRoutes = new Elysia({ prefix: "/api" }).post(
         t.Literal("projects"),
         t.Literal("games"),
         t.Literal("experiences"),
+        t.Literal("certifications"),
       ]),
       imageType: t.Union([
         t.Literal("project"),
         t.Literal("cover"),
         t.Literal("icon"),
         t.Literal("logo"),
+        t.Literal("image"),
       ]),
       entityId: t.Optional(t.String()),
       oldImagePath: t.Optional(t.String()),
