@@ -353,7 +353,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
           ? createSupabaseServiceClient()
           : authClient;
 
-        const existing = await getProject(BigInt(params.id), authClient);
+        const existing = await getProject(BigInt(params.id), storageClient);
         if (existing?.project_img) {
           const deletePath = toStoragePath(existing.project_img);
           if (deletePath) {

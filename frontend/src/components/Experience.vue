@@ -109,7 +109,7 @@ onMounted(() => fetchExperiences())
 </style>
 
 <template>
-  <section :class="['mb-24', mode === Mode.Developer ? '' : 'hidden']" id="experience">
+  <section :class="['mb-12 pt-12', mode === Mode.Developer ? '' : 'hidden']" id="experience">
     <SectionTitle :title="mode === Mode.Developer ? 'Work Experience' : 'Gaming Milestones'" />
 
     <!-- Loading -->

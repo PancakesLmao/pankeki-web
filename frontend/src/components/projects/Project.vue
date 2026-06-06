@@ -43,7 +43,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="mb-24" id="projects">
+  <section class="mb-24 pt-12" id="projects">
     <SectionTitle :title="mode === 'developer' ? 'Projects' : 'Games'" />
 
     <!-- Developer Mode: Projects -->

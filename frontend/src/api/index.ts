@@ -79,9 +79,8 @@ class ApiClient {
 // Create API client instance
 const apiClient = new ApiClient(API_CONFIG.BASE_URL)
 
-// ============================================
 // Projects API
-// ============================================
+
 export const projectsApi = {
   // Get all projects
   async getAll(): Promise<{ projects: Project[] }> {

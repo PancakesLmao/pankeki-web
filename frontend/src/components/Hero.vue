@@ -67,8 +67,8 @@ const writerArray = computed(() => {
       ]"
     >
       {{ mode === 'developer'
-        ? 'Sparking curiosity through vibrant web apps and cloud-powered solutions'
-        : '"I don’t check the time, I check the pity counter"' }}
+        ? 'Passionate web developer and cloud enthusiast who loves creating web apps and cloud solutions'
+        : "Rate up is a lie" }}
     </p>
 
     <div class="flex gap-4">

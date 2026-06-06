@@ -224,7 +224,7 @@ export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
           ? createSupabaseServiceClient()
           : authClient;
 
-        const existing = await getExperience(BigInt(params.id), authClient);
+        const existing = await getExperience(BigInt(params.id), storageClient);
         if (existing?.logo) {
           const deletePath = toStoragePath(existing.logo);
           if (deletePath) {

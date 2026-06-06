@@ -434,7 +434,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
         const storageClient = process.env.SUPABASE_SERVICE_ROLE_KEY
           ? createSupabaseServiceClient()
           : authClient;
-        const existing = await getGame(BigInt(params.id), authClient);
+        const existing = await getGame(BigInt(params.id), storageClient);
 
         if (existing) {
           const paths = [
