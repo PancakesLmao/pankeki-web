@@ -4,16 +4,19 @@ import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import type { Project, Game, Experience } from '@/types/profile'
 import { useMode } from '@/composables/useMode'
+import { useToast } from '@/composables/useToast'
 import CustomTerminal from '@/components/about/Terminal.vue'
 import ProjectForm from '@/components/dashboard/ProjectForm.vue'
 import GameForm from '@/components/dashboard/GameForm.vue'
 import ExperienceForm from '@/components/dashboard/ExperienceForm.vue'
+import ToastNotification from '@/components/dashboard/ToastNotification.vue'
 import type { ProjectFormData, GameFormData, ExperienceFormData } from '@/types/forms'
 import { projectsApi, gamesApi, experiencesApi } from '@/api'
 
 const authStore = useAuthStore()
 const router = useRouter()
 const { mode } = useMode()
+const toast = useToast()
 
 type Section = 'projects' | 'games' | 'experiences'
 const activeSection = ref<Section>('projects')
@@ -139,36 +142,39 @@ const fetchExperiences = async () => {
 // ── Delete ───────────────────────────────────────────────────────────────────
 
 const deleteProject = async (id: string) => {
-  if (!confirm('Delete this project?')) return
+  if (!confirm('Delete this project? This will also remove the associated image.')) return
   try {
     await projectsApi.delete(id)
+    toast.success('Project deleted successfully')
     fetchProjects()
   } catch (e) {
-    alert(e instanceof Error ? e.message : 'Failed')
+    toast.error(e instanceof Error ? e.message : 'Failed to delete project')
   } finally {
     activeMenuId.value = null
   }
 }
 
 const deleteGame = async (id: string) => {
-  if (!confirm('Delete this game?')) return
+  if (!confirm('Delete this game? This will also remove the associated images.')) return
   try {
     await gamesApi.delete(id)
+    toast.success('Game deleted successfully')
     fetchGames()
   } catch (e) {
-    alert(e instanceof Error ? e.message : 'Failed')
+    toast.error(e instanceof Error ? e.message : 'Failed to delete game')
   } finally {
     activeMenuId.value = null
   }
 }
 
 const deleteExperience = async (id: string) => {
-  if (!confirm('Delete this experience?')) return
+  if (!confirm('Delete this experience? This will also remove the associated logo.')) return
   try {
     await experiencesApi.delete(id)
+    toast.success('Experience deleted successfully')
     fetchExperiences()
   } catch (e) {
-    alert(e instanceof Error ? e.message : 'Failed')
+    toast.error(e instanceof Error ? e.message : 'Failed to delete experience')
   } finally {
     activeMenuId.value = null
   }
@@ -190,6 +196,7 @@ const handleProjectSubmit = async (data: ProjectFormData) => {
       if (uploadResult?.uploaded) delete clean.project_img
       await projectsApi.update(editingProject.value.id, clean)
       editingProject.value = null
+      toast.success('Project updated successfully')
     } else {
       const created = await projectsApi.create(clean as ProjectFormData)
       try {
@@ -199,10 +206,11 @@ const handleProjectSubmit = async (data: ProjectFormData) => {
         await projectsApi.delete(String(created.project.id))
         throw new Error('Image upload failed. Record creation rolled back.')
       }
+      toast.success('Project created successfully')
     }
     fetchProjects()
   } catch (e) {
-    alert(e instanceof Error ? e.message : 'Failed')
+    toast.error(e instanceof Error ? e.message : 'Failed to save project')
   } finally {
     submitLoading.value.projects = false
   }
@@ -225,6 +233,7 @@ const handleGameSubmit = async (data: GameFormData) => {
       }
       await gamesApi.update(editingGame.value.id, clean)
       editingGame.value = null
+      toast.success('Game updated successfully')
     } else {
       const created = await gamesApi.create(clean as GameFormData)
       try {
@@ -234,10 +243,11 @@ const handleGameSubmit = async (data: GameFormData) => {
         await gamesApi.delete(String(created.game.id))
         throw new Error('Image upload failed. Record creation rolled back.')
       }
+      toast.success('Game created successfully')
     }
     fetchGames()
   } catch (e) {
-    alert(e instanceof Error ? e.message : 'Failed')
+    toast.error(e instanceof Error ? e.message : 'Failed to save game')
   } finally {
     submitLoading.value.games = false
   }
@@ -255,6 +265,7 @@ const handleExperienceSubmit = async (data: ExperienceFormData) => {
       if (uploadResult?.uploaded) delete clean.logo
       await experiencesApi.update(editingExperience.value.id, clean)
       editingExperience.value = null
+      toast.success('Experience updated successfully')
     } else {
       const created = await experiencesApi.create(clean as ExperienceFormData)
       try {
@@ -264,10 +275,11 @@ const handleExperienceSubmit = async (data: ExperienceFormData) => {
         await experiencesApi.delete(String(created.experience.id))
         throw new Error('Image upload failed. Record creation rolled back.')
       }
+      toast.success('Experience created successfully')
     }
     fetchExperiences()
   } catch (e) {
-    alert(e instanceof Error ? e.message : 'Failed')
+    toast.error(e instanceof Error ? e.message : 'Failed to save experience')
   } finally {
     submitLoading.value.experiences = false
   }
@@ -300,6 +312,9 @@ const startEditExperience = (e: Experience) => {
 </script>
 
 <template>
+  <!-- Toast portal -->
+  <ToastNotification />
+
   <main>
     <section class="mb-24">
       <!-- Header -->
@@ -526,6 +541,7 @@ const startEditExperience = (e: Experience) => {
           <ProjectForm
             ref="projectFormRef"
             :editing-project="editingProject"
+            :loading="submitLoading.projects"
             @submit="handleProjectSubmit"
             @cancel="editingProject = null"
           />
@@ -687,6 +703,7 @@ const startEditExperience = (e: Experience) => {
           <GameForm
             ref="gameFormRef"
             :editing-game="editingGame"
+            :loading="submitLoading.games"
             @submit="handleGameSubmit"
             @cancel="editingGame = null"
           />
@@ -859,6 +876,7 @@ const startEditExperience = (e: Experience) => {
           <ExperienceForm
             ref="experienceFormRef"
             :editing-experience="editingExperience"
+            :loading="submitLoading.experiences"
             @submit="handleExperienceSubmit"
             @cancel="editingExperience = null"
           />
