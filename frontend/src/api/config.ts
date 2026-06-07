@@ -3,14 +3,28 @@ const BACKEND_PORT = import.meta.env.VITE_BACKEND_PORT || '3000'
 const isDevelopment = !import.meta.env.PROD
 
 const getBackendUrl = (): string => {
+  const domains = DOMAIN.split(',').map((d: string) => d.trim()).filter(Boolean)
+
   if (isDevelopment) {
-    return `http://${DOMAIN}:${BACKEND_PORT}`
+    return `http://${domains[0] || 'localhost'}:${BACKEND_PORT}`
   }
-  // Production: use VITE_DOMAIN env variable (must be set in production)
-  if (!DOMAIN || DOMAIN === 'localhost') {
+
+  if (domains.length === 0 || domains[0] === 'localhost') {
     throw new Error('VITE_DOMAIN environment variable must be set in production')
   }
-  return `https://${DOMAIN}`
+
+  // Production: Try to dynamically match the current browser domain
+  if (typeof window !== 'undefined' && window.location) {
+    const currentHost = window.location.hostname
+    const matchedDomain = domains.find((domain: string) =>
+      domain.includes(currentHost) || currentHost.includes(domain.replace(/^api\./, ''))
+    )
+    if (matchedDomain) {
+      return `https://${matchedDomain}`
+    }
+  }
+
+  return `https://${domains[0]}`
 }
 
 export const API_CONFIG = {

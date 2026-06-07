@@ -53,20 +53,21 @@ const logResponse = (context: any, requestInfo: any) => {
   );
 };
 
-const getFrontendUrl = (): string => {
+const getFrontendUrls = (): string[] => {
+  const domains = DOMAIN.split(",").map((d) => d.trim()).filter(Boolean);
   if (isDevelopment) {
-    return `http://${DOMAIN}:${FRONTEND_PORT}`;
+    return domains.map((d) => `http://${d}:${FRONTEND_PORT}`);
   }
-  if (!DOMAIN || DOMAIN === "localhost") {
+  if (domains.length === 0 || domains[0] === "localhost") {
     throw new Error("DOMAIN environment variable must be set in production");
   }
-  return `https://${DOMAIN}`;
+  return domains.map((d) => `https://${d}`);
 };
 
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
-  getFrontendUrl(),
+  ...getFrontendUrls(),
 ] as string[];
 
 // Cookie configuration for cross-domain authentication
@@ -219,7 +220,7 @@ async function logStartup() {
   console.log(
     `${green}  ✓${reset} Mode       ${isDevelopment ? "development" : "production"}`,
   );
-  console.log(`${green}  ✓${reset} CORS       ${getFrontendUrl()}`);
+  console.log(`${green}  ✓${reset} CORS       ${getFrontendUrls().join(", ")}`);
 
   if (isDevelopment) {
     console.log(
