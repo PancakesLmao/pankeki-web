@@ -27,7 +27,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>()
 
 const { mode } = useMode()
-const { projectStatuses, loading: enumsLoading, fetchEnums } = useEnums()
+const { projectStatuses, fetchEnums } = useEnums()
 
 const form = ref<ProjectFormData>({
   title: '',
@@ -111,12 +111,7 @@ const handleImageUploadError = (error: string) => {
   errors.value.project_img = error
 }
 
-const handleRemoveImage = async () => {
-  if (confirm('Are you sure you want to remove this image?')) {
-    form.value.project_img = ''
-    errors.value.project_img = ''
-  }
-}
+
 
 const handleSubmit = async () => {
   if (!validateForm()) return

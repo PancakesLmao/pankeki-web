@@ -27,7 +27,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>()
 
 const { mode } = useMode()
-const { gameGenres, gamePlatforms, loading: enumsLoading, fetchEnums } = useEnums()
+const { gameGenres, gamePlatforms, fetchEnums } = useEnums()
 
 const form = ref<GameFormData>({
   title: '',

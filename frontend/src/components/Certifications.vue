@@ -79,7 +79,12 @@ onMounted(() => fetchCertifications())
 
     <!-- Empty State -->
     <div v-else-if="certifications.length === 0" class="flex flex-col items-center justify-center py-8 text-center">
-      <img :src="kita" alt="Kita" class="w-64 h-64 mb-4 text-gray-400" />
+      <div class="relative group inline-block">
+        <img :src="kita" alt="Kita" class="w-64 h-64 mb-4 text-gray-400" />
+        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none shadow-lg">
+          Cre: Seseren
+        </div>
+      </div>
       <p class="text-lg font-medium text-gray-600">Me have none rn...</p>
     </div>
 
@@ -130,7 +135,7 @@ onMounted(() => fetchCertifications())
               <!-- Left side: Badge/Image -->
               <div class="w-full md:w-2/3 flex justify-center flex-shrink-0">
                 <img v-if="selectedCert?.image_url || selectedCert?.icon" 
-                     :src="selectedCert.image_url || selectedCert.icon" 
+                     :src="selectedCert.image_url || selectedCert.icon || undefined" 
                      alt="Certificate Image" 
                      class="max-w-full rounded-lg shadow-sm border border-gray-200 object-contain max-h-[60vh] w-full" />
                 <div v-else class="h-48 w-48 bg-white rounded-full flex items-center justify-center text-gray-400 font-bold text-6xl shadow-sm border border-gray-100">

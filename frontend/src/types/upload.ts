@@ -13,9 +13,9 @@ export interface ImageUploadProps {
   /** Label displayed above the file input */
   label: string
   /** Entity type: projects, games, or experiences */
-  entityType: 'projects' | 'games' | 'experiences'
+  entityType: 'projects' | 'games' | 'experiences' | 'certifications'
   /** Image type: project, cover, icon, or logo */
-  imageType?: 'project' | 'cover' | 'icon' | 'logo'
+  imageType?: 'project' | 'cover' | 'icon' | 'logo' | 'image'
   /** Entity ID for database updates (required for replacements) */
   entityId?: string
   /** Path to old image for deletion on replacement */
@@ -61,9 +61,9 @@ export interface UploadRequest {
   /** File to upload */
   file: File
   /** Entity type: projects, games, or experiences */
-  entityType: 'projects' | 'games' | 'experiences'
+  entityType: 'projects' | 'games' | 'experiences' | 'certifications'
   /** Image type: project, cover, icon, or logo */
-  imageType: 'project' | 'cover' | 'icon' | 'logo'
+  imageType: 'project' | 'cover' | 'icon' | 'logo' | 'image'
   /** Entity ID for database updates (required for replacements) */
   entityId?: string
   /** Path to old image for deletion on replacement */

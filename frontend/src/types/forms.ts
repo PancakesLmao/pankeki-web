@@ -77,8 +77,8 @@ export interface ExperienceFormData {
 export interface CertificationFormData {
   title: string
   issuer: string
-  date?: string | null
-  icon?: string | null
-  image_url?: string | null
-  url?: string | null
+  date?: string
+  icon?: string
+  image_url?: string
+  url?: string
 }

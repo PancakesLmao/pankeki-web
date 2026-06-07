@@ -13,7 +13,6 @@ const experiences = ref<Experience[]>([])
 const loading = ref(false)
 const fetchError = ref(false)
 const visibleItems = ref<Set<string>>(new Set())
-const hoveredLogoId = ref<string | null>(null)
 
 const fetchExperiences = async () => {
   loading.value = true

@@ -245,7 +245,7 @@ const handleProjectSubmit = async (data: ProjectFormData) => {
       try {
         await projectFormRef.value?.uploadImages(String(created.project.id))
         projectFormRef.value?.reset()
-      } catch (err) {
+      } catch {
         await projectsApi.delete(String(created.project.id))
         throw new Error('Image upload failed. Record creation rolled back.')
       }
@@ -282,7 +282,7 @@ const handleGameSubmit = async (data: GameFormData) => {
       try {
         await gameFormRef.value?.uploadImages(String(created.game.id))
         gameFormRef.value?.reset()
-      } catch (err) {
+      } catch {
         await gamesApi.delete(String(created.game.id))
         throw new Error('Image upload failed. Record creation rolled back.')
       }
@@ -314,7 +314,7 @@ const handleExperienceSubmit = async (data: ExperienceFormData) => {
       try {
         await experienceFormRef.value?.uploadImages(String(created.experience.id))
         experienceFormRef.value?.reset()
-      } catch (err) {
+      } catch {
         await experiencesApi.delete(String(created.experience.id))
         throw new Error('Image upload failed. Record creation rolled back.')
       }
@@ -351,7 +351,7 @@ const handleCertificationSubmit = async (data: CertificationFormData) => {
       try {
         await certificationFormRef.value?.uploadImages(String(created.certification.id))
         certificationFormRef.value?.reset()
-      } catch (err) {
+      } catch {
         await certificationsApi.delete(String(created.certification.id))
         throw new Error('Image upload failed. Record creation rolled back.')
       }

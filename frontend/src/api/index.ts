@@ -1,4 +1,4 @@
-import { API_CONFIG, DEFAULT_HEADERS } from './config'
+import { API_CONFIG } from './config'
 import type { Project, Game, Experience, Certification } from '@/types/profile'
 import type { ProjectFormData, GameFormData, ExperienceFormData, CertificationFormData } from '@/types/forms'
 
