@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { useMode } from '@/composables/useMode'
 import { useEnums } from '@/composables/useEnums'
 import FormInput from './FormInput.vue'
 import FormCheckboxGroup from './FormCheckboxGroup.vue'
+import ImageUpload from './ImageUpload.vue'
+import FormSubmitButton from './FormSubmitButton.vue'
 import type { GameFormData } from '@/types/forms'
 import type { Game } from '@/types/profile'
 
 interface Props {
   editingGame?: Game | null
+  loading?: boolean
 }
 
 interface Emits {
@@ -18,12 +21,13 @@ interface Emits {
 
 const props = withDefaults(defineProps<Props>(), {
   editingGame: null,
+  loading: false,
 })
 
 const emit = defineEmits<Emits>()
 
 const { mode } = useMode()
-const { gameGenres, gamePlatforms, loading, fetchEnums } = useEnums()
+const { gameGenres, gamePlatforms, fetchEnums } = useEnums()
 
 const form = ref<GameFormData>({
   title: '',
@@ -37,8 +41,10 @@ const form = ref<GameFormData>({
 })
 
 const tagInput = ref('')
-const isSubmitting = ref(false)
 const errors = ref<Record<string, string>>({})
+const coverUploadRef = ref<InstanceType<typeof ImageUpload> | null>(null)
+const iconUploadRef = ref<InstanceType<typeof ImageUpload> | null>(null)
+const pendingEntityId = ref<string | null>(null)
 
 onMounted(() => {
   fetchEnums()
@@ -48,6 +54,7 @@ onMounted(() => {
 watch(
   () => props.editingGame,
   (editingGame) => {
+    pendingEntityId.value = null
     if (editingGame) {
       form.value = {
         title: editingGame.title,
@@ -88,6 +95,24 @@ const removeTag = (index: number) => {
   form.value.tags.splice(index, 1)
 }
 
+const handleCoverImageUploadSuccess = (path: string) => {
+  form.value.cover_img = path
+  errors.value.cover_img = ''
+}
+
+const handleCoverImageUploadError = (error: string) => {
+  errors.value.cover_img = error
+}
+
+const handleIconImageUploadSuccess = (path: string) => {
+  form.value.icon_img = path
+  errors.value.icon_img = ''
+}
+
+const handleIconImageUploadError = (error: string) => {
+  errors.value.icon_img = error
+}
+
 const validateForm = (): boolean => {
   errors.value = {}
   if (!form.value.title.trim()) {
@@ -107,27 +132,39 @@ const validateForm = (): boolean => {
 
 const handleSubmit = async () => {
   if (!validateForm()) return
+  emit('submit', form.value)
+}
 
-  isSubmitting.value = true
-  try {
-    emit('submit', form.value)
-    // Reset form after successful submit
-    if (!props.editingGame) {
-      form.value = {
-        title: '',
-        description: '',
-        tags: [],
-        genre: [],
-        platform: [],
-        link: '',
-        cover_img: '',
-        icon_img: '',
-      }
+const reset = () => {
+  if (!props.editingGame) {
+    form.value = {
+      title: '',
+      description: '',
+      tags: [],
+      genre: [],
+      platform: [],
+      link: '',
+      cover_img: '',
+      icon_img: '',
     }
-  } finally {
-    isSubmitting.value = false
   }
 }
+
+const uploadImages = async (entityId?: string) => {
+  if (entityId) {
+    pendingEntityId.value = entityId
+    await nextTick()
+  }
+  const coverPath = await coverUploadRef.value?.uploadSelected()
+  const iconPath = await iconUploadRef.value?.uploadSelected()
+  return {
+    uploaded: !!coverPath || !!iconPath,
+    cover_img: coverPath || null,
+    icon_img: iconPath || null,
+  }
+}
+
+defineExpose({ uploadImages, reset })
 </script>
 
 <template>
@@ -188,28 +225,40 @@ const handleSubmit = async () => {
     <!-- Link -->
     <FormInput
       v-model="form.link"
-      label="Game Link"
+      label="Game Official Page"
       type="url"
       placeholder="https://example.com"
       :error="errors.link"
     />
 
-    <!-- Cover Image URL -->
-    <FormInput
+    <!-- Cover Image Upload -->
+    <ImageUpload
+      ref="coverUploadRef"
       v-model="form.cover_img"
-      label="Cover Image URL"
-      type="url"
-      placeholder="https://example.com/cover.jpg"
+      label="Cover Image"
+      entityType="games"
+      imageType="cover"
+      :entityId="pendingEntityId || editingGame?.id"
+      :oldImagePath="editingGame?.cover_img || undefined"
+      :autoUpload="false"
       :error="errors.cover_img"
+      @upload:success="handleCoverImageUploadSuccess"
+      @upload:error="handleCoverImageUploadError"
     />
 
-    <!-- Icon Image URL -->
-    <FormInput
+    <!-- Icon Image Upload -->
+    <ImageUpload
+      ref="iconUploadRef"
       v-model="form.icon_img"
-      label="Icon Image URL"
-      type="url"
-      placeholder="https://example.com/icon.jpg"
+      label="Icon Image"
+      entityType="games"
+      imageType="icon"
+      :entityId="pendingEntityId || editingGame?.id"
+      :oldImagePath="editingGame?.icon_img || undefined"
+      :autoUpload="false"
       :error="errors.icon_img"
+      @upload:success="handleIconImageUploadSuccess"
+      @upload:error="handleIconImageUploadError"
     />
 
     <!-- Tags -->
@@ -279,27 +328,12 @@ const handleSubmit = async () => {
     </div>
 
     <!-- Submit Button -->
-    <div class="flex gap-2">
-      <button
-        type="submit"
-        :disabled="isSubmitting"
-        :class="[
-          'px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50',
-          mode === 'developer'
-            ? 'bg-gray-800 text-white hover:bg-gray-900'
-            : 'bg-purple-500 text-purple-100 hover:bg-purple-600',
-        ]"
-      >
-        {{
-          isSubmitting
-            ? editingGame
-              ? 'Updating...'
-              : 'Creating...'
-            : editingGame
-              ? 'Update Game'
-              : 'Create Game'
-        }}
-      </button>
+    <div class="flex gap-2 mt-6">
+      <FormSubmitButton
+        :loading="loading"
+        :label="editingGame ? 'Update Game' : 'Create Game'"
+        :loading-label="editingGame ? 'Updating...' : 'Creating...'"
+      />
       <button
         v-if="editingGame"
         type="button"
@@ -316,3 +350,5 @@ const handleSubmit = async () => {
     </div>
   </form>
 </template>
+
+

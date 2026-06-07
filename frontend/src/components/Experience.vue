@@ -13,7 +13,6 @@ const experiences = ref<Experience[]>([])
 const loading = ref(false)
 const fetchError = ref(false)
 const visibleItems = ref<Set<string>>(new Set())
-const hoveredLogoId = ref<string | null>(null)
 
 const fetchExperiences = async () => {
   loading.value = true
@@ -109,7 +108,7 @@ onMounted(() => fetchExperiences())
 </style>
 
 <template>
-  <section :class="['mb-24', mode === Mode.Developer ? '' : 'hidden']" id="experience">
+  <section :class="['mb-12 pt-12', mode === Mode.Developer ? '' : 'hidden']" id="experience">
     <SectionTitle :title="mode === Mode.Developer ? 'Work Experience' : 'Gaming Milestones'" />
 
     <!-- Loading -->
@@ -215,23 +214,13 @@ onMounted(() => fetchExperiences())
             aria-hidden="true"
           ></div>
 
-          <!-- Date -->
+          <!-- spacer -->
           <div
             :class="[
               'md:w-1/2 pb-8 md:pb-0 md:px-8',
               index % 2 === 0 ? 'md:text-left md:pl-8' : 'md:text-right md:pr-8',
             ]"
           >
-            <span
-              :class="[
-                'inline-block text-sm font-medium px-3 py-1 rounded-full mb-2',
-                mode === Mode.Developer
-                  ? 'bg-gray-100 text-gray-700'
-                  : 'bg-gray-800 text-purple-300',
-              ]"
-            >
-              {{ item.date }}
-            </span>
           </div>
 
           <!-- Content -->
@@ -242,9 +231,10 @@ onMounted(() => fetchExperiences())
               index % 2 === 0 ? 'md:pr-8 md:text-right' : 'md:pl-8',
             ]"
           >
+            <!-- Company header -->
             <div
               :class="[
-                'flex items-center gap-3 mb-1',
+                'flex items-center gap-3 mb-3',
                 index % 2 === 0 ? 'md:flex-row-reverse' : '',
               ]"
             >
@@ -275,32 +265,86 @@ onMounted(() => fetchExperiences())
                   />
                 </div>
               </div>
-              <h3
+              <div>
+                <h3
+                  :class="[
+                    'text-xl font-bold transition-colors leading-tight',
+                    mode === Mode.Developer ? 'font-serif' : 'font-mono',
+                  ]"
+                >
+                  {{ item.company }}
+                </h3>
+                <p
+                  v-if="item.location"
+                  :class="[
+                    'text-xs font-medium',
+                    mode === Mode.Developer ? 'text-gray-500' : 'text-purple-400',
+                  ]"
+                >
+                  {{ item.location }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Positions list -->
+            <div
+              :class="[
+                'space-y-3',
+                index % 2 === 0 ? 'md:border-r md:pr-3 md:border-l-0' : 'border-l pl-3',
+                mode === Mode.Developer ? 'border-gray-200' : 'border-purple-800',
+              ]"
+            >
+              <div
+                v-for="(pos, posIdx) in (item.positions && item.positions.length > 0
+                  ? [...item.positions].reverse()
+                  : [{ title: item.title, date: item.date, description: item.description }])"
+                :key="posIdx"
                 :class="[
-                  'text-xl font-bold transition-colors',
-                  mode === Mode.Developer ? 'font-serif' : 'font-mono',
+                  posIdx > 0 ? 'pt-3' : '',
+                  posIdx > 0
+                    ? mode === Mode.Developer
+                      ? 'border-t border-gray-100'
+                      : 'border-t border-purple-900/50'
+                    : '',
                 ]"
               >
-                {{ item.title }}
-              </h3>
+                <div
+                  :class="[
+                    'flex items-center gap-2 mb-1 flex-wrap',
+                    index % 2 === 0 ? 'md:flex-row-reverse' : '',
+                  ]"
+                >
+                  <p
+                    :class="[
+                      'text-sm font-semibold',
+                      mode === Mode.Developer ? 'text-gray-800' : 'text-purple-100',
+                    ]"
+                  >
+                    {{ pos.title }}
+                  </p>
+                  <span
+                    :class="[
+                      'inline-block text-xs font-medium px-2 py-0.5 rounded-full',
+                      mode === Mode.Developer
+                        ? 'bg-gray-100 text-gray-600'
+                        : 'bg-gray-800 text-purple-300',
+                    ]"
+                  >
+                    {{ pos.date }}
+                  </span>
+                </div>
+                <p
+                  :class="[
+                    'text-sm transition-colors',
+                    mode === Mode.Developer ? 'text-gray-600' : 'text-purple-200',
+                  ]"
+                >
+                  {{ pos.description }}
+                </p>
+              </div>
             </div>
-            <p
-              :class="[
-                'text-sm font-medium mb-2',
-                mode === Mode.Developer ? 'text-gray-600' : 'text-purple-400',
-              ]"
-            >
-              {{ item.company }}{{ item.location ? ` • ${item.location}` : '' }}
-            </p>
-            <p
-              :class="[
-                'transition-colors',
-                mode === Mode.Developer ? 'text-gray-600' : 'text-purple-200',
-              ]"
-            >
-              {{ item.description }}
-            </p>
           </div>
+
         </div>
       </div>
     </div>

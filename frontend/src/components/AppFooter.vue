@@ -12,10 +12,10 @@ const { mode } = useMode()
     ]"
   >
     <p class="text-sm">
-      © {{ new Date().getFullYear() }} {{ mode === 'developer' ? 'PancakesLmao' : 'PancakesLmao' }}. All rights reserved.
+      © {{ new Date().getFullYear() }} {{ mode === 'developer' ? 'Nguyen Thinh' : 'PancakesLmao' }}.
     </p>
-    <!-- <p class="text-xs mt-2">
-      {{ mode === 'developer' ? 'Crafted with precision and care.' : 'May your games be lag-free and your drops legendary.' }}
-    </p> -->
+    <p class="text-xs mt-2">
+      Code and design all rights reserved. Third-party assets belong to respective creators.
+    </p>
   </footer>
 </template>

@@ -10,6 +10,30 @@ import {
 } from "../libs/db";
 import { requireAuth } from "../middleware/auth";
 import { getSignedImageUrl } from "../libs/storage";
+import { createSupabaseServiceClient } from "../libs/supabase";
+
+const BUCKET_NAME = "portfolio-bucket";
+
+function toStoragePath(value: string | null | undefined): string | null {
+  if (!value) return null;
+  if (!value.startsWith("http")) return value;
+
+  try {
+    const url = new URL(value);
+    const prefix = `/storage/v1/object/public/${BUCKET_NAME}/`;
+    const index = url.pathname.indexOf(prefix);
+    if (index >= 0) {
+      return url.pathname.slice(index + prefix.length);
+    }
+  } catch {
+    // Ignore invalid URLs and fall through to regex
+  }
+
+  const fallbackMatch = value.match(
+    new RegExp(`/storage/v1/object/public/${BUCKET_NAME}/(.+)$`),
+  );
+  return fallbackMatch ? fallbackMatch[1] : null;
+}
 
 export const projectRoutes = new Elysia({ prefix: "/api/projects" })
   .use(cookie())
@@ -33,7 +57,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
               ...projectData,
               image_url: imageUrl,
             };
-          })
+          }),
         );
 
         return { projects: projectsWithUrls };
@@ -57,8 +81,8 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
             {
               description:
                 "Filter projects by status. Use title case with spaces. Omit to fetch all projects.",
-            }
-          )
+            },
+          ),
         ),
       }),
       detail: {
@@ -67,7 +91,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
         description:
           "Retrieve all portfolio projects (public access). Can be filtered by status using title case format (e.g., 'Ongoing'). Omit status parameter to get all projects.",
       },
-    }
+    },
   )
 
   // Get a single project by ID (public access)
@@ -113,7 +137,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
         summary: "Get project by ID",
         description: "Retrieve a specific project by its ID (public access)",
       },
-    }
+    },
   )
 
   // Create a new project (admin only)
@@ -121,18 +145,24 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
     "/",
     async ({ body, cookie, set }) => {
       try {
-        const { user, supabase: authClient } = await requireAuth({ cookie, set });
+        const { user, supabase: authClient } = await requireAuth({
+          cookie,
+          set,
+        });
 
-        const project = await createProject({
-          title: body.title,
-          description: body.description,
-          tags: body.tags,
-          link: body.link,
-          project_img: body.project_img,
-          status: body.status,
-          time_range: body.time_range,
-          created_by: user!.id,
-        }, authClient);
+        const project = await createProject(
+          {
+            title: body.title,
+            description: body.description,
+            tags: body.tags,
+            link: body.link,
+            project_img: body.project_img,
+            status: body.status,
+            time_range: body.time_range,
+            created_by: user!.id,
+          },
+          authClient,
+        );
 
         return {
           message: "Project created successfully",
@@ -154,7 +184,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
             description: "Project description",
             default:
               "Centralized IoT platform that build specifically for weather stations",
-          })
+          }),
         ),
         tags: t.Array(t.String(), {
           description: "Array of technology tags",
@@ -164,20 +194,20 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
           t.String({
             description: "Project link (GitHub, live demo, etc.)",
             default: "https://github.com/username/weather-platform",
-          })
+          }),
         ),
         project_img: t.Optional(
           t.String({
             description: "Project image URL",
             default: "https://placehold.co/600x400/png",
-          })
+          }),
         ),
         time_range: t.Optional(
           t.String({
             description:
               "Development time range (e.g., 'February 2025 - March 2025')",
             default: "January 2025 - February 2025",
-          })
+          }),
         ),
         status: t.Union(
           [
@@ -192,7 +222,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
             description:
               "Project status (required). Use title case with spaces.",
             default: "Ongoing",
-          }
+          },
         ),
       }),
       detail: {
@@ -201,7 +231,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
         description:
           "Create a new project (admin only). The created_by field is automatically set from the authenticated user. Use title case status format (e.g., 'Ongoing', 'Completed and Published').",
       },
-    }
+    },
   )
 
   // Update a project (admin only)
@@ -228,7 +258,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
         const project = await updateProject(
           BigInt(params.id),
           updateData,
-          authClient
+          authClient,
         );
 
         return {
@@ -253,10 +283,12 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
             description: "Project title",
             default: "Updated Weather Platform",
           }),
-          description: t.Optional(t.String({
-            description: "Project description",
-            default: "Enhanced IoT platform with real-time analytics",
-          })),
+          description: t.Optional(
+            t.String({
+              description: "Project description",
+              default: "Enhanced IoT platform with real-time analytics",
+            }),
+          ),
           tags: t.Array(t.String(), {
             description: "Array of technology tags",
             default: [
@@ -267,19 +299,25 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
               "Redis",
             ],
           }),
-          link: t.Optional(t.String({
-            description: "Project link",
-            default: "https://github.com/username/weather-platform-v2",
-          })),
-          project_img: t.Optional(t.String({
-            description: "Project image URL",
-            default: "https://placehold.co/600x400/png",
-          })),
-          time_range: t.Optional(t.String({
-            description:
-              "Development time range (e.g., 'February 2025 - March 2025')",
-            default: "January 2025 - March 2025",
-          })),
+          link: t.Optional(
+            t.String({
+              description: "Project link",
+              default: "https://github.com/username/weather-platform-v2",
+            }),
+          ),
+          project_img: t.Optional(
+            t.String({
+              description: "Project image URL",
+              default: "https://placehold.co/600x400/png",
+            }),
+          ),
+          time_range: t.Optional(
+            t.String({
+              description:
+                "Development time range (e.g., 'February 2025 - March 2025')",
+              default: "January 2025 - March 2025",
+            }),
+          ),
           status: t.Union(
             [
               t.Literal("Completed and Published"),
@@ -292,9 +330,9 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
             {
               description: "Project status. Use title case with spaces.",
               default: "Ongoing",
-            }
+            },
           ),
-        })
+        }),
       ),
       detail: {
         tags: ["Projects"],
@@ -302,7 +340,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
         description:
           "Update an existing project (admin only). All fields are optional. Use URL-friendly status format (e.g., 'ongoing', 'completed-and-published').",
       },
-    }
+    },
   )
 
   // Delete a project (admin only)
@@ -311,6 +349,22 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
     async ({ params, cookie, set }) => {
       try {
         const { supabase: authClient } = await requireAuth({ cookie, set });
+        const storageClient = process.env.SUPABASE_SERVICE_ROLE_KEY
+          ? createSupabaseServiceClient()
+          : authClient;
+
+        const existing = await getProject(BigInt(params.id), storageClient);
+        if (existing?.project_img) {
+          const deletePath = toStoragePath(existing.project_img);
+          if (deletePath) {
+            const { error } = await storageClient.storage
+              .from(BUCKET_NAME)
+              .remove([deletePath]);
+            if (error) {
+              console.warn("Failed to delete project image:", error.message);
+            }
+          }
+        }
 
         await deleteProject(BigInt(params.id), authClient);
 
@@ -332,5 +386,5 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
         summary: "Delete project",
         description: "Delete a project (admin only)",
       },
-    }
+    },
   );

@@ -2,7 +2,7 @@
 defineOptions({ name: 'ContactSection' })
 
 import { useMode } from '@/composables/useMode'
-import { Mail, Github, Linkedin } from 'lucide-vue-next'
+import { Mail, Github, Linkedin, Phone } from 'lucide-vue-next'
 import SectionTitle from '../SectionTitle.vue'
 import ContactLink from './ContactLink.vue'
 import ContactForm from './ContactForm.vue'
@@ -45,6 +45,12 @@ const { mode } = useMode()
           </p>
 
           <div class="space-y-4">
+            <ContactLink
+              v-if="mode === 'developer'"
+              href="#tel:+84913305835"
+              :icon="{ component: Phone, size: 20 }"
+              text="+84 913 305 835"
+            />
             <ContactLink
               :href= "mode === 'developer' ? 'mailto:phucthin29@gmail.com' : ''"
               :icon="{ component: mode === 'developer' ? Mail : Discord, size: 20 }"

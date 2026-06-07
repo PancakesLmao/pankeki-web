@@ -8,6 +8,8 @@ import { projectRoutes } from "./routes/projects";
 import { gameRoutes } from "./routes/games";
 import { enumRoutes } from "./routes/enums";
 import { experienceRoutes } from "./routes/experiences";
+import { uploadRoutes } from "./routes/upload";
+import { certificationRoutes } from "./routes/certifications";
 
 const PORT = process.env.PORT || 3000;
 const isDevelopment = process.env.NODE_ENV !== "production";
@@ -123,7 +125,7 @@ if (isDevelopment) {
         info: {
           title: "Portfolio API",
           description: "API for managing portfolio projects and authentication",
-          version: "1.0.0",
+          version: "1.1.0",
         },
         tags: [
           { name: "Health", description: "Health check endpoints" },
@@ -132,6 +134,8 @@ if (isDevelopment) {
           { name: "Games", description: "Game management endpoints" },
           { name: "Enums", description: "Enum reference endpoints" },
           { name: "Experiences", description: "Work experience endpoints" },
+          { name: "Certifications", description: "Certification endpoints" },
+          { name: "Upload", description: "Image upload endpoints" },
         ],
       },
       path: "/swagger",
@@ -142,7 +146,7 @@ if (isDevelopment) {
 app = app
   .get("/", () => ({
     message: "Elysia + Supabase API",
-    version: "1.0.0",
+    version: "1.1.0",
   }))
   .get("/health", () => ({ status: "ok" }), {
     detail: {
@@ -181,6 +185,8 @@ app = app
   .use(gameRoutes)
   .use(enumRoutes)
   .use(experienceRoutes)
+  .use(certificationRoutes)
+  .use(uploadRoutes)
   .listen(PORT);
 
 const reset = "\x1b[0m";

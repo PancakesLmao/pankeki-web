@@ -9,6 +9,30 @@ import {
 } from "../libs/db";
 import { requireAuth } from "../middleware/auth";
 import { getMultipleSignedUrls } from "../libs/storage";
+import { createSupabaseServiceClient } from "../libs/supabase";
+
+const BUCKET_NAME = "portfolio-bucket";
+
+function toStoragePath(value: string | null | undefined): string | null {
+  if (!value) return null;
+  if (!value.startsWith("http")) return value;
+
+  try {
+    const url = new URL(value);
+    const prefix = `/storage/v1/object/public/${BUCKET_NAME}/`;
+    const index = url.pathname.indexOf(prefix);
+    if (index >= 0) {
+      return url.pathname.slice(index + prefix.length);
+    }
+  } catch {
+    // Ignore invalid URLs and fall through to regex
+  }
+
+  const fallbackMatch = value.match(
+    new RegExp(`/storage/v1/object/public/${BUCKET_NAME}/(.+)$`),
+  );
+  return fallbackMatch ? fallbackMatch[1] : null;
+}
 
 export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
   .use(cookie())
@@ -98,12 +122,10 @@ export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
 
         const experience = await createExperience(
           {
-            title: body.title,
             company: body.company,
             location: body.location,
-            description: body.description,
-            date: body.date,
             logo: body.logo,
+            positions: body.positions ?? [],
             created_by: user!.id,
           },
           authClient,
@@ -117,10 +139,6 @@ export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
     },
     {
       body: t.Object({
-        title: t.String({
-          description: "Job title",
-          default: "Software Engineer",
-        }),
         company: t.String({
           description: "Company name",
           default: "Acme Corp",
@@ -128,16 +146,18 @@ export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
         location: t.Optional(
           t.String({ description: "Location", default: "HCM, Vietnam" }),
         ),
-        description: t.String({
-          description: "Role description",
-          default: "Worked on...",
-        }),
-        date: t.String({
-          description: "Date range",
-          default: "January 2025 - Present",
-        }),
         logo: t.Optional(
           t.String({ description: "Logo URL or storage path", default: "" }),
+        ),
+        positions: t.Optional(
+          t.Array(
+            t.Object({
+              title: t.String({ description: "Job title" }),
+              date: t.String({ description: "Date range" }),
+              description: t.String({ description: "Role description" }),
+            }),
+            { description: "List of positions at this company" },
+          ),
         ),
       }),
       detail: {
@@ -172,13 +192,19 @@ export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
       }),
       body: t.Partial(
         t.Object({
-          title: t.String({ description: "Job title" }),
           company: t.String({ description: "Company name" }),
           location: t.Optional(t.String({ description: "Location" })),
-          description: t.String({ description: "Role description" }),
-          date: t.String({ description: "Date range" }),
           logo: t.Optional(
             t.String({ description: "Logo URL or storage path" }),
+          ),
+          positions: t.Optional(
+            t.Array(
+              t.Object({
+                title: t.String({ description: "Job title" }),
+                date: t.String({ description: "Date range" }),
+                description: t.String({ description: "Role description" }),
+              }),
+            ),
           ),
         }),
       ),
@@ -196,6 +222,22 @@ export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
     async ({ params, cookie, set }) => {
       try {
         const { supabase: authClient } = await requireAuth({ cookie, set });
+        const storageClient = process.env.SUPABASE_SERVICE_ROLE_KEY
+          ? createSupabaseServiceClient()
+          : authClient;
+
+        const existing = await getExperience(BigInt(params.id), storageClient);
+        if (existing?.logo) {
+          const deletePath = toStoragePath(existing.logo);
+          if (deletePath) {
+            const { error } = await storageClient.storage
+              .from(BUCKET_NAME)
+              .remove([deletePath]);
+            if (error) {
+              console.warn("Failed to delete experience logo:", error.message);
+            }
+          }
+        }
 
         await deleteExperience(BigInt(params.id), authClient);
         return { message: "Experience deleted successfully" };

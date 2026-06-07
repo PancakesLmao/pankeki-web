@@ -9,8 +9,16 @@ class UrlCache {
   private cache = new Map<string, CachedUrl>();
   private readonly cacheExpirySeconds = 86400; // 24 hours (URLs never expire for public bucket)
 
+  private isPublicUrl(value: string): boolean {
+    return /^https?:\/\//i.test(value);
+  }
+
   getPublicUrl(storagePath: string): string | null {
     if (!storagePath) return null;
+
+    if (this.isPublicUrl(storagePath)) {
+      return storagePath;
+    }
 
     const { data } = supabase.storage
       .from("portfolio-bucket")
@@ -20,6 +28,10 @@ class UrlCache {
 
   async getCachedPublicUrl(storagePath: string): Promise<string | null> {
     if (!storagePath) return null;
+
+    if (this.isPublicUrl(storagePath)) {
+      return storagePath;
+    }
 
     // Check cache first
     const cached = this.cache.get(storagePath);
@@ -45,10 +57,10 @@ class UrlCache {
   }
 
   async getMultipleCachedUrls(
-    paths: (string | null)[]
+    paths: (string | null)[],
   ): Promise<(string | null)[]> {
     return Promise.all(
-      paths.map((path) => (path ? this.getCachedPublicUrl(path) : null))
+      paths.map((path) => (path ? this.getCachedPublicUrl(path) : null)),
     );
   }
 }
@@ -56,13 +68,13 @@ class UrlCache {
 const urlCache = new UrlCache();
 
 export async function getSignedImageUrl(
-  storagePath: string
+  storagePath: string,
 ): Promise<string | null> {
   return urlCache.getCachedPublicUrl(storagePath);
 }
 
 export async function getMultipleSignedUrls(
-  paths: (string | null)[]
+  paths: (string | null)[],
 ): Promise<(string | null)[]> {
   return urlCache.getMultipleCachedUrls(paths);
 }

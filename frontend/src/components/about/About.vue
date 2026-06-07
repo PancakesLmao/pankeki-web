@@ -36,7 +36,7 @@ const handleSkillClick = (skillText: string) => {
 }
 </script>
 <template>
-  <section class="mb-24" id="about">
+  <section class="mb-24 pt-12" id="about">
     <SectionTitle title="About" />
 
     <div class="grid md:grid-cols-2 gap-12">
@@ -66,7 +66,7 @@ const handleSkillClick = (skillText: string) => {
         >
           {{
             mode === 'developer'
-              ? 'My approach is all about staying versatile and learning as much as I can across web, cloud, and IoT, so I’m ready for today’s fast-moving tech world, where startups expect freshers to wear multiple hats. With about six months of AWS experience and a hunger to grow, I’m chasing internships to dive into real-world projects, level up my skills, and help teams build something awesome.'
+              ? 'My approach is all about staying versatile and learning as much as I can across web, cloud, and IoT, so I’m ready for today’s fast-moving tech world, where companies expect freshers to wear multiple hats. With nearly a year of AWS experience and a hunger to grow, I’m chasing internships to dive into real-world projects, level up my skills, and help teams build something awesome.'
               : 'Modern RPGs are my jam, with deep narratives and stunning designs that show the heart poured into every detail. I’m a sucker for that artistry in character designs, surrounding worlds, and stories that hook you right away—simulation and sandbox vibes included. Every pixel feels like a labor of love. Well except for gacha, its pain, we all know that.'
           }}
         </p>
