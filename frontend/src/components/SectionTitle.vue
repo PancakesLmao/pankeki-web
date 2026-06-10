@@ -11,7 +11,7 @@ const scrollToSection = (e: Event) => {
   if (target) {
     const rect = target.getBoundingClientRect();
     window.scrollBy({
-      top: rect.top - 20,
+      top: rect.top - 84, // 64px (header) + 20px (breathing room)
       behavior: 'smooth'
     });
   }
@@ -19,7 +19,7 @@ const scrollToSection = (e: Event) => {
 </script>
 <template>
   <div 
-    class="sticky top-0 z-40 py-4 mb-8 -mx-4 px-4 transition-colors duration-500"
+    class="sticky top-16 z-40 py-4 mb-8 -mx-4 px-4 transition-colors duration-500"
     :class="mode === 'developer' ? 'bg-gray-50/95 backdrop-blur-md' : 'bg-gray-900/95 backdrop-blur-md'"
   >
     <button

@@ -3,11 +3,35 @@ import { useMode } from '@/composables/useMode'
 import { Mode } from '@/types/mode'
 import { RouterLink } from 'vue-router'
 import { Gamepad2, Code } from 'lucide-vue-next'
-// import { useRoute } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
+
 const { mode, setMode } = useMode()
+const isScrolled = ref(false)
+
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 10
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll, { passive: true })
+  handleScroll()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 </script>
 <template>
-  <header class="flex justify-between items-center mb-16">
+  <header 
+    class="sticky top-0 z-50 flex justify-between items-center h-16 mb-12 -mx-4 px-4 transition-all duration-300"
+    :class="[
+      isScrolled
+        ? (mode === Mode.Developer 
+            ? 'bg-gray-50/95 backdrop-blur-md border-b border-gray-200/50' 
+            : 'bg-gray-900/95 backdrop-blur-md border-b border-purple-900/50')
+        : 'bg-transparent border-transparent'
+    ]"
+  >
     <RouterLink
       to="/"
       :class="[
