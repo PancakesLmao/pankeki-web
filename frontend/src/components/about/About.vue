@@ -36,7 +36,7 @@ const handleSkillClick = (skillText: string) => {
 }
 </script>
 <template>
-  <section class="mb-24 pt-12" id="about">
+  <section class="pb-24 pt-12" id="about">
     <SectionTitle title="About" />
 
     <div class="grid md:grid-cols-2 gap-12">

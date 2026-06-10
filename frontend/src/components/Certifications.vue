@@ -46,7 +46,7 @@ onMounted(() => fetchCertifications())
 </script>
 
 <template>
-  <section :class="['mb-12 pt-12', mode === Mode.Developer ? '' : 'hidden']" id="certifications">
+  <section :class="['pb-12 pt-12', mode === Mode.Developer ? '' : 'hidden']" id="certifications">
     <SectionTitle title="Certifications" />
 
     <!-- Loading -->

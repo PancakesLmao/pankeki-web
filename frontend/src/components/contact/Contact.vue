@@ -13,7 +13,7 @@ const { mode } = useMode()
 </script>
 
 <template>
-  <section class="mb-16" id="contact">
+  <section class="pb-16" id="contact">
     <SectionTitle :title="mode === 'developer' ? 'Contact' : 'Connect' " />
 
     <div
