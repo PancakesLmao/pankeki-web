@@ -9,7 +9,6 @@ import {
   type Project,
 } from "../libs/db";
 import { requireAuth } from "../middleware/auth";
-import { getSignedImageUrl } from "../libs/storage";
 import { createSupabaseServiceClient } from "../libs/supabase";
 
 const BUCKET_NAME = "portfolio-bucket";
@@ -44,21 +43,13 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
       try {
         const projects = await getProjects(query.status);
 
-        // Generate public URLs for all project images
-        const projectsWithUrls = await Promise.all(
-          projects.map(async (project) => {
-            const imageUrl = (project as any).project_img
-              ? await getSignedImageUrl((project as any).project_img)
-              : null;
-
-            // Exclude internal path from response
-            const { project_img, ...projectData } = project as any;
-            return {
-              ...projectData,
-              image_url: imageUrl,
-            };
-          }),
-        );
+        const projectsWithUrls = projects.map((project) => {
+          const { project_img, ...projectData } = project as any;
+          return {
+            ...projectData,
+            image_url: project_img || null,
+          };
+        });
 
         return { projects: projectsWithUrls };
       } catch (error: any) {
@@ -106,18 +97,12 @@ export const projectRoutes = new Elysia({ prefix: "/api/projects" })
           return { error: "Project not found" };
         }
 
-        // Generate public URL for the project image
-        const imageUrl = (project as any).project_img
-          ? await getSignedImageUrl((project as any).project_img)
-          : null;
-
-        // Exclude internal path from response
         const { project_img, ...projectData } = project as any;
 
         return {
           project: {
             ...projectData,
-            image_url: imageUrl,
+            image_url: project_img || null,
           },
         };
       } catch (error: any) {

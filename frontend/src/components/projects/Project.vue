@@ -136,6 +136,7 @@ onMounted(() => {
           :link="project.link"
           :status="project.status"
           :time-range="project.time_range"
+          :project-img="project.image_url"
         />
       </div>
     </div>

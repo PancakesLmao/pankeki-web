@@ -8,7 +8,6 @@ import {
   deleteExperience,
 } from "../libs/db";
 import { requireAuth } from "../middleware/auth";
-import { getMultipleSignedUrls } from "../libs/storage";
 import { createSupabaseServiceClient } from "../libs/supabase";
 
 const BUCKET_NAME = "portfolio-bucket";
@@ -44,21 +43,7 @@ export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
       try {
         const experiences = await getExperiences();
 
-        // Generate signed URLs for all logo fields
-        const logoPaths = experiences
-          .map((exp: any) => exp.logo)
-          .filter((logo: string | null) => logo !== null);
-        const signedUrls = await getMultipleSignedUrls(logoPaths);
-
-        // Map signed URLs back to experiences
-        const experiencesWithSignedUrls = experiences.map((exp: any) => {
-          if (exp.logo && signedUrls[exp.logo]) {
-            return { ...exp, logo: signedUrls[exp.logo] };
-          }
-          return exp;
-        });
-
-        return { experiences: experiencesWithSignedUrls };
+        return { experiences };
       } catch (error: any) {
         set.status = 500;
         return { error: error.message };
@@ -84,14 +69,7 @@ export const experienceRoutes = new Elysia({ prefix: "/api/experiences" })
           return { error: "Experience not found" };
         }
 
-        // Generate signed URL for logo if it exists
-        if (experience.logo) {
-          const signedUrls = await getMultipleSignedUrls([experience.logo]);
-          if (signedUrls[experience.logo]) {
-            experience.logo = signedUrls[experience.logo];
-          }
-        }
-
+        // Raw DB strings returned
         return { experience };
       } catch (error: any) {
         set.status = 500;

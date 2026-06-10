@@ -10,10 +10,12 @@ const props = withDefaults(defineProps<{
   link?: string | undefined
   status: string
   timeRange?: string | undefined
+  projectImg?: string | undefined
 }>(), {
   description: '',
   link: '',
-  timeRange: ''
+  timeRange: '',
+  projectImg: ''
 })
 
 const { mode } = useMode()
@@ -87,13 +89,18 @@ const statusColor = computed(() => {
   <div
     ref="cardRef"
     :class="[
-      'p-6 rounded-xl transition-all duration-500 hover:-translate-y-1',
+      'p-6 rounded-xl transition-all duration-500 hover:-translate-y-1 flex flex-col h-full',
       isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4',
       mode === 'developer'
         ? 'bg-white border border-gray-200 hover:shadow-md'
         : 'bg-gray-800 border border-gray-700 hover:border-purple-700',
     ]"
   >
+    <!-- Project Image -->
+    <div v-if="projectImg" class="-mx-6 -mt-6 mb-4 overflow-hidden rounded-t-xl border-b border-gray-100 dark:border-gray-700">
+      <img :src="projectImg" :alt="title" class="w-full h-48 object-cover transition-transform duration-700 hover:scale-105" />
+    </div>
+
     <!-- Header with Title and Status Badge -->
     <div class="flex justify-between items-start gap-3 mb-2">
       <!-- Title -->
@@ -145,18 +152,35 @@ const statusColor = computed(() => {
       </span>
     </div>
 
-    <a
-      :href="link"
-      target="_blank"
-      rel="noopener noreferrer"
-      :class="[
-        'inline-flex items-center text-sm font-medium transition-colors',
-        mode === 'developer'
-          ? 'text-gray-900 hover:text-gray-700'
-          : 'text-purple-400 hover:text-purple-300',
-      ]"
+    <div
+      class="inline-flex mt-auto"
+      :title="link ? `View project at ${link}` : 'Private repository'"
     >
-      {{ mode === 'developer' ? 'View project' : 'See details' }}
-    </a>
+      <a
+        v-if="link"
+        :href="link"
+        target="_blank"
+        rel="noopener noreferrer"
+        :class="[
+          'inline-flex items-center text-sm font-medium transition-colors',
+          mode === 'developer'
+            ? 'text-gray-900 hover:text-gray-700'
+            : 'text-purple-400 hover:text-purple-300',
+        ]"
+      >
+        {{ mode === 'developer' ? 'View project' : 'See details' }}
+      </a>
+      <span
+        v-else
+        :class="[
+          'inline-flex items-center text-sm font-medium transition-colors opacity-50 cursor-not-allowed',
+          mode === 'developer'
+            ? 'text-gray-900'
+            : 'text-purple-400',
+        ]"
+      >
+        {{ mode === 'developer' ? 'View project' : 'See details' }}
+      </span>
+    </div>
   </div>
 </template>
