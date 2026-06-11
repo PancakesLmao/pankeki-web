@@ -15,6 +15,7 @@ const LABELS: Record<'developer' | 'gamer', Record<SectionId, string>> = {
     certifications: 'Certifications',
     experience: 'Work Experience',
     projects: 'Projects',
+    music: '',
     contact: 'Contact',
   },
   gamer: {
@@ -22,6 +23,7 @@ const LABELS: Record<'developer' | 'gamer', Record<SectionId, string>> = {
     certifications: 'Certifications',
     experience: 'Work Experience',
     projects: 'Games',
+    music: 'Playlist',
     contact: 'Connect',
   },
 }
@@ -56,7 +58,7 @@ const scrollTo = () => {
             'sticky-pill',
             mode === 'developer'
               ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              : 'bg-purple-900 text-purple-100 hover:bg-purple-800',
+              : 'bg-transparent text-purple-200 hover:text-white border border-purple-800/30 backdrop-blur-sm',
           ]"
         >
           {{ label }}
@@ -96,7 +98,7 @@ const scrollTo = () => {
   display: inline-block;
   padding: 0.25rem 1rem;
   border-radius: 9999px;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 500;
   line-height: 1.5;
   border: none;

@@ -1,9 +1,9 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useMode } from './useMode'
 
-export type SectionId = 'about' | 'certifications' | 'experience' | 'projects' | 'contact'
+export type SectionId = 'about' | 'certifications' | 'experience' | 'projects' | 'music' | 'contact'
 
-const SECTION_ORDER: SectionId[] = ['about', 'certifications', 'experience', 'projects', 'contact']
+const SECTION_ORDER: SectionId[] = ['about', 'certifications', 'experience', 'projects', 'music', 'contact']
 
 export function useStickySection() {
   const activeSection = ref<SectionId | null>(null)

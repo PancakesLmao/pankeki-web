@@ -82,3 +82,12 @@ export interface CertificationFormData {
   image_url?: string
   url?: string
 }
+
+export interface SongFormData {
+  title: string
+  artist: string
+  youtube_url: string
+  bg_image_url: string
+  art_credit?: string
+}
+

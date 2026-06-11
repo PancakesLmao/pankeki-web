@@ -836,3 +836,153 @@ export async function deleteCertification(
     throw error;
   }
 }
+
+// ============================================================================
+// SONG QUERIES
+// ============================================================================
+
+export interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  youtube_url: string;
+  bg_image_url: string;
+  art_credit: string | null;
+  created_by: string;
+  created_at: string;
+}
+
+const serializeSong = (song: any): Song => ({
+  ...song,
+  id: song.id.toString(),
+});
+
+export async function getSongs(): Promise<Song[]> {
+  try {
+    const { data, error } = await supabase
+      .from("songs")
+      .select("*")
+      .order("created_at", { ascending: true });
+
+    if (error) throw error;
+    return (data || []).map(serializeSong);
+  } catch (error) {
+    console.error("Error fetching songs:", error);
+    throw error;
+  }
+}
+
+export async function getSong(
+  id: string | bigint,
+  client: any = supabase,
+): Promise<Song | null> {
+  try {
+    const songId = typeof id === "bigint" ? id.toString() : id;
+
+    const { data, error } = await client
+      .from("songs")
+      .select("*")
+      .eq("id", songId)
+      .single();
+
+    if (error && error.code === "PGRST116") return null;
+    if (error) throw error;
+
+    return data ? serializeSong(data) : null;
+  } catch (error) {
+    console.error("Error fetching song:", error);
+    throw error;
+  }
+}
+
+export async function createSong(
+  data: {
+    title: string;
+    artist: string;
+    youtube_url: string;
+    bg_image_url: string;
+    art_credit?: string | null;
+    created_by: string;
+  },
+  client: any = supabase,
+): Promise<Song> {
+  try {
+    const { data: song, error } = await client
+      .from("songs")
+      .insert([
+        {
+          title: data.title,
+          artist: data.artist,
+          youtube_url: data.youtube_url,
+          bg_image_url: data.bg_image_url,
+          art_credit: data.art_credit || null,
+          created_by: data.created_by,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return serializeSong(song);
+  } catch (error) {
+    console.error("Error creating song:", error);
+    throw error;
+  }
+}
+
+export async function updateSong(
+  id: string | bigint,
+  data: Partial<{
+    title?: string;
+    artist?: string;
+    youtube_url?: string;
+    bg_image_url?: string;
+    art_credit?: string | null;
+  }>,
+  client: any = supabase,
+): Promise<Song> {
+  try {
+    const existing = await getSong(id, client);
+    if (!existing) throw new Error("Song not found");
+
+    const updateData: any = {};
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.artist !== undefined) updateData.artist = data.artist;
+    if (data.youtube_url !== undefined) updateData.youtube_url = data.youtube_url;
+    if (data.bg_image_url !== undefined) updateData.bg_image_url = data.bg_image_url;
+    if (data.art_credit !== undefined) updateData.art_credit = data.art_credit;
+
+    const songId = typeof id === "bigint" ? id.toString() : id;
+
+    const { error } = await client
+      .from("songs")
+      .update(updateData)
+      .eq("id", songId);
+
+    if (error) throw error;
+
+    const updated = await getSong(songId, client);
+    if (!updated) throw new Error("Song not found after update");
+    return updated;
+  } catch (error) {
+    console.error("Error updating song:", error);
+    throw error;
+  }
+}
+
+export async function deleteSong(
+  id: string | bigint,
+  client: any = supabase,
+): Promise<void> {
+  try {
+    const songId = typeof id === "bigint" ? id.toString() : id;
+
+    const { error } = await client.from("songs").delete().eq("id", songId);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error("Error deleting song:", error);
+    throw error;
+  }
+}
+

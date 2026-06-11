@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
-import type { Project, Game, Experience } from '@/types/profile'
+import type { Project, Game, Experience, Song } from '@/types/profile'
 import { useMode } from '@/composables/useMode'
 import { useToast } from '@/composables/useToast'
 import CustomTerminal from '@/components/about/Terminal.vue'
@@ -10,9 +10,10 @@ import ProjectForm from '@/components/dashboard/ProjectForm.vue'
 import GameForm from '@/components/dashboard/GameForm.vue'
 import ExperienceForm from '@/components/dashboard/ExperienceForm.vue'
 import CertificationForm from '@/components/dashboard/CertificationForm.vue'
+import SongForm from '@/components/dashboard/SongForm.vue'
 import ToastNotification from '@/components/dashboard/ToastNotification.vue'
-import type { ProjectFormData, GameFormData, ExperienceFormData, CertificationFormData } from '@/types/forms'
-import { projectsApi, gamesApi, experiencesApi, certificationsApi } from '@/api'
+import type { ProjectFormData, GameFormData, ExperienceFormData, CertificationFormData, SongFormData } from '@/types/forms'
+import { projectsApi, gamesApi, experiencesApi, certificationsApi, songsApi } from '@/api'
 import type { Certification } from '@/types/profile'
 
 const authStore = useAuthStore()
@@ -20,14 +21,15 @@ const router = useRouter()
 const { mode } = useMode()
 const toast = useToast()
 
-type Section = 'projects' | 'games' | 'experiences' | 'certifications'
+type Section = 'projects' | 'games' | 'experiences' | 'certifications' | 'songs'
 const activeSection = ref<Section>('projects')
 
 const projects = ref<Project[]>([])
 const games = ref<Game[]>([])
 const experiences = ref<Experience[]>([])
 const certifications = ref<Certification[]>([])
-const loading = ref<Record<Section, boolean>>({ projects: false, games: false, experiences: false, certifications: false })
+const songs = ref<Song[]>([])
+const loading = ref<Record<Section, boolean>>({ projects: false, games: false, experiences: false, certifications: false, songs: false })
 const activeMenuId = ref<string | null>(null)
 
 const pageSize = {
@@ -35,6 +37,7 @@ const pageSize = {
   games: 5,
   experiences: 5,
   certifications: 5,
+  songs: 8,
 }
 
 const currentPage = ref<Record<Section, number>>({
@@ -42,22 +45,26 @@ const currentPage = ref<Record<Section, number>>({
   games: 1,
   experiences: 1,
   certifications: 1,
+  songs: 1,
 })
 
 const editingProject = ref<Project | null>(null)
 const editingGame = ref<Game | null>(null)
 const editingExperience = ref<Experience | null>(null)
 const editingCertification = ref<Certification | null>(null)
+const editingSong = ref<Song | null>(null)
 const projectFormRef = ref<InstanceType<typeof ProjectForm> | null>(null)
 const gameFormRef = ref<InstanceType<typeof GameForm> | null>(null)
 const experienceFormRef = ref<InstanceType<typeof ExperienceForm> | null>(null)
 const certificationFormRef = ref<InstanceType<typeof CertificationForm> | null>(null)
+const songFormRef = ref<InstanceType<typeof SongForm> | null>(null)
 
 const submitLoading = ref({
   projects: false,
   games: false,
   experiences: false,
   certifications: false,
+  songs: false,
 })
 
 const getPageCount = (total: number, size: number) => Math.max(1, Math.ceil(total / size))
@@ -81,6 +88,10 @@ const pagedCertifications = computed(() =>
   paginate(certifications.value, currentPage.value.certifications, pageSize.certifications),
 )
 
+const pagedSongs = computed(() =>
+  paginate(songs.value, currentPage.value.songs, pageSize.songs),
+)
+
 const projectPageCount = computed(() => getPageCount(projects.value.length, pageSize.projects))
 
 const gamePageCount = computed(() => getPageCount(games.value.length, pageSize.games))
@@ -92,6 +103,8 @@ const experiencePageCount = computed(() =>
 const certificationPageCount = computed(() =>
   getPageCount(certifications.value.length, pageSize.certifications),
 )
+
+const songPageCount = computed(() => getPageCount(songs.value.length, pageSize.songs))
 
 const normalizePage = (section: Section, total: number, size: number) => {
   const maxPage = getPageCount(total, size)
@@ -108,11 +121,11 @@ const setPage = (section: Section, page: number, maxPage: number) => {
 onMounted(async () => {
   const isAuth = await authStore.checkAuth()
   if (!isAuth) router.push('/')
-  // Load all sections upfront
   fetchProjects()
   fetchGames()
   fetchExperiences()
   fetchCertifications()
+  fetchSongs()
 })
 
 // ── Fetch ────────────────────────────────────────────────────────────────────
@@ -365,6 +378,52 @@ const handleCertificationSubmit = async (data: CertificationFormData) => {
   }
 }
 
+const fetchSongs = async () => {
+  loading.value.songs = true
+  try {
+    const data = await songsApi.getAll()
+    songs.value = data.songs || []
+    normalizePage('songs', songs.value.length, pageSize.songs)
+  } catch (e) {
+    console.error(e)
+  } finally {
+    loading.value.songs = false
+  }
+}
+
+const deleteSong = async (id: string) => {
+  if (!confirm('Delete this song?')) return
+  try {
+    await songsApi.delete(id)
+    toast.success('Song deleted successfully')
+    fetchSongs()
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Failed to delete song')
+  } finally {
+    activeMenuId.value = null
+  }
+}
+
+const handleSongSubmit = async (data: SongFormData) => {
+  submitLoading.value.songs = true
+  try {
+    if (editingSong.value) {
+      await songsApi.update(editingSong.value.id, data)
+      editingSong.value = null
+      toast.success('Song updated successfully')
+    } else {
+      await songsApi.create(data)
+      songFormRef.value?.reset()
+      toast.success('Song added successfully')
+    }
+    fetchSongs()
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Failed to save song')
+  } finally {
+    submitLoading.value.songs = false
+  }
+}
+
 const handleSignout = async () => {
   await authStore.signout()
   router.push('/')
@@ -392,6 +451,11 @@ const startEditExperience = (e: Experience) => {
 
 const startEditCertification = (c: Certification) => {
   editingCertification.value = c
+  activeMenuId.value = null
+}
+
+const startEditSong = (s: Song) => {
+  editingSong.value = s
   activeMenuId.value = null
 }
 </script>
@@ -446,7 +510,7 @@ const startEditCertification = (c: Certification) => {
         ]"
       >
         <button
-          v-for="s in ['projects', 'games', 'experiences', 'certifications']"
+          v-for="s in ['projects', 'games', 'experiences', 'certifications', 'songs']"
           :key="s"
           @click="setSection(s)"
           :class="[
@@ -1140,6 +1204,150 @@ const startEditCertification = (c: Certification) => {
             :loading="submitLoading.certifications"
             @submit="handleCertificationSubmit"
             @cancel="editingCertification = null"
+          />
+        </div>
+      </div>
+
+      <!-- ── SONGS ─────────────────────────────────────────────────────── -->
+      <div v-else-if="activeSection === 'songs'" class="grid lg:grid-cols-2 gap-6 items-start">
+        <!-- List -->
+        <div>
+          <h3
+            :class="[
+              'text-sm font-semibold uppercase tracking-wide mb-3',
+              mode === 'developer' ? 'text-gray-400' : 'text-purple-500',
+            ]"
+          >
+            {{ songs.length }} song{{ songs.length !== 1 ? 's' : '' }}
+          </h3>
+          <div
+            v-if="loading.songs"
+            class="text-center py-8 text-sm"
+            :class="mode === 'developer' ? 'text-gray-400' : 'text-purple-400'"
+          >
+            Loading...
+          </div>
+          <!-- Empty state -->
+          <div
+            v-else-if="songs.length === 0"
+            class="flex flex-col items-center justify-center py-10 text-center rounded-lg border-2 border-dashed"
+            :class="mode === 'developer' ? 'border-gray-200 text-gray-400' : 'border-purple-900/50 text-purple-400'"
+          >
+            <svg class="w-10 h-10 mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+            </svg>
+            <p class="text-sm font-medium">No songs added yet</p>
+            <p class="text-xs mt-1 opacity-60">Use the form to add your first track</p>
+          </div>
+          <div v-else class="space-y-3">
+            <div
+              v-for="song in pagedSongs"
+              :key="song.id"
+              :class="[
+                'p-4 rounded-lg border flex justify-between items-start transition-colors',
+                editingSong?.id === song.id
+                  ? mode === 'developer'
+                    ? 'border-blue-400 bg-blue-50'
+                    : 'border-purple-500 bg-gray-700'
+                  : mode === 'developer'
+                    ? 'bg-white border-gray-200 hover:bg-gray-50'
+                    : 'bg-gray-800 border-gray-700 hover:bg-gray-750',
+              ]"
+            >
+              <!-- Bg preview swatch -->
+              <div
+                class="w-10 h-10 rounded-md flex-shrink-0 bg-cover bg-center border"
+                :class="mode === 'developer' ? 'border-gray-200' : 'border-gray-600'"
+                :style="{ backgroundImage: `url(${song.bg_image_url})` }"
+              />
+              <div class="flex-1 min-w-0 mx-3">
+                <p
+                  :class="[
+                    'font-semibold text-sm truncate',
+                    mode === 'developer' ? 'text-gray-900' : 'text-purple-100',
+                  ]"
+                >{{ song.title }}</p>
+                <p :class="['text-xs truncate', mode === 'developer' ? 'text-gray-500' : 'text-gray-400']">
+                  {{ song.artist }}
+                </p>
+              </div>
+              <div class="relative ml-2 flex-shrink-0">
+                <button
+                  @click="activeMenuId = activeMenuId === song.id ? null : song.id"
+                  :class="[
+                    'p-1.5 rounded text-lg leading-none',
+                    mode === 'developer' ? 'hover:bg-gray-200' : 'hover:bg-gray-600',
+                  ]"
+                >⋮</button>
+                <div
+                  v-if="activeMenuId === song.id"
+                  :class="[
+                    'absolute right-0 mt-1 w-36 rounded-lg shadow-lg z-10 border overflow-hidden',
+                    mode === 'developer' ? 'bg-white border-gray-200' : 'bg-gray-700 border-gray-600',
+                  ]"
+                >
+                  <button
+                    @click="startEditSong(song)"
+                    :class="[
+                      'block w-full text-left px-4 py-2 text-sm transition-colors',
+                      mode === 'developer' ? 'text-gray-700 hover:bg-gray-100' : 'text-purple-100 hover:bg-gray-600',
+                    ]"
+                  >Edit</button>
+                  <button
+                    @click="deleteSong(song.id)"
+                    :class="[
+                      'block w-full text-left px-4 py-2 text-sm transition-colors',
+                      mode === 'developer' ? 'text-red-600 hover:bg-red-50' : 'text-red-400 hover:bg-red-900/30',
+                    ]"
+                  >Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Pagination -->
+          <div
+            v-if="songs.length > pageSize.songs"
+            class="flex items-center justify-between mt-4 text-xs"
+            :class="mode === 'developer' ? 'text-gray-500' : 'text-purple-400'"
+          >
+            <button
+              type="button"
+              @click="setPage('songs', currentPage.songs - 1, songPageCount)"
+              :disabled="currentPage.songs === 1"
+              :class="[
+                'px-2 py-1 rounded transition-colors disabled:opacity-50',
+                mode === 'developer' ? 'bg-gray-100 hover:bg-gray-200' : 'bg-gray-700 hover:bg-gray-600',
+              ]"
+            >Prev</button>
+            <span>Page {{ currentPage.songs }} of {{ songPageCount }}</span>
+            <button
+              type="button"
+              @click="setPage('songs', currentPage.songs + 1, songPageCount)"
+              :disabled="currentPage.songs === songPageCount"
+              :class="[
+                'px-2 py-1 rounded transition-colors disabled:opacity-50',
+                mode === 'developer' ? 'bg-gray-100 hover:bg-gray-200' : 'bg-gray-700 hover:bg-gray-600',
+              ]"
+            >Next</button>
+          </div>
+        </div>
+
+        <!-- Form -->
+        <div>
+          <h3
+            :class="[
+              'text-sm font-semibold uppercase tracking-wide mb-3',
+              mode === 'developer' ? 'text-gray-400' : 'text-purple-500',
+            ]"
+          >
+            {{ editingSong ? 'Editing song' : 'Add song' }}
+          </h3>
+          <SongForm
+            ref="songFormRef"
+            :editing-song="editingSong"
+            :loading="submitLoading.songs"
+            @submit="handleSongSubmit"
+            @cancel="editingSong = null"
           />
         </div>
       </div>

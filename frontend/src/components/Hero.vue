@@ -24,76 +24,85 @@ const writerArray = computed(() => {
 </script>
 
 <template>
-  <section class="mb-24 flex flex-col items-center text-center">
-    <div
-      :class="[
-        'w-40 h-40 rounded-full mb-8 overflow-hidden border-4 transition-all',
-        mode === 'developer' ? 'border-gray-300' : 'border-purple-600',
-      ]"
-    >
-      <img
-        :src="
-          mode === 'developer'
-            ? light_profile
-            : dark_profile
-        "
-        alt="Profile"
-        class="w-full h-full object-cover"
-      />
-    </div>
+  <section class="min-h-[calc(100vh-8rem)] min-h-[calc(100dvh-8rem)] flex flex-col items-center text-center py-4 mb-24">
+    <!-- Top spacer to shift content slightly upwards (asymmetrical vertical centering) -->
+    <div class="flex-grow-[1] max-h-[8vh]"></div>
 
-    <h2
-      :class="[
-        'text-4xl md:text-5xl font-bold mb-4 transition-colors',
-        mode === 'developer' ? 'font-serif' : 'font-mono',
-      ]"
-    >
-       <!-- {{ mode === 'developer' ? 'text1' : 'text2' }} -->
-       <VueWriter
-        :key="mode"
-        :array="writerArray"
-        :typeSpeed="70"
-        :eraseSpeed="50"
-        :delay="2000"
-        :intervals="1000"
-        class="inline-block typed-text"
-      />
-    </h2>
-
-    <p
-      :class="[
-        'max-w-2xl text-lg mb-8 transition-colors',
-        mode === 'developer' ? 'text-gray-600' : 'text-purple-300'
-      ]"
-    >
-      {{ mode === 'developer'
-        ? 'Passionate web developer and cloud enthusiast who loves creating web apps and cloud solutions'
-        : "Rate up is a lie" }}
-    </p>
-
-    <div class="flex gap-4">
-      <a
-        href="#contact"
+    <!-- Main Content Wrapper -->
+    <div class="flex flex-col items-center">
+      <div
         :class="[
-          'px-6 py-3 rounded-md font-medium transition-colors',
-          mode === 'developer'
-            ? 'bg-gray-900 text-white hover:bg-gray-800'
-            : 'bg-purple-600 text-white hover:bg-purple-700'
+          'w-40 h-40 rounded-full mb-8 overflow-hidden border-4 transition-all',
+          mode === 'developer' ? 'border-gray-300' : 'border-purple-600',
         ]"
       >
-        Get in touch
-      </a>
-      <a
-        href="#projects"
+        <img
+          :src="
+            mode === 'developer'
+              ? light_profile
+              : dark_profile
+          "
+          alt="Profile"
+          class="w-full h-full object-cover"
+        />
+      </div>
+
+      <h2
         :class="[
-          'px-6 py-3 rounded-md font-medium transition-colors',
-          mode === 'developer'
-            ? 'bg-gray-200 text-gray-900 hover:bg-gray-300'
-            : 'bg-gray-800 text-gray-50 hover:bg-gray-700'
+          'text-4xl md:text-5xl font-bold mb-4 transition-colors',
+          mode === 'developer' ? 'font-serif' : 'font-mono',
         ]"
       >
-        {{ mode === 'developer' ? 'View projects' : 'Browse games' }}
-      </a>
+         <!-- {{ mode === 'developer' ? 'text1' : 'text2' }} -->
+         <VueWriter
+          :key="mode"
+          :array="writerArray"
+          :typeSpeed="70"
+          :eraseSpeed="50"
+          :delay="2000"
+          :intervals="1000"
+          class="inline-block typed-text"
+        />
+      </h2>
+
+      <p
+        :class="[
+          'max-w-2xl text-lg mb-8 transition-colors',
+          mode === 'developer' ? 'text-gray-600' : 'text-purple-300'
+        ]"
+      >
+        {{ mode === 'developer'
+          ? 'Passionate web developer and cloud enthusiast who loves creating web apps and cloud solutions'
+          : "Rate up is a lie" }}
+      </p>
+
+      <div class="flex gap-4">
+        <a
+          href="#contact"
+          :class="[
+            'px-6 py-3 rounded-md font-medium transition-colors',
+            mode === 'developer'
+              ? 'bg-gray-900 text-white hover:bg-gray-800'
+              : 'bg-purple-600 text-white hover:bg-purple-700'
+          ]"
+        >
+          Get in touch
+        </a>
+        <a
+          href="#projects"
+          :class="[
+            'px-6 py-3 rounded-md font-medium transition-colors',
+            mode === 'developer'
+              ? 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+              : 'bg-gray-800 text-gray-50 hover:bg-gray-700'
+          ]"
+        >
+          {{ mode === 'developer' ? 'View projects' : 'Browse games' }}
+        </a>
+      </div>
     </div>
+
+    <!-- Larger bottom spacer to push content up -->
+    <div class="flex-grow-[2]"></div>
   </section>
 </template>
