@@ -51,7 +51,7 @@ const scrollTo = () => {
       <Transition name="label-swap" mode="out-in">
         <button
           v-if="label"
-          :key="activeSection"
+          :key="activeSection || undefined"
           @click="scrollTo"
           :aria-label="`Jump to ${label} section`"
           :class="[
