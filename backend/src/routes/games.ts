@@ -9,7 +9,6 @@ import {
   type Game,
 } from "../libs/db";
 import { requireAuth } from "../middleware/auth";
-import { getMultipleSignedUrls } from "../libs/storage";
 import { createSupabaseServiceClient } from "../libs/supabase";
 
 const BUCKET_NAME = "portfolio-bucket";
@@ -64,15 +63,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
           PlayStation: "playstation",
         };
 
-        // Generate public URLs for all image fields
-        const imagePaths = games.flatMap((game: any) => [
-          game.cover_img,
-          game.icon_img,
-        ]);
-        const signedUrls = await getMultipleSignedUrls(imagePaths);
-
         // Map URLs back to games (exclude internal paths and normalize enum values)
-        let urlIndex = 0;
         const gamesWithUrls = games.map((game: any) => {
           const { cover_img, icon_img, ...gameData } = game;
           return {
@@ -83,8 +74,8 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
             platform: (game.platform || []).map(
               (p: string) => platformReverseMap[p] || p,
             ),
-            cover_url: signedUrls[urlIndex++],
-            icon_url: signedUrls[urlIndex++],
+            cover_url: cover_img || null,
+            icon_url: icon_img || null,
           };
         });
 
@@ -148,11 +139,7 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
           return { error: "Game not found" };
         }
 
-        // Generate public URLs for the game images
-        const [coverUrl, iconUrl] = await getMultipleSignedUrls([
-          (game as any).cover_img,
-          (game as any).icon_img,
-        ]);
+        // Raw DB strings returned
 
         // Normalize enum values
         const genreReverseMap: Record<string, string> = {
@@ -186,8 +173,8 @@ export const gameRoutes = new Elysia({ prefix: "/api/games" })
             platform: (game.platform || []).map(
               (p: string) => platformReverseMap[p] || p,
             ),
-            cover_url: coverUrl,
-            icon_url: iconUrl,
+            cover_url: cover_img || null,
+            icon_url: icon_img || null,
           },
         };
       } catch (error: any) {

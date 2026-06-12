@@ -8,7 +8,6 @@ import {
   deleteCertification,
 } from "../libs/db";
 import { requireAuth } from "../middleware/auth";
-import { getMultipleSignedUrls } from "../libs/storage";
 import { createSupabaseServiceClient } from "../libs/supabase";
 
 const BUCKET_NAME = "portfolio-bucket";
@@ -44,21 +43,8 @@ export const certificationRoutes = new Elysia({ prefix: "/api/certifications" })
       try {
         const certifications = await getCertifications();
 
-        // Generate signed URLs for icon and image_url fields
-        const pathsToSign: string[] = [];
-        certifications.forEach((cert: any) => {
-          if (cert.icon) pathsToSign.push(cert.icon);
-          if (cert.image_url) pathsToSign.push(cert.image_url);
-        });
-
-        const signedUrls = await getMultipleSignedUrls(pathsToSign);
-
         const certificationsWithUrls = certifications.map((cert: any) => {
-          return {
-            ...cert,
-            icon: cert.icon && signedUrls[cert.icon] ? signedUrls[cert.icon] : cert.icon,
-            image_url: cert.image_url && signedUrls[cert.image_url] ? signedUrls[cert.image_url] : cert.image_url,
-          };
+          return cert;
         });
 
         return { certifications: certificationsWithUrls };
@@ -87,15 +73,7 @@ export const certificationRoutes = new Elysia({ prefix: "/api/certifications" })
           return { error: "Certification not found" };
         }
 
-        const pathsToSign: string[] = [];
-        if (cert.icon) pathsToSign.push(cert.icon);
-        if (cert.image_url) pathsToSign.push(cert.image_url);
-
-        if (pathsToSign.length > 0) {
-          const signedUrls = await getMultipleSignedUrls(pathsToSign);
-          if (cert.icon && signedUrls[cert.icon]) cert.icon = signedUrls[cert.icon];
-          if (cert.image_url && signedUrls[cert.image_url]) cert.image_url = signedUrls[cert.image_url];
-        }
+        // Raw DB strings returned
 
         return { certification: cert };
       } catch (error: any) {

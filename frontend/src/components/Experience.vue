@@ -56,7 +56,7 @@ onMounted(() => fetchExperiences())
 
 .timeline-item.is-visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
 }
 
 .logo-wrapper {
@@ -65,6 +65,7 @@ onMounted(() => fetchExperiences())
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  z-index: 45;
 }
 
 .logo-tooltip {
@@ -79,7 +80,7 @@ onMounted(() => fetchExperiences())
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease-out;
-  z-index: 50;
+  z-index: 55;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -108,7 +109,7 @@ onMounted(() => fetchExperiences())
 </style>
 
 <template>
-  <section :class="['mb-12 pt-12', mode === Mode.Developer ? '' : 'hidden']" id="experience">
+  <section :class="['pb-12', mode === Mode.Developer ? '' : 'hidden']" id="experience">
     <SectionTitle :title="mode === Mode.Developer ? 'Work Experience' : 'Gaming Milestones'" />
 
     <!-- Loading -->

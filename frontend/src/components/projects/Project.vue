@@ -43,7 +43,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="mb-24 pt-12" id="projects">
+  <section class="pb-12" id="projects">
     <SectionTitle :title="mode === 'developer' ? 'Projects' : 'Games'" />
 
     <!-- Developer Mode: Projects -->
@@ -136,6 +136,7 @@ onMounted(() => {
           :link="project.link"
           :status="project.status"
           :time-range="project.time_range"
+          :project-img="project.image_url || undefined"
         />
       </div>
     </div>

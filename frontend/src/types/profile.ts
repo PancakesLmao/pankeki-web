@@ -57,3 +57,13 @@ export interface Certification {
   created_at: string
   created_by: string
 }
+
+export interface Song {
+  id: string
+  title: string
+  artist: string
+  youtube_url: string
+  bg_image_url: string
+  art_credit?: string | null
+  created_at: string
+}

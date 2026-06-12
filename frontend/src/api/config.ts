@@ -62,6 +62,10 @@ export const API_CONFIG = {
       BASE: '/api/certifications',
       BY_ID: (id: string) => `/api/certifications/${id}`,
     },
+    SONGS: {
+      BASE: '/api/songs',
+      BY_ID: (id: string) => `/api/songs/${id}`,
+    },
     UPLOAD: '/api/upload',
   },
 }

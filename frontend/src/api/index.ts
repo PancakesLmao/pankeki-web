@@ -1,6 +1,6 @@
 import { API_CONFIG } from './config'
-import type { Project, Game, Experience, Certification } from '@/types/profile'
-import type { ProjectFormData, GameFormData, ExperienceFormData, CertificationFormData } from '@/types/forms'
+import type { Project, Game, Experience, Certification, Song } from '@/types/profile'
+import type { ProjectFormData, GameFormData, ExperienceFormData, CertificationFormData, SongFormData } from '@/types/forms'
 
 // HTTP Client with error handling
 class ApiClient {
@@ -246,3 +246,28 @@ export const certificationsApi = {
 
 // Export everything
 export { API_CONFIG }
+
+// ============================================
+// Songs API
+// ============================================
+export const songsApi = {
+  async getAll(): Promise<{ songs: Song[] }> {
+    return apiClient.get(API_CONFIG.ENDPOINTS.SONGS.BASE)
+  },
+
+  async getById(id: string): Promise<{ song: Song }> {
+    return apiClient.get(API_CONFIG.ENDPOINTS.SONGS.BY_ID(id))
+  },
+
+  async create(data: SongFormData): Promise<{ message: string; song: Song }> {
+    return apiClient.post(API_CONFIG.ENDPOINTS.SONGS.BASE, data)
+  },
+
+  async update(id: string, data: Partial<SongFormData>): Promise<{ message: string; song: Song }> {
+    return apiClient.put(API_CONFIG.ENDPOINTS.SONGS.BY_ID(id), data)
+  },
+
+  async delete(id: string): Promise<{ message: string }> {
+    return apiClient.delete(API_CONFIG.ENDPOINTS.SONGS.BY_ID(id))
+  },
+}

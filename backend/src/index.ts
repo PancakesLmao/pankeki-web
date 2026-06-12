@@ -10,6 +10,7 @@ import { enumRoutes } from "./routes/enums";
 import { experienceRoutes } from "./routes/experiences";
 import { uploadRoutes } from "./routes/upload";
 import { certificationRoutes } from "./routes/certifications";
+import { songRoutes } from "./routes/songs";
 
 const PORT = process.env.PORT || 3000;
 const isDevelopment = process.env.NODE_ENV !== "production";
@@ -137,6 +138,7 @@ if (isDevelopment) {
           { name: "Experiences", description: "Work experience endpoints" },
           { name: "Certifications", description: "Certification endpoints" },
           { name: "Upload", description: "Image upload endpoints" },
+          { name: "Songs", description: "Music playlist endpoints" },
         ],
       },
       path: "/swagger",
@@ -187,6 +189,7 @@ app = app
   .use(enumRoutes)
   .use(experienceRoutes)
   .use(certificationRoutes)
+  .use(songRoutes)
   .use(uploadRoutes)
   .listen(PORT);
 
